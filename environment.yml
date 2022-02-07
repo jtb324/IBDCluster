@@ -3,6 +3,7 @@ channels:
  - conda-forge
  - defaults
 dependencies:
+ - python=3.8
  - click=8.0.3
  - colorama=0.4.4
  - numpy=1.22.2
