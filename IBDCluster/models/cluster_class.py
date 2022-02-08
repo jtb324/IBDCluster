@@ -1,6 +1,7 @@
 from dataclasses import dataclass
-from email import header
 import pandas as pd
+from typing import Dict, List
+from models import Pairs
 
 @dataclass
 class Cluster:
@@ -27,3 +28,29 @@ class Cluster:
 
             if not filtered_chunk.empty:
                 self.ibd_df = pd.concat(self.ibd_df, filtered_chunk)
+
+    def filter_for_haplotype(self, phase_1_indx: int, phase_2_indx: int) -> None:
+        """Method that will filter the dataframe for only those haplotypes phases for pair 1 and pair 2 that match
+        
+        Parameters
+        
+        phase_1_indx : int
+            integer that tells which column in the file has the phasing information for the first individual
+            
+        phase_2_indx : int
+            integer that tells whichh columb in the file has the phasing information for the second individual
+        """
+
+        self.ibd_df = self.ibd_df[self.ibd_df[phase_1_indx] == self.ibd_df[phase_2_indx]]
+
+    def find_networks(self) -> Dict[int: Dict]:
+        """Method that will go through the dataframe and will identify networks.
+        
+        Parameters
+        
+        
+        Returns
+        Dict[int: Dict]
+            returns a dictionary with the following structure:
+            {network_id: {pairs: List[Pair_objects], in_network: List[str], haplotypes_list: List[str]}}. Other data information will be added to this file
+        """
