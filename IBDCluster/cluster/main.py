@@ -62,7 +62,7 @@ def get_ibd_program(ibd_program: str):
 
 
 
-def cluster(ibd_program: str, gene_info_filepath: str) -> None:
+def find_clusters(ibd_program: str, gene_info_filepath: str) -> None:
     """Main function that will handle the clustering into networks"""
 
     # we will need the information for the correct ibd_program
@@ -81,7 +81,7 @@ def cluster(ibd_program: str, gene_info_filepath: str) -> None:
         cluster_model: models.Cluster = models.Cluster(hapibd_file)
 
         cluster_model.load_file(gene_tuple.start, gene_tuple.end, indices.str_indx, indices.end_indx)
-        # This line will filter the dataframe for only those pairs that have the same phase
+        # This line will filter the dataframe for only those pairs that have the same phase9
         cluster_model.filter_for_haplotype(indices.id1_phase_indx, indices.id2_phase_indx)
 
         pass

@@ -2,6 +2,7 @@ from dataclasses import dataclass
 import pandas as pd
 from typing import Dict, List
 from models import Pairs
+import os
 
 @dataclass
 class Cluster:
@@ -29,6 +30,9 @@ class Cluster:
             if not filtered_chunk.empty:
                 self.ibd_df = pd.concat(self.ibd_df, filtered_chunk)
 
+        if os.environ.get("verbose", "False") == "True":
+            print(f"Found {self.ibd_df.shape[0]} individuals that overlap the given gene region")
+            
     def filter_for_haplotype(self, phase_1_indx: int, phase_2_indx: int) -> None:
         """Method that will filter the dataframe for only those haplotypes phases for pair 1 and pair 2 that match
         
@@ -42,6 +46,9 @@ class Cluster:
         """
 
         self.ibd_df = self.ibd_df[self.ibd_df[phase_1_indx] == self.ibd_df[phase_2_indx]]
+
+        if os.environ.get("verbose", "False") == "True":
+            print(f"Found {self.ibd_df.shape[0]} pairs that have matching haplotypes")
 
     def find_networks(self) -> Dict[int: Dict]:
         """Method that will go through the dataframe and will identify networks.

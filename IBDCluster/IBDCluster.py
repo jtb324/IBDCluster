@@ -1,14 +1,9 @@
 from dotenv import load_dotenv
 import callbacks
 import typer
-import pandas as pd
-from collections import namedtuple
-from typing import List, Optional, Dict, Set
-from glob import glob
 import os
-from dataclasses import dataclass, field
-# import cluster
-from numpy import where
+import cluster
+
 
 
 app = typer.Typer(
@@ -16,6 +11,24 @@ app = typer.Typer(
     help="Tool that identifies ibd sharing for specific loci for individuals within biobanks",
 )
 
+def load_env_var(verbose: bool, loglevel: str) -> None:
+    """Function that will add variables to the environment
+    
+    Parameters
+    
+    verbose : bool
+        either true of False for if the user wants a more verbose setting
+        
+    loglevel : str
+        level the user wishes to set for logging. It defaults to INFO
+    """
+    if verbose:
+        print(f"adding verbosity settings and logging levels to environmental variables")
+        
+    os.environ["verbose"] = str(verbose)
+    os.environ["loglevel"] = loglevel
+
+    
 @app.command
 def main(
     IBD_programs: str = typer.Option(
@@ -26,6 +39,13 @@ def main(
     env: str = typer.Option(
         "../.env",
         help="Filepath to an env file that has configuration setting. Program assumes that the default path is ../.env from the main file IBDCluster.py"
+    ),
+    gene_info_file: str = typer.Option(
+        ...,
+        "--gene_file",
+        "-g",
+        help="Filepath to a text file that has information about the genes it should have four columns: Gene name, chromosome, gene start, and gene end. The file is expected to not have a header",
+        callback=callbacks.check_gene_file,
     ),
     verbose: bool = typer.Option(
         False, 
@@ -44,7 +64,7 @@ def main(
     #loading in environmental variables from an env file
     load_dotenv(env)
 
-
+    cluster.find_cluster(IBD_programs, gene_info_file)
 
 if __name__ == "__main__":
     app()
