@@ -178,19 +178,19 @@ class Cluster:
         
         # getting all the connections based on the new_individuals grids
         secondary_connections: pd.DataFrame = self.ibd_df[(self.ibd_df[indices.id1_indx].isin(new_individuals)) | (self.ibd_df[indices.id2_indx].isin(new_individuals))]
-
+        # print(f"secondary carriers: {secondary_connections.shape[0]}")
         # excluding the exclusion individual from the secondary connections because we 
         # already have these connections
         excluded_df: pd.DataFrame = secondary_connections[~(secondary_connections[indices.id1_indx].isin(exclusion)) & ~(secondary_connections[indices.id2_indx].isin(exclusion))]
-        
+        # print(f"excluded carriers: {excluded_df.shape[0]}")
         if not excluded_df.empty:
             # getting a list of all new individuals 
             new_connections: List[str] = list(set(excluded_df[indices.id1_indx].values.tolist() + excluded_df[indices.id2_indx].values.tolist())) 
-
+            # print([iid for iid in new_connections if iid in exclusion])
             # This will extend all the list of pairs for the network to include the new 
             # pairs 
             network_dict[self.network_id]["pairs"].extend(list(excluded_df.apply(lambda row: self._determine_pairs(row, indices), axis=1)))
-
+            
             # need to create a list of people in the network
             network_dict[self.network_id]["in_network"].update(self._determine_iids_in_network(excluded_df, indices))
 
@@ -231,8 +231,6 @@ class Cluster:
         # iterate over each iid in the original dataframe
         for ind in iid_list:
 
-            
-
             # if this iid has already been associated with a network then we need to skip it. If not then we can get the network connected to it
             if ind not in self.individuals_in_network:
                 
@@ -240,7 +238,7 @@ class Cluster:
                 network_info[self.network_id] = {}
 
                 filtered_df: pd.DataFrame = self.ibd_df[(self.ibd_df[indices.id1_indx] == ind) | (self.ibd_df[indices.id2_indx] == ind)]
-
+                # print(f"initial cluster: {filtered_df.shape[0]}")
                 # forming a list of Pair objects that will be added to the network_info_dict in a pairs key
                 network_info[self.network_id]["pairs"] = list(filtered_df.apply(lambda row: self._determine_pairs(row, indices), axis=1))
 
@@ -260,7 +258,7 @@ class Cluster:
                 # seeding individual
                 self._find_secondary_connections(
                     [iid for iid in network_info[self.network_id]["in_network"] if iid != ind], 
-                    set(ind), 
+                    set([ind]), 
                     indices,
                     network_info
                     )
@@ -272,9 +270,9 @@ class Cluster:
 
         # we can reset the network_id for the next cluster
         self.network_id = 1
-
-        return network_info
         print(network_info)
+        return network_info
+        
 
 
 

@@ -5,6 +5,8 @@ import callbacks
 import typer
 import os
 import cluster
+from typing import Dict, Tuple
+from models import Writer, Pair_Writer
 
 
 app = typer.Typer(
@@ -37,6 +39,10 @@ def main(
         help="IBD detection software that the output came from. The program expects these values to be hapibd or ilash",
         callback=callbacks.check_ibd_program,
     ),
+    output: str = typer.Option(
+        "./",
+        help="directory to write the output files into."
+    ),
     env: str = typer.Option(
         ...,
         help="Filepath to an env file that has configuration setting. Program assumes that the default path is ../.env from the main file IBDCluster.py"
@@ -66,7 +72,13 @@ def main(
     load_dotenv(env)
 
     load_env_var(verbose, loglevel)
-    cluster.find_clusters(IBD_programs, gene_info_file)
+    
+    networks: Dict[Tuple[str, int], Dict] = cluster.find_clusters(IBD_programs, gene_info_file)
+
+    write_obj = Writer()
+    
+    for gene, networks in networks.items():
+        write_obj.set_writer(Pair_Writer(gene[0], gene[1], ...))
 
 if __name__ == "__main__":
     app()

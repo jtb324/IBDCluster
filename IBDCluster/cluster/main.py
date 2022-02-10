@@ -1,4 +1,4 @@
-from typing import Generator, List, Set
+from typing import Dict, Generator, List, Set, Dict, Tuple
 from collections import namedtuple
 from dataclasses import dataclass, field
 import os
@@ -61,8 +61,11 @@ def get_ibd_program(ibd_program: str):
 
 
 
-def find_clusters(ibd_program: str, gene_info_filepath: str) -> None:
+def find_clusters(ibd_program: str, gene_info_filepath: str) -> Dict[Tuple[str, int], Dict]:
     """Main function that will handle the clustering into networks"""
+
+    # create a dictionary that will have the gene name and chromosome as keys and the network information as values
+    return_dict: Dict[Tuple[str, int], Dict] = {}
 
     # we will need the information for the correct ibd_program
     indices: models.File_Info = get_ibd_program(ibd_program)
@@ -85,5 +88,10 @@ def find_clusters(ibd_program: str, gene_info_filepath: str) -> None:
         # This line will filter the dataframe for only those pairs that have the same phase
         cluster_model.filter_for_haplotype(indices.id1_phase_indx, indices.id2_phase_indx)
 
-        _ = cluster_model.find_networks(indices)
-        pass
+        network_info: Dict = cluster_model.find_networks(indices)
+
+        return_dict[(gene_tuple.name, gene_tuple.chr)] = network_info
+
+    return return_dict
+        
+
