@@ -50,16 +50,17 @@ class Pair_Writer:
 
     def write(self, **kwargs) -> None:
         """Method to write the output to an allpairs.txt file"""
+        # get the necessary information from the kwargs
         output_dir: str = kwargs["output"]
         networks_info: Dict = kwargs["network_info"]
         ibd_program: str = kwargs["program"]
-
-        with open(
-            os.path.join(output_dir, self.gene_name, "_allpairs.txt"), "w"
-        ) as output_file:
+        
+        # opening the file and then writting the information from each 
+        # pair to that file. A file will be created for each gene
+        with open(os.path.join(output_dir, "IBD_", self.gene_name, "_allpairs.txt"), "w") as output_file:
 
             output_file.write(
-                "program\tnetwork_id\tpair_1\tpair_2\tchromosome\tgene_name\tpair_1_carrier_status\tpair_2_carrier_status\tphase_1\tphase_2\tstart\tend\tlength\n"
+                "program\tnetwork_id\tpair_1\tpair_2\tchromosome\tgene_name\tphase_1\tphase_2\tstart\tend\tlength\n"
             )
             for network_id, info in networks_info.items():
 
@@ -76,6 +77,7 @@ class Pair_Writer:
                             ibd_program,
                         )
                     )
+
 
 @dataclass
 class Network_Writer:

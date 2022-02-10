@@ -16,11 +16,9 @@ class Pairs:
     def format_info(
         self,
         gene: str,
-        pair_1_carrier_status: int,
-        pair_2_carrier_status: int,
         network_id: int,
         ibd_program: str,
     ) -> str:
         """Function that will formation the information so that it can easily be written to the allpairs.txt file"""
-        return f"{ibd_program}\t{network_id}{self.pair_1}\t{self.pair_2}\t{self.chromosome}\t{gene}\t{pair_1_carrier_status}\t{pair_2_carrier_status}\t{self.phase_1}\t{self.phase_2}\t{self.segment_start}\t{self.segment_end}\t{self.length}\n"
+        return f"{ibd_program}\t{network_id}{self.pair_1}\t{self.pair_2}\t{self.chromosome}\t{gene}\t{self.phase_1}\t{self.phase_2}\t{self.segment_start}\t{self.segment_end}\t{self.length}\n"
 
