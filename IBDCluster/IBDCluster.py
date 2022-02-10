@@ -1,9 +1,10 @@
+#!/usr/bin/env python 
+
 from dotenv import load_dotenv
 import callbacks
 import typer
 import os
 import cluster
-
 
 
 app = typer.Typer(
@@ -24,12 +25,12 @@ def load_env_var(verbose: bool, loglevel: str) -> None:
     """
     if verbose:
         print(f"adding verbosity settings and logging levels to environmental variables")
-        
+    print(verbose)
     os.environ["verbose"] = str(verbose)
     os.environ["loglevel"] = loglevel
 
     
-@app.command
+@app.command()
 def main(
     IBD_programs: str = typer.Option(
         "hapibd",
@@ -37,7 +38,7 @@ def main(
         callback=callbacks.check_ibd_program,
     ),
     env: str = typer.Option(
-        "../.env",
+        ...,
         help="Filepath to an env file that has configuration setting. Program assumes that the default path is ../.env from the main file IBDCluster.py"
     ),
     gene_info_file: str = typer.Option(
@@ -64,7 +65,8 @@ def main(
     #loading in environmental variables from an env file
     load_dotenv(env)
 
-    cluster.find_cluster(IBD_programs, gene_info_file)
+    load_env_var(verbose, loglevel)
+    cluster.find_clusters(IBD_programs, gene_info_file)
 
 if __name__ == "__main__":
     app()

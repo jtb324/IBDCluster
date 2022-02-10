@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Optional
 
 class IncorrectFileType(Exception):
     """Error that will be raised if the gene info file is not a text file"""
@@ -48,9 +49,11 @@ def check_gene_file(gene_filepath: str) -> str:
     str
         returns the filepath
     """
-    gene_filepath = Path(gene_filepath)
+    file_path = Path(gene_filepath)
 
-    if not gene_filepath.exists():
+    if not file_path.exists():
         raise FileNotFoundError
     if gene_filepath[-4:] != ".txt":
         raise IncorrectFileType(gene_filepath[-4:], "The filetype provided for the gene info file is incorrect. Please provided a tab delimited text file")
+    
+    return gene_filepath

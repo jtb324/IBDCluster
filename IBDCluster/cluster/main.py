@@ -2,20 +2,19 @@ from typing import Generator, List, Set
 from collections import namedtuple
 from dataclasses import dataclass, field
 import os
-from IBDCluster.models import cluster_class
 import models
 import pandas as pd
 
 
-@dataclass
-class Grids_Found:
-    ids_found: Set[str] = field(default_factory=set)
-    new_grids: List[str] = field(
-        default_factory=list
-    )  # This attribute will be a list of all new grids found during each cluster iteration
-    all_grids_found: Set[str] = field(
-        default_factory=set
-    )  # This attribute will be a set of all nthe grids found during the entire clustering
+# @dataclass
+# class Grids_Found:
+#     ids_found: Set[str] = field(default_factory=set)
+#     new_grids: List[str] = field(
+#         default_factory=list
+#     )  # This attribute will be a list of all new grids found during each cluster iteration
+#     all_grids_found: Set[str] = field(
+#         default_factory=set
+#     )  # This attribute will be a set of all nthe grids found during the entire clustering
 
 
 def load_gene_info(filepath: str) -> Generator:
@@ -55,9 +54,9 @@ def get_ibd_program(ibd_program: str):
         returns either a clusters.Hapibd_Info object or clusters.Ilash_Info object
     """
     if ibd_program == "hapibd":
-        return models.Hapibd_Info()
+        return models.Hapibd_Info(file_dir=os.environ.get("hapibd_files"))
     else:
-        return models.Ilash_Info()
+        return models.Ilash_Info(file_dir=os.environ.get("ilash_files"))
 
 
 
@@ -67,6 +66,9 @@ def find_clusters(ibd_program: str, gene_info_filepath: str) -> None:
 
     # we will need the information for the correct ibd_program
     indices: models.File_Info = get_ibd_program(ibd_program)
+
+    # gather all the ibd files into an attribute of the indice class called self.ibd_files
+    indices.gather_files()
 
     # creating a generator that returns the Genes namedtuple from the load_gene_info function
     gene_generator: Generator = load_gene_info(gene_info_filepath)
@@ -78,10 +80,10 @@ def find_clusters(ibd_program: str, gene_info_filepath: str) -> None:
 
         hapibd_file: str = indices.find_file("".join(["chr", gene_tuple.chr]))
         
-        cluster_model: models.Cluster = models.Cluster(hapibd_file)
-
+        cluster_model: models.Cluster = models.Cluster(gene_tuple.name, hapibd_file)
         cluster_model.load_file(gene_tuple.start, gene_tuple.end, indices.str_indx, indices.end_indx)
-        # This line will filter the dataframe for only those pairs that have the same phase9
+        # This line will filter the dataframe for only those pairs that have the same phase
         cluster_model.filter_for_haplotype(indices.id1_phase_indx, indices.id2_phase_indx)
 
+        _ = cluster_model.find_networks(indices)
         pass
