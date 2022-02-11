@@ -24,7 +24,7 @@ class File_Info:
 
     def gather_files(self) -> None:
         """Function that will gather together all the files in the file_dir that have the ext and will store them in a list"""
-        print(self.file_dir)
+
         self.ibd_files: List[str] = []
         for file in glob(os.path.join(self.file_dir, self.ext)):
 

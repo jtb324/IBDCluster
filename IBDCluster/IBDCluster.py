@@ -6,7 +6,7 @@ import typer
 import os
 import cluster
 from typing import Dict, Tuple
-from models import Writer, Pair_Writer
+from models import Writer, Pair_Writer, Network_Writer
 
 
 app = typer.Typer(
@@ -27,24 +27,30 @@ def load_env_var(verbose: bool, loglevel: str) -> None:
     """
     if verbose:
         print(f"adding verbosity settings and logging levels to environmental variables")
-    print(verbose)
+
     os.environ["verbose"] = str(verbose)
     os.environ["loglevel"] = loglevel
 
     
 @app.command()
 def main(
-    IBD_programs: str = typer.Option(
+    IBD_program: str = typer.Option(
         "hapibd",
+        "--ibd",
+        "-i",
         help="IBD detection software that the output came from. The program expects these values to be hapibd or ilash",
         callback=callbacks.check_ibd_program,
     ),
     output: str = typer.Option(
         "./",
+        "--output",
+        "-o",
         help="directory to write the output files into."
     ),
     env: str = typer.Option(
         ...,
+        "--env",
+        "-e",
         help="Filepath to an env file that has configuration setting. Program assumes that the default path is ../.env from the main file IBDCluster.py"
     ),
     gene_info_file: str = typer.Option(
@@ -53,6 +59,11 @@ def main(
         "-g",
         help="Filepath to a text file that has information about the genes it should have four columns: Gene name, chromosome, gene start, and gene end. The file is expected to not have a header",
         callback=callbacks.check_gene_file,
+    ),
+    cM_threshold: int = typer.Option(
+        3,
+        "--cM",
+        help="Centimorgan threshold to filter the ibd segments",
     ),
     verbose: bool = typer.Option(
         False, 
@@ -73,12 +84,14 @@ def main(
 
     load_env_var(verbose, loglevel)
     
-    networks: Dict[Tuple[str, int], Dict] = cluster.find_clusters(IBD_programs, gene_info_file)
+    networks: Dict[Tuple[str, int], Dict] = cluster.find_clusters(IBD_program, gene_info_file, cM_threshold)
 
-    write_obj = Writer()
+    write_obj = Writer(IBD_program)
     
-    for gene, networks in networks.items():
-        write_obj.set_writer(Pair_Writer(gene[0], gene[1], ...))
+    for gene, networks_info in networks.items():
+        write_obj.set_writer(Network_Writer(gene[0], gene[1]))
+
+        write_obj.write_to_file(output, networks_info)
 
 if __name__ == "__main__":
     app()

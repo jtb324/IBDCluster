@@ -88,10 +88,14 @@ class Network_Writer:
         """Method to write the output to a networks.txt file"""
         output_dir: str = kwargs["output"]
         networks_info: Dict = kwargs["network_info"]
+        ibd_program: str = kwargs["program"]
 
         with open(
-            os.path.join(output_dir, self.gene_name, "_networks.txt"), "w"
+            os.path.join(output_dir, self.gene_name + "_networks.txt"), "w+"
         ) as output_file:
+            output_file.write("network_id\tprogram\tgene\tchromosome\tIIDs\thaplotypes\n")
             for network_id, info in networks_info.items():
-                pass
+                output_file.write(f"{network_id}\t{ibd_program}\t{self.gene_name}\t{self.chromosome}\t{', '.join(info['in_network'])}\t{', '.join(info['haplotypes'])}\n")
+                
+
 

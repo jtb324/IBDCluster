@@ -61,7 +61,7 @@ def get_ibd_program(ibd_program: str):
 
 
 
-def find_clusters(ibd_program: str, gene_info_filepath: str) -> Dict[Tuple[str, int], Dict]:
+def find_clusters(ibd_program: str, gene_info_filepath: str, cM_threshold: int) -> Dict[Tuple[str, int], Dict]:
     """Main function that will handle the clustering into networks"""
 
     # create a dictionary that will have the gene name and chromosome as keys and the network information as values
@@ -84,9 +84,12 @@ def find_clusters(ibd_program: str, gene_info_filepath: str) -> Dict[Tuple[str, 
         hapibd_file: str = indices.find_file("".join(["chr", gene_tuple.chr]))
         
         cluster_model: models.Cluster = models.Cluster(gene_tuple.name, hapibd_file)
+
         cluster_model.load_file(gene_tuple.start, gene_tuple.end, indices.str_indx, indices.end_indx)
+        # filtering the dataframe to >= specific centimorgan threshold
+        cluster_model.filter_cM_threshold(cM_threshold, indices.cM_indx)
         # This line will filter the dataframe for only those pairs that have the same phase
-        cluster_model.filter_for_haplotype(indices.id1_phase_indx, indices.id2_phase_indx)
+        # cluster_model.filter_for_haplotype(indices.id1_phase_indx, indices.id2_phase_indx)
 
         network_info: Dict = cluster_model.find_networks(indices)
 

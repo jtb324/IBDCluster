@@ -45,26 +45,45 @@ class Cluster:
             individ: List[str] = list(set(self.ibd_df[0].values.tolist() + self.ibd_df[2].values.tolist()))
 
             print(f"Found {len(individ)} individuals that overlap the given gene region")
-            
-    def filter_for_haplotype(self, phase_1_indx: int, phase_2_indx: int) -> None:
-        """Method that will filter the dataframe for only those haplotypes phases for pair 1 and pair 2 that match
+
+    def filter_cM_threshold(self, cM_threshold: int, len_index: int) -> None:
+        """Method that will filter the self.ibd_df to only individuals larger than the specified threshold. This should be run after the load_file method.
         
         Parameters
         
-        phase_1_indx : int
-            integer that tells which column in the file has the phasing information for the first individual
-            
-        phase_2_indx : int
-            integer that tells whichh columb in the file has the phasing information for the second individual
-        """
+        cM_threshold : int
+            threshold to filter the file lengths on
+        
+        len_index : index
+            column index for the hapibd or ilash file to find the lengths of each segment for
+        """  
+        
+        self.ibd_df = self.ibd_df[self.ibd_df[len_index] >= cM_threshold]
 
-        self.ibd_df = self.ibd_df[self.ibd_df[phase_1_indx] == self.ibd_df[phase_2_indx]]
-
+        print(self.ibd_df[len_index].value_counts())
         if os.environ.get("verbose", "False") == "True":
-            print(f"Found {self.ibd_df.shape[0]} pairs that have matching haplotypes")
+
+            print(f"Found {self.ibd_df.shape[0]} pairs that overlap the given gene region")
+
+    # def filter_for_haplotype(self, phase_1_indx: int, phase_2_indx: int) -> None:
+    #     """Method that will filter the dataframe for only those haplotypes phases for pair 1 and pair 2 that match
+        
+    #     Parameters
+        
+    #     phase_1_indx : int
+    #         integer that tells which column in the file has the phasing information for the first individual
+            
+    #     phase_2_indx : int
+    #         integer that tells whichh columb in the file has the phasing information for the second individual
+    #     """
+
+    #     self.ibd_df = self.ibd_df[self.ibd_df[phase_1_indx] == self.ibd_df[phase_2_indx]]
+
+    #     if os.environ.get("verbose", "False") == "True":
+    #         print(f"Found {self.ibd_df.shape[0]} pairs that have matching haplotypes")
 
     @staticmethod
-    def _find_all_grids(dataframe: pd.DataFrame, ind_1_indx: int, ind_2_indx: int) -> List[str]:
+    def _find_all_grids(dataframe: pd.DataFrame, indices) -> List[str]:
         """Method that will take the dataframe that is filtered for the location and the haplotype and return 
         a list of all unique individuals in that dataframe
         
@@ -74,18 +93,23 @@ class Cluster:
             dataframe that has the pairs of individuals who share an ibd segment. This dataframe is filtered for a 
             specific loci and matching haplotype phase.
 
-        ind_1_indx : int
-            integer for the column that has the individual 1 IIDs
-
-        ind_2_indx : int
-            integer for the column that has the individual 2 IIDs
+        indices : File_Info
+            object that has all the indices for the file of interest
             
         Returns
         
         List[str]
             returns a list of unique individuals in the dataframe
         """
-        return list(set(dataframe[ind_1_indx].values.tolist()+dataframe[ind_2_indx].values.tolist()))
+        dataframe["ind_1"] = dataframe[indices.id1_indx] + "." + dataframe[indices.id1_phase_indx].astype(str)
+
+        dataframe["ind_2"] = dataframe[indices.id2_indx] + "." + dataframe[indices.id2_phase_indx].astype(str)
+
+        # adding these new categories as indices to the indices object
+        indices.ind1_with_phase = "ind_1"
+        indices.ind2_with_phase = "ind_2"
+
+        return list(set(dataframe["ind_1"].values.tolist()+dataframe["ind_2"].values.tolist()))
 
     @staticmethod
     def _determine_pairs(ibd_row: pd.Series, indices: File_Info) -> Pairs:
@@ -93,9 +117,9 @@ class Cluster:
 
         return Pairs(
             ibd_row[indices.id1_indx],
-            ibd_row[indices.id1_phase_indx],
+            ibd_row[indices.ind1_with_phase],
             ibd_row[indices.id2_indx],
-            ibd_row[indices.id2_phase_indx],
+            ibd_row[indices.ind2_with_phase],
             ibd_row[indices.chr_indx],
             ibd_row[indices.str_indx],
             ibd_row[indices.end_indx],
@@ -103,7 +127,7 @@ class Cluster:
             )
     
     @staticmethod
-    def _determine_iids_in_network(dataframe: pd.DataFrame, indices: File_Info) -> Set[str]:
+    def _determine_iids_in_network(dataframe: pd.DataFrame, pair_1_indx: int, pair_2_indx: int) -> Set[str]:
         """Staticmethod that will find all the unique individuals in the dataframe and return that list
         
         Parameters
@@ -119,7 +143,7 @@ class Cluster:
         Set[str]
             returns a list of unique iids that are in the dataframe
         """
-        return set(dataframe[indices.id1_indx].values.tolist()+dataframe[indices.id2_indx].values.tolist())
+        return set(dataframe[pair_1_indx].values.tolist()+dataframe[pair_2_indx].values.tolist())
 
     @staticmethod
     def _gather_haplotypes(dataframe: pd.DataFrame, indices: File_Info) -> Set[str]:
@@ -138,11 +162,11 @@ class Cluster:
         Set[str]
             returns a set of unique haplotypes that are in the dataframe
         """
-        pair_1_haplotypes: List[str] = list(set(list(dataframe[indices.id1_indx] + "." + dataframe[indices.id1_phase_indx].astype('str'))))
+        # pair_1_haplotypes: List[str] = list(set(list(dataframe[indices.id1_indx] + "." + dataframe[indices.id1_phase_indx].astype('str'))))
 
-        pair_2_haplotypes: List[str] = list(set(list(dataframe[indices.id2_indx] + "." + dataframe[indices.id2_phase_indx].astype('str'))))
+        # pair_2_haplotypes: List[str] = list(set(list(dataframe[indices.id2_indx] + "." + dataframe[indices.id2_phase_indx].astype('str'))))
 
-        return set(pair_1_haplotypes+pair_2_haplotypes)
+        return set(dataframe[indices.ind1_with_phase].values.tolist() + dataframe[indices.ind1_with_phase].values.tolist())
     
     def _add_pair_tuples(self, id1: List[str], id2: List[str]) -> None:
         """Method that will add each of the pairs found to the class attribute 'pairs_found'. This atrribute provides a list of tuples that I can later check against to make sure that we are not repeating pair objects
@@ -177,16 +201,16 @@ class Cluster:
         """
         
         # getting all the connections based on the new_individuals grids
-        secondary_connections: pd.DataFrame = self.ibd_df[(self.ibd_df[indices.id1_indx].isin(new_individuals)) | (self.ibd_df[indices.id2_indx].isin(new_individuals))]
-        # print(f"secondary carriers: {secondary_connections.shape[0]}")
+        secondary_connections: pd.DataFrame = self.ibd_df[(self.ibd_df[indices.ind1_with_phase].isin(new_individuals)) | (self.ibd_df[indices.ind2_with_phase].isin(new_individuals))]
+
         # excluding the exclusion individual from the secondary connections because we 
         # already have these connections
-        excluded_df: pd.DataFrame = secondary_connections[~(secondary_connections[indices.id1_indx].isin(exclusion)) & ~(secondary_connections[indices.id2_indx].isin(exclusion))]
-        # print(f"excluded carriers: {excluded_df.shape[0]}")
+        excluded_df: pd.DataFrame = secondary_connections[~(secondary_connections[indices.ind1_with_phase].isin(exclusion)) & ~(secondary_connections[indices.ind2_with_phase].isin(exclusion))]
+
         if not excluded_df.empty:
             # getting a list of all new individuals 
-            new_connections: List[str] = list(set(excluded_df[indices.id1_indx].values.tolist() + excluded_df[indices.id2_indx].values.tolist())) 
-            # print([iid for iid in new_connections if iid in exclusion])
+            new_connections: List[str] = list(set(excluded_df[indices.ind1_with_phase].values.tolist() + excluded_df[indices.ind2_with_phase].values.tolist())) 
+
             # This will extend all the list of pairs for the network to include the new 
             # pairs 
             network_dict[self.network_id]["pairs"].extend(list(excluded_df.apply(lambda row: self._determine_pairs(row, indices), axis=1)))
@@ -194,6 +218,9 @@ class Cluster:
             # need to create a list of people in the network
             network_dict[self.network_id]["in_network"].update(self._determine_iids_in_network(excluded_df, indices))
 
+            # need to create a set of people that are in the network. This will be 
+            # the IIds without the phase information
+            network_dict[self.network_id]["IIDs"] = self._determine_iids_in_network(excluded_df, indices.ind1_with_phase, indices.ind2_with_phase)
             # now need to get a list of haplotypes 
             network_dict[self.network_id]["haplotypes"].update(self._gather_haplotypes(excluded_df, indices))
             # This adds all the grids that are in the network to the class attribute that stores all the individuals that are found in any network
@@ -223,27 +250,31 @@ class Cluster:
             {network_id: {pairs: List[Pair_objects], in_network: List[str], haplotypes_list: List[str]}}. Other data information will be added to this file
         """
         # First need to get a list of all the unique individuals in the network
-        iid_list: List[str] = self._find_all_grids(self.ibd_df, indices.id1_indx, indices.id2_indx)
+        iid_list: List[str] = self._find_all_grids(self.ibd_df, indices)
 
         # creating a dictionary that will return information of interest
         network_info: Dict[int: Dict] = {}
-
+        print(f"ibd_df: {self.ibd_df}")
         # iterate over each iid in the original dataframe
         for ind in iid_list:
-
+            print(ind)
             # if this iid has already been associated with a network then we need to skip it. If not then we can get the network connected to it
             if ind not in self.individuals_in_network:
                 
                 # creating a key in the dictionary for the network id
                 network_info[self.network_id] = {}
 
-                filtered_df: pd.DataFrame = self.ibd_df[(self.ibd_df[indices.id1_indx] == ind) | (self.ibd_df[indices.id2_indx] == ind)]
-                # print(f"initial cluster: {filtered_df.shape[0]}")
+                filtered_df: pd.DataFrame = self.ibd_df[(self.ibd_df[indices.ind1_with_phase] == ind) | (self.ibd_df[indices.ind2_with_phase] == ind)]
+
                 # forming a list of Pair objects that will be added to the network_info_dict in a pairs key
                 network_info[self.network_id]["pairs"] = list(filtered_df.apply(lambda row: self._determine_pairs(row, indices), axis=1))
 
-                # need to create a list of people in the network
-                network_info[self.network_id]["in_network"] = self._determine_iids_in_network(filtered_df, indices)
+                # need to create a list of people in the network. This will be individuals with the phase
+                network_info[self.network_id]["in_network"] = self._determine_iids_in_network(filtered_df, indices.id1_indx, indices.id2_indx)
+
+                # need to create a set of people that are in the network. This will be 
+                # the IIds without the phase information
+                network_info[self.network_id]["IIDs"] = self._determine_iids_in_network(filtered_df, indices.ind1_with_phase, indices.ind2_with_phase)
 
                 # now need to get a list of haplotypes 
                 network_info[self.network_id]["haplotypes"] = self._gather_haplotypes(filtered_df, indices)
@@ -270,7 +301,7 @@ class Cluster:
 
         # we can reset the network_id for the next cluster
         self.network_id = 1
-        print(network_info)
+
         return network_info
         
 
