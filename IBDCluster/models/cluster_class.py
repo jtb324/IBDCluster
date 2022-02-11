@@ -60,7 +60,6 @@ class Cluster:
         
         self.ibd_df = self.ibd_df[self.ibd_df[len_index] >= cM_threshold]
 
-        print(self.ibd_df[len_index].value_counts())
         if os.environ.get("verbose", "False") == "True":
 
             print(f"Found {self.ibd_df.shape[0]} pairs that overlap the given gene region")
@@ -216,11 +215,11 @@ class Cluster:
             network_dict[self.network_id]["pairs"].extend(list(excluded_df.apply(lambda row: self._determine_pairs(row, indices), axis=1)))
             
             # need to create a list of people in the network
-            network_dict[self.network_id]["in_network"].update(self._determine_iids_in_network(excluded_df, indices))
+            network_dict[self.network_id]["in_network"].update(self._determine_iids_in_network(excluded_df, indices.ind1_with_phase, indices.ind2_with_phase))
 
             # need to create a set of people that are in the network. This will be 
             # the IIds without the phase information
-            network_dict[self.network_id]["IIDs"] = self._determine_iids_in_network(excluded_df, indices.ind1_with_phase, indices.ind2_with_phase)
+            network_dict[self.network_id]["IIDs"] = self._determine_iids_in_network(excluded_df, indices.id1_indx, indices.id2_indx)
             # now need to get a list of haplotypes 
             network_dict[self.network_id]["haplotypes"].update(self._gather_haplotypes(excluded_df, indices))
             # This adds all the grids that are in the network to the class attribute that stores all the individuals that are found in any network
@@ -254,10 +253,10 @@ class Cluster:
 
         # creating a dictionary that will return information of interest
         network_info: Dict[int: Dict] = {}
-        print(f"ibd_df: {self.ibd_df}")
+
         # iterate over each iid in the original dataframe
         for ind in iid_list:
-            print(ind)
+
             # if this iid has already been associated with a network then we need to skip it. If not then we can get the network connected to it
             if ind not in self.individuals_in_network:
                 
@@ -270,11 +269,11 @@ class Cluster:
                 network_info[self.network_id]["pairs"] = list(filtered_df.apply(lambda row: self._determine_pairs(row, indices), axis=1))
 
                 # need to create a list of people in the network. This will be individuals with the phase
-                network_info[self.network_id]["in_network"] = self._determine_iids_in_network(filtered_df, indices.id1_indx, indices.id2_indx)
+                network_info[self.network_id]["in_network"] = self._determine_iids_in_network(filtered_df, indices.ind1_with_phase, indices.ind2_with_phase)
 
                 # need to create a set of people that are in the network. This will be 
                 # the IIds without the phase information
-                network_info[self.network_id]["IIDs"] = self._determine_iids_in_network(filtered_df, indices.ind1_with_phase, indices.ind2_with_phase)
+                network_info[self.network_id]["IIDs"] = self._determine_iids_in_network(filtered_df, indices.id1_indx, indices.id2_indx)
 
                 # now need to get a list of haplotypes 
                 network_info[self.network_id]["haplotypes"] = self._gather_haplotypes(filtered_df, indices)
@@ -295,7 +294,9 @@ class Cluster:
                     )
                 
                 print(f"number of iids in network {self.network_id}: {len(network_info[self.network_id]['in_network'])}")
+
                 print(len(self.individuals_in_network))
+
                 self.network_id += 1
 
 

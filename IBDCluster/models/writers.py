@@ -95,7 +95,7 @@ class Network_Writer:
         ) as output_file:
             output_file.write("network_id\tprogram\tgene\tchromosome\tIIDs\thaplotypes\n")
             for network_id, info in networks_info.items():
-                output_file.write(f"{network_id}\t{ibd_program}\t{self.gene_name}\t{self.chromosome}\t{', '.join(info['in_network'])}\t{', '.join(info['haplotypes'])}\n")
+                output_file.write(f"{network_id}\t{ibd_program}\t{self.gene_name}\t{self.chromosome}\t{', '.join(info['IIDs'])}\t{', '.join(info['haplotypes'])}\n")
                 
 
 
