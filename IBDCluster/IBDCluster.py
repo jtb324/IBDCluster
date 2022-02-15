@@ -8,7 +8,7 @@ import cluster
 import analysis
 import pandas as pd
 from typing import Dict, Tuple
-from models import Writer, Pair_Writer, Network_Writer
+from models import Writer
 
 
 app = typer.Typer(
@@ -30,7 +30,7 @@ def load_env_var(verbose: bool, loglevel: str) -> None:
     """
     if verbose:
         print(
-            f"adding verbosity settings and logging levels to environmental variables"
+            "adding verbosity settings and logging levels to environmental variables"
         )
 
     os.environ["verbose"] = str(verbose)
@@ -98,17 +98,14 @@ def main(
 
     # create an object that will be used to write to an
     # appropriate file
-    write_obj = Writer(IBD_program)
+    write_obj = Writer(output, IBD_program)
 
     carriers_df: pd.DataFrame = pd.read_csv(carriers, sep="\t")
 
     for gene, networks_info in networks.items():
         # This is the main function that will run the analysis of the networks
-        analysis.analyzer(gene, networks_info, carriers_df, write_obj)
+        analysis.analyze(gene, networks_info, carriers_df, write_obj)
 
-        # write_obj.set_writer(Network_Writer(gene[0], gene[1]))
-
-        # write_obj.write_to_file(output, networks_info)
 
 
 if __name__ == "__main__":

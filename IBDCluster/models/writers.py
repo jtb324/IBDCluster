@@ -1,16 +1,22 @@
 from dataclasses import dataclass
 from typing import Protocol, Dict, List
 import os
-import pandas as pd
+from collections import namedtuple
+
+CarriersInfo = namedtuple(
+    "Carrier_Comp", ["ind_in_network", "percentage", "IIDs", "pvalue"]
+)
 
 
-class Write_Object(Protocol):
+class WriteObject(Protocol):
     """Interface indicating that the writer object needs to have the methods write to file"""
 
     def _form_phenotype_header(self) -> str:
+        """method used to form a dynamic column header for different phenotypes. That way the columns can scale with different number of phenotypes that are added"""
         ...
 
     def write(self, **kwargs) -> None:
+        """Method used to write out to a file"""
         ...
 
 
@@ -18,67 +24,41 @@ class Write_Object(Protocol):
 class Writer:
     """This will be the overall writer class that is responsible for write information to a file"""
 
+    output: str
     ibd_program: str
 
-    def set_writer(self, writer: Write_Object) -> None:
-        self.writer: Write_Object = writer
+    def set_writer(self, writer: WriteObject) -> None:
+        """Method that will set whether we are writing for networks or pairs"""
+        self.writer: WriteObject = writer
 
-    def write_to_file(self, output: str, networks_dict: Dict) -> None:
+    def write_to_file(self, networks_dict: Dict) -> None:
+        """Method that will call the write method of the self.writer class"""
         self.writer.write(
-            output=output, network_info=networks_dict, program=self.ibd_program
+            output=self.output, network_info=networks_dict, program=self.ibd_program
         )
 
 
 @dataclass
-class Pair_Writer:
+class PairWriter:
+    """Class object that will handle the string formatting and output for the allpairs.txt file"""
+
     gene_name: str
     chromosome: str
-    carriers_matrix: pd.DataFrame
-
-    def check_carriers(self, pair_id: str) -> int:
-        """Function to check if pair 1 or pair 2 is a carrier. If not then it returns a 0, if it is then it returns a 1
-
-        pair_id : str
-            id of the pair of interest"""
-
-        return int(pair_id in self.carriers_matrix)
+    phenotype_list: List[str]
 
     def _form_phenotype_header(self) -> str:
         """Method that will form the phenotype section of the header string"""
-        # pulling out all of the phenotype names from the carriers matrix
-        columns: List[str] = list(self.carriers_matrix.columns)
+
         # Appending the word Pair_1/Pair_2 to the column label and then joining them
         # into a string
-        pair_1_section: str = "\t".join(["Pair_1_" + label for label in columns])
-        pair_2_section: str = "\t".join(["Pair_2_" + label for label in columns])
+        pair_1_section: str = "\t".join(
+            ["Pair_1_" + label for label in self.phenotype_list]
+        )
+        pair_2_section: str = "\t".join(
+            ["Pair_2_" + label for label in self.phenotype_list]
+        )
 
         return "\t".join([pair_1_section, pair_2_section])
-
-    def _determine_carrier_status(self, pair_id: str) -> str:
-        """Method that will determine if the pair id is a carrier for any of the phenotypes listed
-
-        Parameters
-
-        pair_id : str
-            IID for each individual
-
-        Returns
-
-        str
-            returns a string that has tab separated 0's or 1's whether the individual is
-            a carrier or not
-        """
-        pair_df: pd.DataFrame = self.carriers_matrix[
-            self.carriers_matrix["grids"] == pair_id
-        ]
-
-        if not pair_id.empty:
-            carrier_status: List[int] = pair_df[pair_df.columns[1:]].values.tolist()
-
-            return "\t".join([str(status) for status in carrier_status])
-
-        else:
-            return "\t".join(["N/A"] * len(self.carriers_matrix.columns[1:]))
 
     def write(self, **kwargs) -> None:
         """Method to write the output to an allpairs.txt file"""
@@ -90,11 +70,15 @@ class Pair_Writer:
         # opening the file and then writting the information from each
         # pair to that file. A file will be created for each gene
         with open(
-            os.path.join(output_dir, "IBD_", self.gene_name, "_allpairs.txt"), "w"
+            os.path.join(
+                output_dir, "".join(["IBD_", self.gene_name, "_allpairs.txt"])
+            ),
+            "w",
+            encoding="utf-8",
         ) as output_file:
 
             output_file.write(
-                f"program\tnetwork_id\tpair_1\tpair_2\tchromosome\tgene_name\tphase_1\tphase_2\t{self._form_phenotype_header()}\tstart\tend\tlength\n"
+                f"program\tnetwork_id\tpair_1\tpair_2\tphase_1\tphase_2\tchromosome\tgene_name\t{self._form_phenotype_header()}\tstart\tend\tlength\n"
             )
             for network_id, info in networks_info.items():
 
@@ -103,41 +87,91 @@ class Pair_Writer:
                 for pair in pairs:
 
                     output_file.write(
-                        pair.format_info(
-                            self.gene_name,
-                            self.check_carriers(pair.pair_1),
-                            self.check_carriers(pair.pair_2),
-                            network_id,
-                            ibd_program,
-                        )
+                        f"{ibd_program}\t{network_id}\t{pair.form_id_str()}\t{pair.chromosome}\t{self.gene_name}\t{pair.carrier_str_1}\t{pair.carrier_str_2}\t{pair.form_segment_info_str()}"
                     )
 
 
 @dataclass
-class Network_Writer:
+class NetworkWriter:
+    """Class that is responsible for creating the _networks.txt file from the information provided"""
+
     gene_name: str
     chromosome: str
-    carriers_df: str
+    carriers_columns: List[str]
 
     def _form_phenotype_header(self) -> str:
-        """Method that will form the phenotype section of the header string"""
-        # pulling out all of the phenotype names from the carriers matrix
-        columns: List[str] = list(self.carriers_matrix.columns)
+        """Method that will form the phenotype section of the header string. Need to
+        append the words ind_in_network, percentage_in_net, carrier_IIDs, and pvalue to
+        the phenotype name."""
 
-        return "\t".join(columns)
+        column_list: List[str] = []
+        # pulling out all of the phenotype names from the carriers matrix
+        for column in self.carriers_columns:
+
+            column_list.extend(
+                [
+                    column + ending
+                    for ending in [
+                        "_ind_in_network",
+                        "_percentage_in_net",
+                        "_carrier_IIDs",
+                        "_pvalue",
+                    ]
+                ]
+            )
+
+        return "\t".join(column_list)
+
+    def _form_analysis_string(self, analysis_dict: Dict[str, CarriersInfo]) -> str:
+        """Method that will form a string for each phenotype. We need to use the self.carriers_columns so that the values line up with the columns
+
+        Parameters
+
+        analysis_dict : Dict[str, CarriersInfo]
+            Dictionary that has the phenotypes as keys and a namedtuple, Carrier_Comp as the key with info about the carrier count/percentage in network, the IIDs in network and the pvalue
+
+        Returns
+
+        str
+            returns a tab separated string that has all of the values
+        """
+
+        output_str: str = ""
+
+        # iteratign over every phenotype in the carrier_columns list.
+        # Adds all of the CarrierInfo attributes to these string for each phenotype.
+        # These are all tab separated
+        for phenotype in self.carriers_columns:
+
+            analysis_obj: CarriersInfo = analysis_dict[phenotype]
+
+            if analysis_obj.ind_in_network != 0:
+                output_str += f"{analysis_obj.ind_in_network}\t{analysis_obj.percentage}\t{', '.join(analysis_obj.IIDs)}\t{analysis_obj.pvalue}\t"
+            else:
+                output_str += f"{analysis_obj.ind_in_network}\t{analysis_obj.percentage}\t{'N/A'}\t{analysis_obj.pvalue}\t"
+
+        # strips of the final tab space and then replaces it with a newline
+        output_str.rstrip("\t")
+
+        output_str += "\n"
+
+        return output_str
 
     def write(self, **kwargs) -> None:
         """Method to write the output to a networks.txt file"""
         output_dir: str = kwargs["output"]
         networks_info: Dict = kwargs["network_info"]
         ibd_program: str = kwargs["program"]
-        pvalue_dict: Dict[int, float] = kwargs["pvalues"]
 
         with open(
-            os.path.join(output_dir, self.gene_name + "_networks.txt"), "w+"
+            os.path.join(
+                output_dir, "".join([ibd_program, "_", self.gene_name, "_networks.txt"])
+            ),
+            "w+",
+            encoding="utf-8",
         ) as output_file:
             output_file.write(
-                "network_id\tprogram\tgene\tchromosome\tIIDs in Network\tHaplotypes in Network\tIIDs\thaplotypes\n"
+                f"network_id\tprogram\tgene\tchromosome\tIIDs_count\thaplotypes_count\tIIDs\thaplotypes\t{self._form_phenotype_header()}\n"
             )
 
             for network_id, info in networks_info.items():
@@ -151,7 +185,12 @@ class Network_Writer:
                 counts: str = f"{len(info['IIDs'])}\t{len(info['haplotypes'])}"
                 # string that has the list of GRID IIDs and the haplotype phases
                 iids: str = (
-                    f"{', '.join(info['IIDs'])}\t{', '.join(info['haplotypes'])}\n"
+                    f"{', '.join(info['IIDs'])}\t{', '.join(info['haplotypes'])}"
                 )
 
-                output_file.write(f"{networks}\t{counts}\t{iids}")
+                # Getting the phenotype analysis infofrom the object
+                analysis_obj: Dict[str, CarriersInfo] = info["phenotype"]
+
+                analysis_str: str = f"{self._form_analysis_string(analysis_obj)}"
+
+                output_file.write(f"{networks}\t{counts}\t{iids}\t{analysis_str}")

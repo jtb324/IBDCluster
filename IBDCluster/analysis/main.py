@@ -1,13 +1,16 @@
-import os
-import pandas as pd
 from typing import Protocol, Dict, Tuple, List, Set
 from collections import namedtuple
+import pandas as pd
+from models import PairWriter, NetworkWriter
 
-# named tuple that will contain info about the carriers in a specific network as well the percentage, and the IIDs
-Carriers_Comp = namedtuple("Carrier_Comp", ["ind_in_network", "percentage", "IIDs"])
+# named tuple that will contain info about the carriers in a specific network
+# as well the percentage, and the IIDs
+CarriersInfo = namedtuple(
+    "Carrier_Comp", ["ind_in_network", "percentage", "IIDs", "pvalue"]
+)
 
 
-class Write_Object(Protocol):
+class WriteObject(Protocol):
     """Interface indicating that the writer object needs to have the methods write to file"""
 
     def _form_phenotype_header(self) -> str:
@@ -18,7 +21,10 @@ class Write_Object(Protocol):
 
 
 class Writer(Protocol):
-    def set_writer(self, writer: Write_Object) -> None:
+    """Interface that defines that these objects need a write_to_file method 
+    and a set_writer method"""
+
+    def set_writer(self, writer: WriteObject) -> None:
         ...
 
     def write_to_file(self, output: str, networks_dict: Dict) -> None:
@@ -31,10 +37,11 @@ def _generate_carrier_list(carriers_matrix: pd.DataFrame) -> Dict[str, List[str]
 
     # iterating over each phenotype which starts with the
     # second column
-    for column in carriers_matrix[carriers_matrix.columns[1:]]:
+    
+    for column in carriers_matrix.columns[1:]:
 
         filtered_matrix: pd.DataFrame = carriers_matrix[carriers_matrix[column] == 1][
-            "grids", column
+            ["grids", column]
         ]
 
         return_dict[column] = filtered_matrix.grids.values.tolist()
@@ -42,11 +49,142 @@ def _generate_carrier_list(carriers_matrix: pd.DataFrame) -> Dict[str, List[str]
     return return_dict
 
 
+def determine_pvalue() -> float:
+    """Function that will determine the pvalue for each network
+
+    Returns
+
+    float
+        Returns the calculated pvalue
+    """
+    # TODO: Determine how to calculate the binomial
+
+    return 0
+
+
+# FIXME: This needs to be refactored. The function is doing many different things
 def determine_in_networks(
-    carriers_list: Dict[str, List[str]], iids: Set[str]
-) -> Dict[str, Carriers_Comp]:
-    """Method that will determine how many carriers for a specific phenotype are in a network and then create a Carriers_Comp tuple with the info"""
-    ...
+    carriers_list: Dict[str, List[str]], info_dict: Dict[int, Dict]
+) -> None:
+    """Function that will determine information about how many carriers are in each
+    network, the percentage, the IIDs of the carriers in the network, and the pvalue for
+    the network. These values are stored in the namedtuple CarriersInfo, and then
+    finally stored in the phenotype key of the inner info_dict dictionary
+
+    Parameters
+
+    carriers_list : dict[str, List[str]]
+        Dictionaary that has all the carriers in list for each phenotype of interest
+
+    info_dict : Dict[int, Dict]
+        dictionary where the keys are network ids and the inner dictionary has information about the network ind different keys
+    """
+    for _, info in info_dict.items():
+
+        iids_in_network: Set[str] = info["IIDs"]
+
+        phenotype_info: Dict[str, CarriersInfo] = {}
+
+        for phenotype, carriers in carriers_list.items():
+
+            carriers_in_network: List[str] = [
+                iid for iid in iids_in_network if iid in carriers
+            ]
+
+            num_carriers_in_network: int = len(carriers_in_network)
+
+            carrier_info: CarriersInfo = CarriersInfo(
+                num_carriers_in_network,
+                num_carriers_in_network / len(iids_in_network),
+                carriers_in_network,
+                determine_pvalue(),
+            )
+
+            phenotype_info[phenotype] = carrier_info
+
+        info["phenotype"] = phenotype_info
+
+
+def _determine_pair_carrier_status(
+    phenotype_list: List[str], carrier_list: Dict[str, List[str]], pair_id: str
+) -> str:
+    """Function that will iterate over the phenotype list and get a list of carriers for each one and check if the pair id is in each list
+
+    Parameters
+
+    phenotype_list : List[str]
+        List of phenotypes. This gives us a consistent order for the columns in
+        the file
+
+    carrier_list : Dict[str, List[str]]
+        Dictionary that has the phenotypes as keys and list of IIDs that carry that phenotype as values
+
+    pair_id : str
+        id of the pair of interest
+
+    Returns
+
+    str
+        returns a string with either 0's or 1's for whether the individual is a carrier or not. These values will be tab separated
+    """
+    # iterrating over each phenotype to get the carriers
+    carrier_str: str = ""
+
+    for phenotype in phenotype_list:
+
+        carriers: List[str] = carrier_list[phenotype]
+
+        if pair_id in carriers:
+
+            carrier_str += "1\t"
+
+        else:
+
+            carrier_str += "0\t"
+
+    carrier_str = carrier_str.strip("\t")
+
+    return carrier_str
+
+
+def analyze_pair_carrier_status(
+    phenotype_list: List[str],
+    carrier_list: Dict[str, List[str]],
+    info_dict: Dict[int, Dict],
+) -> None:
+    """Function that will iterate through each pair in a network and add the carrier status for each id for each phenotype
+
+    Parameters
+
+    phenotype_list : List[str]
+        List of phenotypes. This gives us a consistent order for the columns in
+        the file
+
+    carriers_list : dict[str, List[str]]
+        Dictionaary that has all the carriers in list for each phenotype of interest
+
+    info_dict : Dict[int, Dict]
+        dictionary where the keys are network ids and the inner dictionary has information about the network ind different keys
+    """
+    for _, info in info_dict.items():
+
+        # getting all of the pair objects and iterate over them
+        pair_list = info["pairs"]
+
+        for pair in pair_list:
+
+            carrier_str_1: str = _determine_pair_carrier_status(
+                phenotype_list, carrier_list, pair.pair_1
+            )
+
+            carrier_str_2: str = _determine_pair_carrier_status(
+                phenotype_list, carrier_list, pair.pair_2
+            )
+
+            pair.carrier_str_1 = carrier_str_1
+
+
+            pair.carrier_str_2 = carrier_str_2
 
 
 def analyze(
@@ -81,9 +219,21 @@ def analyze(
     # generate list of carriers for each phenotype
     carriers_lists: Dict[int, List[str]] = _generate_carrier_list(carriers_pheno_matrix)
 
+    phenotype_list: List[str] = list(carriers_lists.keys())
     # we will iterate over each network and basically
     # determine the number of carriers for each grid as well
     # as the percent
-    for network_id, info in network_info.items():
+    determine_in_networks(carriers_lists, network_info)
 
-        ...
+    # creating the _networks.txt file using the writer object
+    writer.set_writer(NetworkWriter(gene_info[0], gene_info[1], phenotype_list))
+
+    writer.write_to_file(network_info)
+
+    # adding information to the pair about the carrier string
+    analyze_pair_carrier_status(phenotype_list, carriers_lists, network_info)
+
+    # creating the allpairs.txt file
+    writer.set_writer(PairWriter(gene_info[0], gene_info[1], phenotype_list))
+
+    writer.write_to_file(network_info)
