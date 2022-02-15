@@ -5,11 +5,12 @@ description = "A tool to help analyze ibd sharing across a locus of interest for
 authors = ["jtb324 <james.baker@vanderbilt.edu>"]
 
 [tool.poetry.dependencies]
-python = ">=3.8"
+python = ">=3.8, <3.11"
 pandas = "^1.4.0"
 numpy = "^1.22.2"
 typer = "^0.4.0"
 python-dotenv = "^0.19.2"
+scipy = "^1.8.0"
 
 [tool.poetry.dev-dependencies]
 black = "^22.1.0"
