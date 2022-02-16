@@ -1,7 +1,10 @@
 from typing import Protocol, Dict, Tuple, List, Set
 from collections import namedtuple
 import pandas as pd
+from scipy.stats import binom
 from models import PairWriter, NetworkWriter
+import analysis
+
 
 # named tuple that will contain info about the carriers in a specific network
 # as well the percentage, and the IIDs
@@ -21,7 +24,7 @@ class WriteObject(Protocol):
 
 
 class Writer(Protocol):
-    """Interface that defines that these objects need a write_to_file method 
+    """Interface that defines that these objects need a write_to_file method
     and a set_writer method"""
 
     def set_writer(self, writer: WriteObject) -> None:
@@ -37,7 +40,7 @@ def _generate_carrier_list(carriers_matrix: pd.DataFrame) -> Dict[str, List[str]
 
     # iterating over each phenotype which starts with the
     # second column
-    
+
     for column in carriers_matrix.columns[1:]:
 
         filtered_matrix: pd.DataFrame = carriers_matrix[carriers_matrix[column] == 1][
@@ -49,7 +52,12 @@ def _generate_carrier_list(carriers_matrix: pd.DataFrame) -> Dict[str, List[str]
     return return_dict
 
 
-def determine_pvalue() -> float:
+def determine_pvalue(
+    phenotype: str,
+    percentage_pop_phenotypes: Dict[str, int],
+    carriers_count: int,
+    network_size: int,
+) -> float:
     """Function that will determine the pvalue for each network
 
     Returns
@@ -57,14 +65,23 @@ def determine_pvalue() -> float:
     float
         Returns the calculated pvalue
     """
-    # TODO: Determine how to calculate the binomial
+    # the probability is 1 if the carrier count is zero because it is chances of finding
+    # 0 or higher which is everyone
+    if carriers_count == 0:
+        return 1
+    else:
+        prob: float = 1 - binom.cdf(
+            carriers_count - 1, network_size, percentage_pop_phenotypes[phenotype]
+        )
 
-    return 0
+        return prob
 
 
 # FIXME: This needs to be refactored. The function is doing many different things
 def determine_in_networks(
-    carriers_list: Dict[str, List[str]], info_dict: Dict[int, Dict]
+    carriers_list: Dict[str, List[str]],
+    info_dict: Dict[int, Dict],
+    percentage_pop_phenotypes: Dict[str, float],
 ) -> None:
     """Function that will determine information about how many carriers are in each
     network, the percentage, the IIDs of the carriers in the network, and the pvalue for
@@ -97,7 +114,12 @@ def determine_in_networks(
                 num_carriers_in_network,
                 num_carriers_in_network / len(iids_in_network),
                 carriers_in_network,
-                determine_pvalue(),
+                determine_pvalue(
+                    phenotype,
+                    percentage_pop_phenotypes,
+                    num_carriers_in_network,
+                    len(iids_in_network),
+                ),
             )
 
             phenotype_info[phenotype] = carrier_info
@@ -183,7 +205,6 @@ def analyze_pair_carrier_status(
 
             pair.carrier_str_1 = carrier_str_1
 
-
             pair.carrier_str_2 = carrier_str_2
 
 
@@ -219,11 +240,18 @@ def analyze(
     # generate list of carriers for each phenotype
     carriers_lists: Dict[int, List[str]] = _generate_carrier_list(carriers_pheno_matrix)
 
+    # getting the percentage of carriers for each phenotype per the input population
+    percent_carriers_in_pop: Dict[str, float] = analysis.get_percentages(
+        carriers_pheno_matrix
+    )
+    # recording this percentage to keep track of it. CONSIDER JUST ADDING THIS AS ANOTHER CLASS WITHIN THE WRITER
+    analysis.write_to_file(percent_carriers_in_pop, writer.output)
+
     phenotype_list: List[str] = list(carriers_lists.keys())
     # we will iterate over each network and basically
     # determine the number of carriers for each grid as well
     # as the percent
-    determine_in_networks(carriers_lists, network_info)
+    determine_in_networks(carriers_lists, network_info, percent_carriers_in_pop)
 
     # creating the _networks.txt file using the writer object
     writer.set_writer(NetworkWriter(gene_info[0], gene_info[1], phenotype_list))

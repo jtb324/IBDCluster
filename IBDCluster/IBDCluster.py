@@ -87,6 +87,8 @@ def main(
         help="This argument sets the logging level for the program",
     ),
 ) -> None:
+    """Main function for the program that has all the parameters that the user can use with typer
+    """
     # loading in environmental variables from an env file
     load_dotenv(env)
 

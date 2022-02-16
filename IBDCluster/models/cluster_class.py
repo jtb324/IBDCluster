@@ -16,6 +16,7 @@ class File_Info(Protocol):
 @dataclass
 class Cluster:
     """Class object that will handle the formation of the clusters"""
+
     gene_name: str
     ibd_file: str
     pairs_found: List[Tuple] = field(
@@ -78,23 +79,6 @@ class Cluster:
             print(
                 f"Found {self.ibd_df.shape[0]} pairs that overlap the given gene region"
             )
-
-    # def filter_for_haplotype(self, phase_1_indx: int, phase_2_indx: int) -> None:
-    #     """Method that will filter the dataframe for only those haplotypes phases for pair 1 and pair 2 that match
-
-    #     Parameters
-
-    #     phase_1_indx : int
-    #         integer that tells which column in the file has the phasing information for the first individual
-
-    #     phase_2_indx : int
-    #         integer that tells whichh columb in the file has the phasing information for the second individual
-    #     """
-
-    #     self.ibd_df = self.ibd_df[self.ibd_df[phase_1_indx] == self.ibd_df[phase_2_indx]]
-
-    #     if os.environ.get("verbose", "False") == "True":
-    #         print(f"Found {self.ibd_df.shape[0]} pairs that have matching haplotypes")
 
     @staticmethod
     def _find_all_grids(dataframe: pd.DataFrame, indices) -> List[str]:
