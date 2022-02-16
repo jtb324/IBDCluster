@@ -4,7 +4,11 @@ from typing import Dict
 
 level_dict = {
     "info": logging.INFO,
+<<<<<<< HEAD
     "debug": logging.INFO
+=======
+    "debug": logging.DEBUG
+>>>>>>> c26b34fc14f148bb1629760a1ba8eb857a2b94ee
 }
 
 def create_logger(loglevel: str) -> logging.Logger:

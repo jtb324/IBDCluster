@@ -3,6 +3,7 @@ import pandas as pd
 from typing import Dict, List, Set, Protocol, Tuple
 from .pairs import Pairs
 import os
+from tqdm import tqdm
 
 # class protocol that makes sure that the indices object has these methods
 class File_Info(Protocol):
@@ -16,6 +17,7 @@ class File_Info(Protocol):
 @dataclass
 class Cluster:
     """Class object that will handle the formation of the clusters"""
+
     gene_name: str
     ibd_file: str
     pairs_found: List[Tuple] = field(
@@ -78,23 +80,6 @@ class Cluster:
             print(
                 f"Found {self.ibd_df.shape[0]} pairs that overlap the given gene region"
             )
-
-    # def filter_for_haplotype(self, phase_1_indx: int, phase_2_indx: int) -> None:
-    #     """Method that will filter the dataframe for only those haplotypes phases for pair 1 and pair 2 that match
-
-    #     Parameters
-
-    #     phase_1_indx : int
-    #         integer that tells which column in the file has the phasing information for the first individual
-
-    #     phase_2_indx : int
-    #         integer that tells whichh columb in the file has the phasing information for the second individual
-    #     """
-
-    #     self.ibd_df = self.ibd_df[self.ibd_df[phase_1_indx] == self.ibd_df[phase_2_indx]]
-
-    #     if os.environ.get("verbose", "False") == "True":
-    #         print(f"Found {self.ibd_df.shape[0]} pairs that have matching haplotypes")
 
     @staticmethod
     def _find_all_grids(dataframe: pd.DataFrame, indices) -> List[str]:
@@ -244,7 +229,6 @@ class Cluster:
             returns a dictionary with the following structure:
             {network_id: {pairs: List[Pair_objects], in_network: List[str], haplotypes_list: List[str]}}. Other data information will be added to this file
         """
-        # print("next cluster")
         # getting all the connections based on the new_individuals grids
         secondary_connections: pd.DataFrame = self.ibd_df[
             (self.ibd_df[indices.ind1_with_phase].isin(new_individuals))
@@ -266,7 +250,6 @@ class Cluster:
                     + excluded_df[indices.ind2_with_phase].values.tolist()
                 )
             )
-            # print(f"new connections: {new_connections}")
             # This will extend all the list of pairs for the network to include the new
             # pairs
             network_dict[self.network_id]["pairs"].extend(
@@ -283,7 +266,6 @@ class Cluster:
                     excluded_df, indices.ind1_with_phase, indices.ind2_with_phase
                 )
             )
-            # print(f"phased_pairs: {network_dict[self.network_id]['in_network']}")
             # need to create a set of people that are in the network. This will be
             # the IIds without the phase information
             network_dict[self.network_id]["IIDs"].update(
@@ -291,19 +273,14 @@ class Cluster:
                     excluded_df, indices.id1_indx, indices.id2_indx
                 )
             )
-
-            # print(f"pairs: {network_dict[self.network_id]['IIDs']}")
             # now need to get a list of haplotypes
             network_dict[self.network_id]["haplotypes"].update(
                 self._gather_haplotypes(excluded_df, indices)
             )
-            # print(f"haplotypes: {network_dict[self.network_id]['haplotypes']}")
             # This adds all the grids that are in the network to the class attribute that stores all the individuals that are found in any network
             self.individuals_in_network.update(
                 network_dict[self.network_id]["in_network"]
             )
-
-            # print(f"self.individuals_in_network: {self.individuals_in_network}")
             # updating the exclusion set so that the individuals that we seeded of of this iteration are added to it
             exclusion.update(new_individuals)
             # now need to recursively find more connections
@@ -334,9 +311,12 @@ class Cluster:
         # creating a dictionary that will return information of interest
         network_info: Dict[int:Dict] = {}
 
+        # count = 1
         # iterate over each iid in the original dataframe
-        for ind in iid_list:
-
+        # creating a progress bar
+        for i in tqdm(range(len(iid_list)), desc="pairs in clusters"):
+            # getting the individual out of the iid_list
+            ind: str = iid_list[i]
             # if this iid has already been associated with a network then we need to skip it. If not then we can get the network connected to it
             if ind not in self.individuals_in_network:
 
@@ -361,25 +341,19 @@ class Cluster:
                 ] = self._determine_iids_in_network(
                     filtered_df, indices.ind1_with_phase, indices.ind2_with_phase
                 )
-                # print(f"phased_pairs: {network_info[self.network_id]['in_network']}")
                 # need to create a set of people that are in the network. This will be
                 # the IIds without the phase information
                 network_info[self.network_id]["IIDs"] = self._determine_iids_in_network(
                     filtered_df, indices.id1_indx, indices.id2_indx
                 )
-                # print(f"pairs: {network_info[self.network_id]['IIDs']}")
                 # now need to get a list of haplotypes
                 network_info[self.network_id]["haplotypes"] = self._gather_haplotypes(
                     filtered_df, indices
                 )
-                # print(f"haplotypes: {network_info[self.network_id]['haplotypes']}")
                 # This adds all the grids that are in the network to the class attribute that stores all the individuals that are found in any network
                 self.individuals_in_network.update(
                     network_info[self.network_id]["in_network"]
                 )
-
-                # print(f"individuals_in_network: {self.individuals_in_network}")
-
                 # Updating the pairs_found attribute for the pairs that are connected
                 self._add_pair_tuples(
                     filtered_df[indices.id1_indx].values.tolist(),
@@ -399,14 +373,16 @@ class Cluster:
                     network_info,
                 )
 
-                print(
-                    f"number of iids in network {self.network_id}: {len(network_info[self.network_id]['in_network'])}"
-                )
+                # print(
+                #     f"number of iids in network {self.network_id}: {len(network_info[self.network_id]['in_network'])}"
+                # )
 
-                print(len(self.individuals_in_network))
+                # print(len(self.individuals_in_network))
 
                 self.network_id += 1
-
+            # if count ==3:
+            #     break
+            # count += 1
         # we can reset the network_id for the next cluster
         self.network_id = 1
 
