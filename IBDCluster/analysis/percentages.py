@@ -1,8 +1,8 @@
 # script to determine percentages of each phenotype in the subset
 from typing import Dict
-from black import out
 import pandas as pd
 import os
+from tqdm import tqdm
 
 
 def _find_carrier_percentages(
@@ -20,7 +20,13 @@ def _find_carrier_percentages(
         dictionary that has the phenotype name as the key and the
         percentage of carriers out of the population as values
     """
-    percentage_dict[col_series.name] = col_series.value_counts(normalize=True)[1]
+    try:
+        percentage_dict[col_series.name] = col_series.value_counts(normalize=True)[1]
+    except KeyError:
+        print(
+            f"There were no individuals in the population affected by phenotype {col_series.name}"
+        )
+        percentage_dict[col_series.name] = 0
 
 
 def write_to_file(percentage_dict: Dict[str, float], output: str) -> None:
@@ -65,7 +71,9 @@ def get_percentages(carrier_matrix: pd.DataFrame) -> Dict[str, float]:
 
     percent_carriers: Dict[str, float] = {}
 
-    carrier_matrix.iloc[:, 1:].apply(
+    # setting up a progress bar for this operation
+    tqdm.pandas(desc="phenotypes population percentages calculated: ")
+    carrier_matrix.iloc[:, 1:].progress_apply(
         lambda x: _find_carrier_percentages(x, percent_carriers)
     )
 
