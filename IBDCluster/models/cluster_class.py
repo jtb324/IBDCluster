@@ -118,6 +118,8 @@ class Cluster:
         )
         logger.debug(f"Found {len(grids)} unique individual that will be clustered")
 
+        return grids
+
     @staticmethod
     def _determine_pairs(ibd_row: pd.Series, indices: File_Info) -> Pairs:
         """Method that will take each row of the dataframe and convert it into a pair object"""
