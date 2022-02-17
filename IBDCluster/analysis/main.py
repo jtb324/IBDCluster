@@ -4,13 +4,17 @@ import pandas as pd
 from scipy.stats import binom
 from models import PairWriter, NetworkWriter
 import analysis
+from tqdm import tqdm
+import log
 
-
+logger = log.get_logger(__name__)
 # named tuple that will contain info about the carriers in a specific network
 # as well the percentage, and the IIDs
-CarriersInfo = namedtuple(
-    "Carrier_Comp", ["ind_in_network", "percentage", "IIDs", "pvalue"]
-)
+class CarriersInfo(
+    namedtuple("Carrier_Comp", ["ind_in_network", "percentage", "IIDs", "pvalue"])
+):
+    def __str__(self):
+        return f"Carrier Info Object - Individuals in Network: {self.ind_in_network}, Percentages: {self.percentage}, IID List: {self.IIDs}, pvalue: {self.pvalue}"
 
 
 class WriteObject(Protocol):
@@ -48,6 +52,8 @@ def _generate_carrier_list(carriers_matrix: pd.DataFrame) -> Dict[str, List[str]
         ]
 
         return_dict[column] = filtered_matrix.grids.values.tolist()
+
+    logger.debug(f"identified carriers for {len(return_dict.keys())} phenotypes")
 
     return return_dict
 
@@ -96,7 +102,8 @@ def determine_in_networks(
     info_dict : Dict[int, Dict]
         dictionary where the keys are network ids and the inner dictionary has information about the network ind different keys
     """
-    for _, info in info_dict.items():
+
+    for _, info in tqdm(info_dict.items(), desc="Analyzing networks: "):
 
         iids_in_network: Set[str] = info["IIDs"]
 
@@ -123,6 +130,8 @@ def determine_in_networks(
             )
 
             phenotype_info[phenotype] = carrier_info
+
+            logger.debug(carrier_info)
 
         info["phenotype"] = phenotype_info
 
@@ -157,11 +166,11 @@ def _determine_pair_carrier_status(
         carriers: List[str] = carrier_list[phenotype]
 
         if pair_id in carriers:
-
+            logger.debug(f"id {pair_id} is in the list {', '.join(carriers)}")
             carrier_str += "1\t"
 
         else:
-
+            logger.debug(f"id {pair_id} is not in the list {', '.join(carriers)}")
             carrier_str += "0\t"
 
     carrier_str = carrier_str.strip("\t")
@@ -244,7 +253,7 @@ def analyze(
     percent_carriers_in_pop: Dict[str, float] = analysis.get_percentages(
         carriers_pheno_matrix
     )
-    # recording this percentage to keep track of it. CONSIDER JUST 
+    # recording this percentage to keep track of it. CONSIDER JUST
     # ADDING THIS AS ANOTHER CLASS WITHIN THE WRITER
     analysis.write_to_file(percent_carriers_in_pop, writer.output)
 

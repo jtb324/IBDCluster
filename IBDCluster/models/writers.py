@@ -3,6 +3,9 @@ from typing import Protocol, Dict, List
 import os
 from collections import namedtuple
 from tqdm import tqdm
+import log
+
+logger = log.get_logger(__name__)
 
 CarriersInfo = namedtuple(
     "Carrier_Comp", ["ind_in_network", "percentage", "IIDs", "pvalue"]
@@ -34,6 +37,7 @@ class Writer:
 
     def write_to_file(self, networks_dict: Dict) -> None:
         """Method that will call the write method of the self.writer class"""
+        logger.info(f"writing the output to the directory: {self.output}")
         self.writer.write(
             output=self.output, network_info=networks_dict, program=self.ibd_program
         )
@@ -68,12 +72,16 @@ class PairWriter:
         networks_info: Dict = kwargs["network_info"]
         ibd_program: str = kwargs["program"]
 
+        # full filepath to write the output to
+        output_file_name = os.path.join(
+            output_dir, "".join(["IBD_", self.gene_name, "_allpairs.txt"])
+        )
+
+        logger.info(f"Writing the allpairs.txt file to: {output_file_name}")
         # opening the file and then writting the information from each
         # pair to that file. A file will be created for each gene
         with open(
-            os.path.join(
-                output_dir, "".join(["IBD_", self.gene_name, "_allpairs.txt"])
-            ),
+            output_file_name,
             "w",
             encoding="utf-8",
         ) as output_file:
@@ -162,21 +170,25 @@ class NetworkWriter:
 
     def write(self, **kwargs) -> None:
         """Method to write the output to a networks.txt file"""
-        output_dir: str = kwargs["output"]
         networks_info: Dict = kwargs["network_info"]
         ibd_program: str = kwargs["program"]
 
+        output_file_name = os.path.join(
+            kwargs["output"],
+            "".join([ibd_program, "_", self.gene_name, "_networks.txt"]),
+        )
+
+        logger.info(f"Information written to a networks.txt at: {output_file_name}")
+
         with open(
-            os.path.join(
-                output_dir, "".join([ibd_program, "_", self.gene_name, "_networks.txt"])
-            ),
+            output_file_name,
             "w+",
             encoding="utf-8",
         ) as output_file:
             output_file.write(
                 f"network_id\tprogram\tgene\tchromosome\tIIDs_count\thaplotypes_count\tIIDs\thaplotypes\t{self._form_phenotype_header()}\n"
             )
-            
+
             for network_id, info in tqdm(
                 networks_info.items(), desc="Networks written to file: "
             ):

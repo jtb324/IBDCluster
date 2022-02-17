@@ -111,7 +111,7 @@ def main(
         # This is the main function that will run the analysis of the networks
         analysis.analyze(gene, networks_info, carriers_df, write_obj)
 
-
+    logger.info("analysis_finished")
 
 if __name__ == "__main__":
     app()

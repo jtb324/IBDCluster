@@ -87,7 +87,7 @@ def find_clusters(
         # cluster_model.filter_for_haplotype(indices.id1_phase_indx, indices.id2_phase_indx)
 
         network_info: Dict = cluster_model.find_networks(indices)
-
+        
         return_dict[(gene_tuple.name, gene_tuple.chr)] = network_info
 
     return return_dict
