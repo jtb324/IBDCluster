@@ -2,7 +2,9 @@ from typing import Dict, Generator, List, Tuple
 from collections import namedtuple
 import os
 import models
+import log
 
+logger = log.get_logger(__name__)
 
 def load_gene_info(filepath: str) -> Generator:
     """Function that will load in the information for each gene. This function will return a generator
@@ -15,10 +17,11 @@ def load_gene_info(filepath: str) -> Generator:
     Generator
         returns a generator of namedtuples that has the gene information
     """
+
     Genes = namedtuple("Genes", ["name", "chr", "start", "end"])
 
     with open(filepath, "r", encoding="utf-8") as gene_input:
-
+        logger.info(f"Loaded in the gene information from the file, {filepath}, into a generator")
         for line in gene_input:
             split_line: List[str] = line.split()
 
@@ -40,10 +43,12 @@ def get_ibd_program(ibd_program: str):
     Object
         returns either a clusters.Hapibd_Info object or clusters.Ilash_Info object
     """
+    logger.info(f"Building the model that has the necessary indices for the {ibd_program} output")
+
     if ibd_program == "hapibd":
         return models.Hapibd_Info(file_dir=os.environ.get("hapibd_files"))
-    else:
-        return models.Ilash_Info(file_dir=os.environ.get("ilash_files"))
+    
+    return models.Ilash_Info(file_dir=os.environ.get("ilash_files"))
 
 
 def find_clusters(
@@ -58,6 +63,7 @@ def find_clusters(
     indices: models.File_Info = get_ibd_program(ibd_program)
 
     # gather all the ibd files into an attribute of the indice class called self.ibd_files
+    logger.debug(f"gathering all the necessary files for the program: {ibd_program}")
     indices.gather_files()
 
     # creating a generator that returns the Genes namedtuple from the load_gene_info function
@@ -67,7 +73,7 @@ def find_clusters(
     # chromosome number to find the correct file. A Cluster object is then created which loads the pairs
     # that surround a certain location into a dataframe
     for gene_tuple in gene_generator:
-
+        logger.debug(f"finding clusters for the gene: {gene_tuple.name}")
         hapibd_file: str = indices.find_file("".join(["chr", gene_tuple.chr]))
 
         cluster_model: models.Cluster = models.Cluster(gene_tuple.name, hapibd_file)
@@ -81,7 +87,7 @@ def find_clusters(
         # cluster_model.filter_for_haplotype(indices.id1_phase_indx, indices.id2_phase_indx)
 
         network_info: Dict = cluster_model.find_networks(indices)
-
+        
         return_dict[(gene_tuple.name, gene_tuple.chr)] = network_info
 
     return return_dict

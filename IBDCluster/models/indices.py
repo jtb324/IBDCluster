@@ -2,7 +2,9 @@ from dataclasses import dataclass
 import os
 from typing import List, Optional
 from glob import glob
+import log
 
+logger = log.get_logger(__name__)
 
 @dataclass
 class File_Info:
@@ -47,6 +49,8 @@ class File_Info:
         """ 
         ibd_file: str = [file for file in self.ibd_files if "".join([chr_num, "."]) in file][0]
 
+        logger.debug(f"Found the ibd file, {ibd_file}, that matches the chromosome, chr_num")
+        
         return ibd_file
 
 @dataclass
