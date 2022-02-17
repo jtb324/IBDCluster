@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from typing import Protocol, Dict, List
 import os
 from collections import namedtuple
+from tqdm import tqdm
 
 CarriersInfo = namedtuple(
     "Carrier_Comp", ["ind_in_network", "percentage", "IIDs", "pvalue"]
@@ -80,7 +81,7 @@ class PairWriter:
             output_file.write(
                 f"program\tnetwork_id\tpair_1\tpair_2\tphase_1\tphase_2\tchromosome\tgene_name\t{self._form_phenotype_header()}\tstart\tend\tlength\n"
             )
-            for network_id, info in networks_info.items():
+            for network_id, info in tqdm(networks_info.items(), desc="Networks written to file: "):
 
                 pairs = info["pairs"]
 
@@ -174,7 +175,7 @@ class NetworkWriter:
                 f"network_id\tprogram\tgene\tchromosome\tIIDs_count\thaplotypes_count\tIIDs\thaplotypes\t{self._form_phenotype_header()}\n"
             )
 
-            for network_id, info in networks_info.items():
+            for network_id, info in tqdm(networks_info.items(), desc="Networks written to file: "):
 
                 # string that has the network information such as the network_id, ibd_program, the gene it is for and the chromosome number
                 networks: str = (
