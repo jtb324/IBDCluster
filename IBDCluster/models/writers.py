@@ -81,7 +81,9 @@ class PairWriter:
             output_file.write(
                 f"program\tnetwork_id\tpair_1\tpair_2\tphase_1\tphase_2\tchromosome\tgene_name\t{self._form_phenotype_header()}\tstart\tend\tlength\n"
             )
-            for network_id, info in tqdm(networks_info.items(), desc="Networks written to file: "):
+            for network_id, info in tqdm(
+                networks_info.items(), desc="Networks written to file: "
+            ):
 
                 pairs = info["pairs"]
 
@@ -174,15 +176,19 @@ class NetworkWriter:
             output_file.write(
                 f"network_id\tprogram\tgene\tchromosome\tIIDs_count\thaplotypes_count\tIIDs\thaplotypes\t{self._form_phenotype_header()}\n"
             )
-
-            for network_id, info in tqdm(networks_info.items(), desc="Networks written to file: "):
-
-                # string that has the network information such as the network_id, ibd_program, the gene it is for and the chromosome number
+            
+            for network_id, info in tqdm(
+                networks_info.items(), desc="Networks written to file: "
+            ):
+                # string that has the network information such as the
+                # network_id, ibd_program, the gene it is for and the
+                # chromosome number
                 networks: str = (
                     f"{network_id}\t{ibd_program}\t{self.gene_name}\t{self.chromosome}"
                 )
 
-                # string that has the number of individuals in the network as well as the the number of haplotypes
+                # string that has the number of individuals in the
+                # network as well as the the number of haplotypes
                 counts: str = f"{len(info['IIDs'])}\t{len(info['haplotypes'])}"
                 # string that has the list of GRID IIDs and the haplotype phases
                 iids: str = (

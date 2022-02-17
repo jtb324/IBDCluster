@@ -244,7 +244,8 @@ def analyze(
     percent_carriers_in_pop: Dict[str, float] = analysis.get_percentages(
         carriers_pheno_matrix
     )
-    # recording this percentage to keep track of it. CONSIDER JUST ADDING THIS AS ANOTHER CLASS WITHIN THE WRITER
+    # recording this percentage to keep track of it. CONSIDER JUST 
+    # ADDING THIS AS ANOTHER CLASS WITHIN THE WRITER
     analysis.write_to_file(percent_carriers_in_pop, writer.output)
 
     phenotype_list: List[str] = list(carriers_lists.keys())

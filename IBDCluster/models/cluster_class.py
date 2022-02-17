@@ -4,6 +4,9 @@ from typing import Dict, List, Set, Protocol, Tuple
 from .pairs import Pairs
 import os
 from tqdm import tqdm
+import log
+
+logger = log.get_logger(__name__)
 
 # class protocol that makes sure that the indices object has these methods
 class File_Info(Protocol):
@@ -40,6 +43,9 @@ class Cluster:
         end : int
             integer that desribes the end position of the gene of interest
         """
+        logger.debug(
+            f"Gathering shared ibd segments that overlap the gene region from {start} to {end}"
+        )
         self.ibd_df: pd.DataFrame = pd.DataFrame()
 
         for chunk in pd.read_csv(
@@ -55,12 +61,6 @@ class Cluster:
             if not filtered_chunk.empty:
                 self.ibd_df = pd.concat([self.ibd_df, filtered_chunk])
 
-        if os.environ.get("verbose", "False") == "True":
-
-            print(
-                f"Found {self.ibd_df.shape[0]} unique IIDs that overlap the given gene region"
-            )
-
     def filter_cM_threshold(self, cM_threshold: int, len_index: int) -> None:
         """Method that will filter the self.ibd_df to only individuals larger than the specified threshold. This should be run after the load_file method.
 
@@ -72,14 +72,10 @@ class Cluster:
         len_index : index
             column index for the hapibd or ilash file to find the lengths of each segment for
         """
-
+        logger.debug(
+            f"Filtering the dataframe of shared segments to greater than or equal to {cM_threshold}cM"
+        )
         self.ibd_df = self.ibd_df[self.ibd_df[len_index] >= cM_threshold]
-
-        if os.environ.get("verbose", "False") == "True":
-
-            print(
-                f"Found {self.ibd_df.shape[0]} pairs that overlap the given gene region"
-            )
 
     @staticmethod
     def _find_all_grids(dataframe: pd.DataFrame, indices) -> List[str]:
@@ -120,12 +116,7 @@ class Cluster:
         grids: List[str] = list(
             set(dataframe["ind_1"].values.tolist() + dataframe["ind_2"].values.tolist())
         )
-
-        if os.environ.get("verbose", "False") == "True":
-
-            print(f"Found {len(grids)} unique individual that will be clustered")
-
-        return grids
+        logger.debug(f"Found {len(grids)} unique individual that will be clustered")
 
     @staticmethod
     def _determine_pairs(ibd_row: pd.Series, indices: File_Info) -> Pairs:
@@ -183,9 +174,6 @@ class Cluster:
         Set[str]
             returns a set of unique haplotypes that are in the dataframe
         """
-        # pair_1_haplotypes: List[str] = list(set(list(dataframe[indices.id1_indx] + "." + dataframe[indices.id1_phase_indx].astype('str'))))
-
-        # pair_2_haplotypes: List[str] = list(set(list(dataframe[indices.id2_indx] + "." + dataframe[indices.id2_phase_indx].astype('str'))))
 
         return set(
             dataframe[indices.ind1_with_phase].values.tolist()
@@ -311,7 +299,7 @@ class Cluster:
         # creating a dictionary that will return information of interest
         network_info: Dict[int:Dict] = {}
 
-        # count = 1
+        count = 1
         # iterate over each iid in the original dataframe
         # creating a progress bar
         for i in tqdm(range(len(iid_list)), desc="pairs in clusters"):
@@ -319,7 +307,7 @@ class Cluster:
             ind: str = iid_list[i]
             # if this iid has already been associated with a network then we need to skip it. If not then we can get the network connected to it
             if ind not in self.individuals_in_network:
-
+                logger.debug(f"search for clusters containing individual: {ind}")
                 # creating a key in the dictionary for the network id
                 network_info[self.network_id] = {}
 
@@ -327,8 +315,14 @@ class Cluster:
                     (self.ibd_df[indices.ind1_with_phase] == ind)
                     | (self.ibd_df[indices.ind2_with_phase] == ind)
                 ]
-
+                logger.debug(
+                    f"found {filtered_df.shape[0]} pairs that contain the individual {ind}"
+                )
                 # forming a list of Pair objects that will be added to the network_info_dict in a pairs key
+                logger.debug(
+                    f"creating all the Pair objects for the pairs in network {self.network_id}"
+                )
+
                 network_info[self.network_id]["pairs"] = list(
                     filtered_df.apply(
                         lambda row: self._determine_pairs(row, indices), axis=1
@@ -362,6 +356,10 @@ class Cluster:
                 # finding the secondary connections. These are connections to all
                 # individuals in the self.individuals_in_network set that are not the
                 # seeding individual
+                logger.debug(
+                    f"Finding secondary connections to {ind} in network {self.network_id}"
+                )
+
                 self._find_secondary_connections(
                     [
                         iid
@@ -373,16 +371,15 @@ class Cluster:
                     network_info,
                 )
 
-                # print(
-                #     f"number of iids in network {self.network_id}: {len(network_info[self.network_id]['in_network'])}"
-                # )
-
-                # print(len(self.individuals_in_network))
+                logger.debug(
+                    f"number of iids in network {self.network_id}: {len(network_info[self.network_id]['in_network'])}"
+                )
 
                 self.network_id += 1
-            # if count ==3:
-            #     break
-            # count += 1
+
+            if count == 3:
+                break
+            count += 1
         # we can reset the network_id for the next cluster
         self.network_id = 1
 

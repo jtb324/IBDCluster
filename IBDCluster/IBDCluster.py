@@ -5,6 +5,7 @@ import callbacks
 import typer
 import os
 import cluster
+import log
 import analysis
 import pandas as pd
 from typing import Dict, Tuple
@@ -16,26 +17,13 @@ app = typer.Typer(
     help="Tool that identifies ibd sharing for specific loci for individuals within biobanks",
 )
 
+def record_inputs(logger, **kwargs) -> None:
+    """function to record the user arguments that were passed to the 
+    program. Takes a logger and then a dictionary of the user 
+    arguments"""
 
-def load_env_var(verbose: bool, loglevel: str) -> None:
-    """Function that will add variables to the environment
-
-    Parameters
-
-    verbose : bool
-        either true of False for if the user wants a more verbose setting
-
-    loglevel : str
-        level the user wishes to set for logging. It defaults to INFO
-    """
-    if verbose:
-        print(
-            "adding verbosity settings and logging levels to environmental variables"
-        )
-
-    os.environ["verbose"] = str(verbose)
-    os.environ["loglevel"] = loglevel
-
+    for parameter, value in kwargs.items():
+        logger.info(f"{parameter}: {value}")
 
 @app.command()
 def main(
@@ -73,31 +61,46 @@ def main(
         "--cM",
         help="Centimorgan threshold to filter the ibd segments",
     ),
-    verbose: bool = typer.Option(
-        False,
-        "--verbose",
-        "-v",
-        help="Optional Flag to run the program in verbose mode",
-        is_flag=True,
-    ),
     loglevel: str = typer.Option(
-        "INFO",
+        "warning",
         "--loglevel",
         "-l",
         help="This argument sets the logging level for the program",
+        callback=callbacks.check_loglevel,
+    ),
+    log_to_console: bool = typer.Option(
+        False,
+        "--log_to_console",
+        help="Optional flag to log to only the console or also a file",
+        is_flag=True,
     ),
 ) -> None:
-    """Main function for the program that has all the parameters that the user can use with typer
+    """Main function for the program that has all the parameters that the user can use with type
     """
     # loading in environmental variables from an env file
     load_dotenv(env)
 
-    load_env_var(verbose, loglevel)
+    # creating the logger and then configuring it
+    logger = log.create_logger()
+
+    log.configure(logger, output, loglevel=loglevel, to_console=log_to_console)
+
+    # recording all the user inputs
+    record_inputs(
+        logger,
+        ibd_program_used=IBD_program,
+        output_path=output,
+        environment_file=env,
+        gene_info_file=gene_info_file,
+        carrier_matrix=carriers,
+        centimorgan_threshold=cM_threshold,
+        loglevel=loglevel
+        )
 
     networks: Dict[Tuple[str, int], Dict] = cluster.find_clusters(
         IBD_program, gene_info_file, cM_threshold
     )
-
+    
     # create an object that will be used to write to an
     # appropriate file
     write_obj = Writer(output, IBD_program)
