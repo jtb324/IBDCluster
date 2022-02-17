@@ -71,7 +71,10 @@ source .zshrc
 This will allow you to run the code by just typing IBDCluster.py from any directory.
 
 ***Running IBDCluster***
-
+* You can find all the optional parameters by running:
+```
+IBDCluster.py --help
+```
 ## Running the code:
 ___
 *
