@@ -115,21 +115,7 @@ class NetworkWriter:
         append the words ind_in_network, percentage_in_net, carrier_IIDs, and pvalue to
         the phenotype name."""
 
-        column_list: List[str] = []
-        # pulling out all of the phenotype names from the carriers matrix
-        for column in self.carriers_columns:
-
-            column_list.extend(
-                [
-                    column + ending
-                    for ending in [
-                        "_ind_in_network",
-                        "_percentage_in_net",
-                        "_carrier_IIDs",
-                        "_pvalue",
-                    ]
-                ]
-            )
+        column_list: List[str] = [column+"_pvalue" for column in self.carriers_columns]
 
         return "\t".join(column_list)
 
@@ -156,10 +142,7 @@ class NetworkWriter:
 
             analysis_obj: CarriersInfo = analysis_dict[phenotype]
 
-            if analysis_obj.ind_in_network != 0:
-                output_str += f"{analysis_obj.ind_in_network}\t{analysis_obj.percentage}\t{', '.join(analysis_obj.IIDs)}\t{analysis_obj.pvalue}\t"
-            else:
-                output_str += f"{analysis_obj.ind_in_network}\t{analysis_obj.percentage}\t{'N/A'}\t{analysis_obj.pvalue}\t"
+            output_str += f"{analysis_obj.pvalue}\t"
 
         # strips of the final tab space and then replaces it with a newline
         output_str.rstrip("\t")

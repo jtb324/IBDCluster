@@ -3,7 +3,6 @@
 from dotenv import load_dotenv
 import callbacks
 import typer
-import os
 import cluster
 import log
 import analysis

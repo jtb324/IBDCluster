@@ -12,7 +12,6 @@ typer = "^0.4.0"
 python-dotenv = "^0.19.2"
 scipy = "^1.8.0"
 tqdm = "^4.62.3"
-pydantic = "^1.9.0"
 
 [tool.poetry.dev-dependencies]
 black = "^22.1.0"
@@ -23,6 +22,7 @@ mypy = "^0.931"
 bokeh = "^2.4.2"
 ipykernel = "^6.9.1"
 holoviews = "^1.14.8"
+pydantic = "^1.9.0"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

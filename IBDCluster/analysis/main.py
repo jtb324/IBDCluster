@@ -13,6 +13,7 @@ logger = log.get_logger(__name__)
 class CarriersInfo(
     namedtuple("Carrier_Comp", ["ind_in_network", "percentage", "IIDs", "pvalue"])
 ):
+    """This is an extension of the class tuple so that I can overwrite the __str__ method"""
     def __str__(self):
         return f"Carrier Info Object - Individuals in Network: {self.ind_in_network}, Percentages: {self.percentage}, IID List: {self.IIDs}, pvalue: {self.pvalue}"
 
