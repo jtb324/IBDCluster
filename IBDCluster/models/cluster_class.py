@@ -301,7 +301,7 @@ class Cluster:
         # creating a dictionary that will return information of interest
         network_info: Dict[int:Dict] = {}
 
-        count = 1
+        # count = 1
         # iterate over each iid in the original dataframe
         # creating a progress bar
         for i in tqdm(range(len(iid_list)), desc="pairs in clusters"):
@@ -379,9 +379,9 @@ class Cluster:
 
                 self.network_id += 1
 
-            if count == 3:
-                break
-            count += 1
+            # if count == 3:
+            #     break
+            # count += 1
         # we can reset the network_id for the next cluster
         self.network_id = 1
 
