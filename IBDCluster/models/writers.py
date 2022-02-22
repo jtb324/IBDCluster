@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Protocol, Dict, List
+from typing import Protocol, Dict, List, Any
 import os
 from collections import namedtuple
 from tqdm import tqdm
@@ -112,12 +112,53 @@ class NetworkWriter:
 
     def _form_phenotype_header(self) -> str:
         """Method that will form the phenotype section of the header string. Need to
-        append the words ind_in_network, percentage_in_net, carrier_IIDs, and pvalue to
-        the phenotype name."""
+        append the words ind_in_network and pvalue to the phenotype name."""
+        # pulling out all of the phenotype names from the carriers matrix
 
-        column_list: List[str] = [column+"_pvalue" for column in self.carriers_columns]
+        column_list: List[str] = []
+
+        for column in self.carriers_columns:
+
+            column_list.extend(
+                [
+                    column + ending
+                    for ending in [
+                        "_ind_in_network",
+                        "_pvalue",
+                    ]
+                ]
+            )
 
         return "\t".join(column_list)
+
+    def _find_min_phecode(self, analysis_dict) -> List[Any]:
+        """Function that will identify the lowest phecode and will write that and the phecode name to a column
+
+        Parameters
+
+        analysis_dict : Dict[str, CarriersInfo]
+            Dictionary that has the phenotypes as keys and a namedtuple, Carrier_Comp as the key with info about the carrier count/percentage in network, the IIDs in network and the pvalue
+
+        Returns
+
+        List[Any]
+            returns a list where the second item is the phecode and the first item is the pvalue
+        """
+        # creating a generic list that can be updated each iteration
+        min_pvalue = [1, "phecode"]
+
+        for phenotype in self.carriers_columns:
+
+            carrier_obj: CarriersInfo = analysis_dict[phenotype]
+
+            pvalue: float = carrier_obj.pvalue
+
+            if pvalue < min_pvalue[0]:
+
+                min_pvalue[1] = phenotype
+                min_pvalue[0] = pvalue
+
+        return [str(value) for value in min_pvalue]
 
     def _form_analysis_string(self, analysis_dict: Dict[str, CarriersInfo]) -> str:
         """Method that will form a string for each phenotype. We need to use the self.carriers_columns so that the values line up with the columns
@@ -140,9 +181,9 @@ class NetworkWriter:
         # These are all tab separated
         for phenotype in self.carriers_columns:
 
-            analysis_obj: CarriersInfo = analysis_dict[phenotype]
+            carrier_obj: CarriersInfo = analysis_dict[phenotype]
 
-            output_str += f"{analysis_obj.pvalue}\t"
+            output_str += f"{carrier_obj.ind_in_network}\t{carrier_obj.pvalue}\t"
 
         # strips of the final tab space and then replaces it with a newline
         output_str.rstrip("\t")
@@ -169,7 +210,7 @@ class NetworkWriter:
             encoding="utf-8",
         ) as output_file:
             output_file.write(
-                f"network_id\tprogram\tgene\tchromosome\tIIDs_count\thaplotypes_count\tIIDs\thaplotypes\t{self._form_phenotype_header()}\n"
+                f"network_id\tprogram\tgene\tchromosome\tIIDs_count\thaplotypes_count\tIIDs\thaplotypes\tmin_pvalue\tmin_pvalue_phecode\t{self._form_phenotype_header()}\n"
             )
 
             for network_id, info in tqdm(
@@ -190,9 +231,19 @@ class NetworkWriter:
                     f"{', '.join(info['IIDs'])}\t{', '.join(info['haplotypes'])}"
                 )
 
+                
+
                 # Getting the phenotype analysis infofrom the object
                 analysis_obj: Dict[str, CarriersInfo] = info["phenotype"]
 
+                # Creating a string that has the information about the
+                # minimum pvalue and corresponding phecode for the network
+                min_pvalue_str: str = "\t".join(self._find_min_phecode(analysis_obj))
+
+                # creating a string that has the carrier count and the pvalues for each 
+                # phecode
                 analysis_str: str = f"{self._form_analysis_string(analysis_obj)}"
 
-                output_file.write(f"{networks}\t{counts}\t{iids}\t{analysis_str}")
+                output_file.write(
+                    f"{networks}\t{counts}\t{iids}\t{min_pvalue_str}\t{analysis_str}"
+                )
