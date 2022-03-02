@@ -10,7 +10,7 @@ class ProgramIndices(Protocol):
     """Interface indicating that the class has to have a gather files method"""
     file_dir: Optional[str]
     cM_indx: int
-    
+
     def gather_files(self) -> List[str]:
         """Method to gather a list of output files for the correct ibd program"""
         ...
@@ -87,8 +87,9 @@ class FileInfo:
             self.program_indices = HapibdInfo("/data100t1/share/BioVU/shapeit4/Eur_70k/hapibd/")
         else:
             self.program_indices = IlashInfo("/data100t1/share/BioVU/shapeit4/Eur_70k/iLash/min100gmap/")
-
-    def find_file(self, chr_num: str, file_list: List[str]) -> str:
+    
+    @staticmethod
+    def find_file(chr_num: str, file_list: List[str]) -> str:
         """Method that will find the appropriate file based on the correct chromosome number
         
         Parameters

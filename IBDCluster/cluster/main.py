@@ -1,6 +1,5 @@
 from typing import Dict, Generator, List, Tuple
 from collections import namedtuple
-import os
 import models
 import log
 
@@ -30,27 +29,6 @@ def load_gene_info(filepath: str) -> Generator:
             yield gene_tuple
 
 
-def get_ibd_program(ibd_program: str):
-    """Function that will take whatever ibd program the user pass and will get the correct info object for it
-
-    Parameters
-
-    ibd_program : str
-        string of either 'hapibd' or 'ilash'
-
-    Returns
-
-    Object
-        returns either a clusters.Hapibd_Info object or clusters.Ilash_Info object
-    """
-    logger.info(f"Building the model that has the necessary indices for the {ibd_program} output")
-
-    if ibd_program == "hapibd":
-        return models.Hapibd_Info(file_dir=os.environ.get("hapibd_files"))
-    
-    return models.Ilash_Info(file_dir=os.environ.get("ilash_files"))
-
-
 def find_clusters(
     ibd_program: str, gene_info_filepath: str, cM_threshold: int
 ) -> Dict[Tuple[str, int], Dict]:
@@ -60,11 +38,14 @@ def find_clusters(
     return_dict: Dict[Tuple[str, int], Dict] = {}
 
     # we will need the information for the correct ibd_program
-    indices: models.File_Info = get_ibd_program(ibd_program)
+    indices = models.FileInfo()
+
+    indices.set_program_indices(ibd_program)
 
     # gather all the ibd files into an attribute of the indice class called self.ibd_files
     logger.debug(f"gathering all the necessary files for the program: {ibd_program}")
-    indices.gather_files()
+
+    ibd_files = indices.program_indices.gather_files()
 
     # creating a generator that returns the Genes namedtuple from the load_gene_info function
     gene_generator: Generator = load_gene_info(gene_info_filepath)
@@ -74,15 +55,16 @@ def find_clusters(
     # that surround a certain location into a dataframe
     for gene_tuple in gene_generator:
         logger.debug(f"finding clusters for the gene: {gene_tuple.name}")
-        hapibd_file: str = indices.find_file("".join(["chr", gene_tuple.chr]))
+        
+        file: str = indices.find_file("".join(["chr", gene_tuple.chr]), ibd_files)
 
-        cluster_model: models.Cluster = models.Cluster(gene_tuple.name, hapibd_file)
+        cluster_model: models.Cluster = models.Cluster(gene_tuple.name, file)
 
         cluster_model.load_file(
             gene_tuple.start, gene_tuple.end, indices.str_indx, indices.end_indx
         )
         # filtering the dataframe to >= specific centimorgan threshold
-        cluster_model.filter_cM_threshold(cM_threshold, indices.cM_indx)
+        cluster_model.filter_cM_threshold(cM_threshold, indices.program_indices.cM_indx)
         # This line will filter the dataframe for only those pairs that have the same phase
         # cluster_model.filter_for_haplotype(indices.id1_phase_indx, indices.id2_phase_indx)
 
