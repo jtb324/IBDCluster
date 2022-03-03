@@ -76,12 +76,12 @@ def determine_pvalue(
     # 0 or higher which is everyone
     if carriers_count == 0:
         return 1
-    else:
-        prob: float = 1 - binom.cdf(
+
+    prob: float = 1 - binom.cdf(
             carriers_count - 1, network_size, percentage_pop_phenotypes[phenotype]
         )
 
-        return prob
+    return prob
 
 
 # FIXME: This needs to be refactored. The function is doing many different things
@@ -167,11 +167,11 @@ def _determine_pair_carrier_status(
         carriers: List[str] = carrier_list[phenotype]
 
         if pair_id in carriers:
-            logger.debug(f"id {pair_id} is in the list {', '.join(carriers)}")
+            logger.debug(f"id {pair_id} is in the list carriers for phenotype {phenotype}")
             carrier_str += "1\t"
 
         else:
-            logger.debug(f"id {pair_id} is not in the list {', '.join(carriers)}")
+            logger.debug(f"id {pair_id} is not in the list of carriers for phenotype {phenotype}")
             carrier_str += "0\t"
 
     carrier_str = carrier_str.strip("\t")
@@ -198,13 +198,15 @@ def analyze_pair_carrier_status(
     info_dict : Dict[int, Dict]
         dictionary where the keys are network ids and the inner dictionary has information about the network ind different keys
     """
-    for _, info in info_dict.items():
+    logger.info("determining the carrier status for each id for each phenotype")
+
+    for net_id, info in info_dict.items():
 
         # getting all of the pair objects and iterate over them
         pair_list = info["pairs"]
 
-        for pair in pair_list:
-
+        for pair in tqdm(pair_list, desc=f"Determine pair carrier status for network {net_id}"):
+            logger.debug(f"Determine carrier status for pair: {pair.pair_1}-{pair.pair_2}")
             carrier_str_1: str = _determine_pair_carrier_status(
                 phenotype_list, carrier_list, pair.pair_1
             )
