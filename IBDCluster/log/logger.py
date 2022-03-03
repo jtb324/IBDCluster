@@ -3,9 +3,9 @@ from typing import Dict
 import os
 
 level_dict: Dict[str, int] = {
-    "info": logging.INFO,
+    "verbose": logging.INFO,
     "debug": logging.DEBUG,
-    "warning": logging.WARNING,
+    "warning":logging.WARNING,
 }
 
 
@@ -13,14 +13,14 @@ def configure(
     logger: logging.Logger,
     output: str,
     filename: str = "IBDCluster.log",
-    loglevel: str = "info",
+    loglevel: str = "warning",
     to_console: bool = False
     ) -> None:
     """Function that will configure the level of logging"""
 
     filename = os.path.join(output, filename)
 
-    logger.setLevel(level_dict[loglevel])
+    logger.setLevel(level_dict.get(loglevel, default=logging.WARNING))
 
     file_formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 

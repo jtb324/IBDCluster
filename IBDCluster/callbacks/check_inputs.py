@@ -21,7 +21,7 @@ class UnSupportedIBDProgram(Exception):
 class UnsupportedLogLevel(Exception):
     """Error that will be raised if the user provides an incorrect loglevel"""
     def __init__(self, loglevel: str) -> None:
-        self.message: str = f"The provided loglevel, {loglevel} is not supportted. Supported values are warning, debug, info (Case Insensitive)"
+        self.message: str = f"The provided loglevel, {loglevel} is not supportted. Supported values are verbose, debug, warning (Case Insensitive)"
         super().__init__(self.message)
 
 def check_ibd_program(program: str) -> str:
@@ -84,7 +84,7 @@ def check_loglevel(loglevel: str) -> str:
     str
         returns the lower case log level"""
 
-    if loglevel.lower() not in ["info", "warning", "debug"]:
+    if loglevel.lower() not in ["verbose", "debug", "warning"]:
         raise UnsupportedLogLevel(loglevel)
 
     return loglevel.lower()
