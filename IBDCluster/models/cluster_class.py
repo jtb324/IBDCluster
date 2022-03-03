@@ -1,19 +1,31 @@
 from dataclasses import dataclass, field
 import pandas as pd
-from typing import Dict, List, Set, Protocol, Tuple
+from typing import Dict, List, Set, Protocol, Tuple, Optional
 from .pairs import Pairs
-import os
 from tqdm import tqdm
 import log
 
 logger = log.get_logger(__name__)
 
 # class protocol that makes sure that the indices object has these methods
-class File_Info(Protocol):
-    def gather_files(self) -> None:
+class FileInfo(Protocol):
+    """Protocol that enforces these two methods for the 
+    FileInfo object"""
+    id1_indx: int
+    ind1_with_phase: int
+    id2_indx: int
+    ind2_with_phase: int
+    chr_indx: int
+    str_indx: int
+    end_indx: int
+
+    def set_program_indices(self, program_name: str) -> None:
+        """Method that will set the proper ibd_program indices"""
         ...
 
-    def find_files(self, chr_num: str) -> str:
+    @staticmethod
+    def find_file( chr_num: str, file_list: List[str]) -> str:
+        """Method that will find the proper ibd files"""
         ...
 
 
@@ -30,6 +42,7 @@ class Cluster:
         default_factory=set
     )  # This attribute will keep track of all individuals that are in any network
     network_id: int = 1
+    ibd_df: Optional[pd.DataFrame] = None
 
     def load_file(self, start: int, end: int, start_indx: int, end_indx: int) -> None:
         """Method filters the ibd file based on location and loads this into memory as a dataframe
@@ -88,7 +101,7 @@ class Cluster:
             dataframe that has the pairs of individuals who share an ibd segment. This dataframe is filtered for a
             specific loci and matching haplotype phase.
 
-        indices : File_Info
+        indices : FileInfo
             object that has all the indices for the file of interest
 
         Returns
@@ -121,7 +134,7 @@ class Cluster:
         return grids
 
     @staticmethod
-    def _determine_pairs(ibd_row: pd.Series, indices: File_Info) -> Pairs:
+    def _determine_pairs(ibd_row: pd.Series, indices: FileInfo) -> Pairs:
         """Method that will take each row of the dataframe and convert it into a pair object"""
 
         return Pairs(
@@ -132,7 +145,7 @@ class Cluster:
             ibd_row[indices.chr_indx],
             ibd_row[indices.str_indx],
             ibd_row[indices.end_indx],
-            ibd_row[indices.cM_indx],
+            ibd_row[indices.program_indices.cM_indx],
         )
 
     @staticmethod
@@ -160,7 +173,7 @@ class Cluster:
         )
 
     @staticmethod
-    def _gather_haplotypes(dataframe: pd.DataFrame, indices: File_Info) -> Set[str]:
+    def _gather_haplotypes(dataframe: pd.DataFrame, indices: FileInfo) -> Set[str]:
         """Static Method that will determine the unique haplotypes within the pairs
 
         Parameters
@@ -197,7 +210,7 @@ class Cluster:
         self,
         new_individuals: List[str],
         exclusion: Set[str],
-        indices: File_Info,
+        indices: FileInfo,
         network_dict: Dict,
     ) -> None:
         """Function that will find the secondary connections within the graph
@@ -212,7 +225,7 @@ class Cluster:
             This is a set of iids that we want to keep out of the secondary cluster because we
             seeded from this iid so we have these connections
 
-        indices : File_Info
+        indices : FileInfo
             object that has all the indices values for the correct column in the hapibd file
 
         network_dict : Dict[int: Dict]
@@ -281,12 +294,12 @@ class Cluster:
                 network_dict,
             )
 
-    def find_networks(self, indices: File_Info) -> Dict[int, Dict]:
+    def find_networks(self, indices: FileInfo) -> Dict[int, Dict]:
         """Method that will go through the dataframe and will identify networks.
 
         Parameters
 
-        indices : File_Info
+        indices : FileInfo
             object that has all the indices values for the correct column in the hapibd file
 
         Returns
@@ -299,7 +312,7 @@ class Cluster:
         iid_list: List[str] = self._find_all_grids(self.ibd_df, indices)
 
         # creating a dictionary that will return information of interest
-        network_info: Dict[int:Dict] = {}
+        network_info: Dict[int, Dict] = {}
 
         # count = 1
         # iterate over each iid in the original dataframe
