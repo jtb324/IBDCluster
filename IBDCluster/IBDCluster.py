@@ -77,8 +77,6 @@ def main(
     ),
 ) -> None:
     """Main function for the program that has all the parameters that the user can use with type"""
-    # loading in environmental variables from an env file
-    load_dotenv(env)
 
     # creating the logger and then configuring it
     logger = log.create_logger()
