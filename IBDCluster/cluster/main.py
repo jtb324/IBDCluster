@@ -37,7 +37,9 @@ def find_clusters(
     # create a dictionary that will have the gene name and chromosome as keys and the network information as values
     return_dict: Dict[Tuple[str, int], Dict] = {}
 
-    # we will need the information for the correct ibd_program
+    # Next two lines create an object with the shared indices for each 
+    # ibd program. Then it loads the proper unique indices for the correct
+    # program
     indices = models.FileInfo()
 
     indices.set_program_indices(ibd_program)
@@ -45,6 +47,7 @@ def find_clusters(
     # gather all the ibd files into an attribute of the indice class called self.ibd_files
     logger.debug(f"gathering all the necessary files for the program: {ibd_program}")
 
+    # Generate a list of files for the correct ibd program
     ibd_files = indices.program_indices.gather_files()
 
     # creating a generator that returns the Genes namedtuple from the load_gene_info function
