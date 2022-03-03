@@ -20,7 +20,7 @@ def configure(
 
     filename = os.path.join(output, filename)
 
-    logger.setLevel(level_dict.get(loglevel, default=logging.WARNING))
+    logger.setLevel(level_dict.get(loglevel, logging.WARNING))
 
     file_formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 
