@@ -4,13 +4,15 @@ from typing import Dict, List, Set, Protocol, Tuple, Optional
 from .pairs import Pairs
 from tqdm import tqdm
 import log
+from numpy import where
 
 logger = log.get_logger(__name__)
 
 # class protocol that makes sure that the indices object has these methods
 class FileInfo(Protocol):
-    """Protocol that enforces these two methods for the 
+    """Protocol that enforces these two methods for the
     FileInfo object"""
+
     id1_indx: int
     ind1_with_phase: int
     id2_indx: int
@@ -24,7 +26,7 @@ class FileInfo(Protocol):
         ...
 
     @staticmethod
-    def find_file( chr_num: str, file_list: List[str]) -> str:
+    def find_file(chr_num: str, file_list: List[str]) -> str:
         """Method that will find the proper ibd files"""
         ...
 
@@ -74,7 +76,42 @@ class Cluster:
             if not filtered_chunk.empty:
                 self.ibd_df = pd.concat([self.ibd_df, filtered_chunk])
 
-    def filter_cM_threshold(self, cM_threshold: int, len_index: int) -> None:
+        logger.info(f"identified {self.ibd_df.shape[0]} pairs within the gene region")
+
+    def add_carrier_status(
+        self, carriers: Dict[float, List[str]], pair_1_indx: int, pair_2_indx: int, phecode_list: List[float]
+    ) -> None:
+        """Method that will determine the carrier status for each pair
+
+        Parameters
+
+        carrier_list : Dict[float, List[str]]
+            dictionary where the keys are the phecodes and the values are list of individuals who are carriers for a specific phecode
+        """
+        logger.info(
+            f"Adding a carrier status of either 1 or 0 for all {len(carriers)} phecodes"
+        )
+        status_dict = {}
+
+        for phecode in phecode_list:
+            carrier_list = carriers[phecode]
+            
+            status_dict["_".join([str(phecode), "pair_1_status"])] = where(
+                self.ibd_df[pair_1_indx].isin(carrier_list), 1, 0
+            )
+            
+            status_dict["_".join([str(phecode), "pair_2_status"])] = where(
+                self.ibd_df[pair_2_indx].isin(carrier_list), 1, 0
+            )
+        print(self.ibd_df.shape[0])
+        self.ibd_df = pd.concat([self.ibd_df.reset_index(drop=True), pd.DataFrame.from_dict(status_dict).reset_index(drop=True)], axis=1)
+
+        print(self.ibd_df.shape[0])
+        del status_dict
+
+        print(self.ibd_df)
+
+    def filter_cm_threshold(self, cM_threshold: int, len_index: int) -> None:
         """Method that will filter the self.ibd_df to only individuals larger than the specified threshold. This should be run after the load_file method.
 
         Parameters
@@ -83,7 +120,8 @@ class Cluster:
             threshold to filter the file lengths on
 
         len_index : index
-            column index for the hapibd or ilash file to find the lengths of each segment for
+            column index for the hapibd or ilash file to find the 
+            lengths of each segment for
         """
         logger.debug(
             f"Filtering the dataframe of shared segments to greater than or equal to {cM_threshold}cM"
@@ -136,6 +174,10 @@ class Cluster:
     @staticmethod
     def _determine_pairs(ibd_row: pd.Series, indices: FileInfo) -> Pairs:
         """Method that will take each row of the dataframe and convert it into a pair object"""
+        
+        carrier_cols = [col for col in ibd_row.keys() if "status" in str(col)]
+
+        affected_values: pd.Series = ibd_row[carrier_cols]
 
         return Pairs(
             ibd_row[indices.id1_indx],
@@ -146,6 +188,7 @@ class Cluster:
             ibd_row[indices.str_indx],
             ibd_row[indices.end_indx],
             ibd_row[indices.program_indices.cM_indx],
+            affected_values
         )
 
     @staticmethod

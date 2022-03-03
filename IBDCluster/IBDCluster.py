@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-from dotenv import load_dotenv
 import callbacks
 import typer
 import cluster
@@ -28,7 +27,7 @@ def record_inputs(logger, **kwargs) -> None:
 
 @app.command()
 def main(
-    IBD_program: str = typer.Option(
+    ibd_program: str = typer.Option(
         "hapibd",
         "--ibd",
         "-i",
@@ -86,7 +85,7 @@ def main(
     # recording all the user inputs
     record_inputs(
         logger,
-        ibd_program_used=IBD_program,
+        ibd_program_used=ibd_program,
         output_path=output,
         environment_file=env,
         gene_info_file=gene_info_file,
@@ -98,16 +97,18 @@ def main(
     # need to first determine list of carriers for each phenotype
     carriers_df: pd.DataFrame = pd.read_csv(carriers, sep="\t")
 
+    phecode_list = carriers_df.columns[1:]
+
     carriers_dict = cluster.generate_carrier_list(carriers_df)
 
     # We can then determine the different clusters for each gene
     networks: Dict[Tuple[str, int], Dict] = cluster.find_clusters(
-        IBD_program, gene_info_file, cm_threshold, carriers_dict
+        ibd_program, gene_info_file, cm_threshold, carriers_dict, phecode_list
     )
 
     # create an object that will be used to write to an
     # appropriate file
-    write_obj = Writer(output, IBD_program)
+    write_obj = Writer(output, ibd_program)
 
     # iterate over each object
     for gene, networks_info in networks.items():

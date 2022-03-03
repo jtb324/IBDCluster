@@ -57,14 +57,17 @@ class PairWriter:
 
         # Appending the word Pair_1/Pair_2 to the column label and then joining them
         # into a string
-        pair_1_section: str = "\t".join(
-            ["Pair_1_" + label for label in self.phenotype_list]
-        )
-        pair_2_section: str = "\t".join(
-            ["Pair_2_" + label for label in self.phenotype_list]
-        )
 
-        return "\t".join([pair_1_section, pair_2_section])
+        header_list = []
+
+        for phecode in self.phenotype_list:
+
+            header_list.extend([
+                "".join([str(phecode), "_Pair_1_status"]), 
+                "".join([str(phecode), "Pair_2_status"])
+                ])
+
+        return "\t".join(header_list)
 
     def write(self, **kwargs) -> None:
         """Method to write the output to an allpairs.txt file"""
@@ -97,7 +100,7 @@ class PairWriter:
                 pairs = info["pairs"]
 
                 for pair in pairs:
-                    output_str = f"{ibd_program}\t{network_id}\t{pair.form_id_str()}\t{pair.chromosome}\t{self.gene_name}\t{pair.carrier_str_1}\t{pair.carrier_str_2}\t{pair.form_segment_info_str()}"
+                    output_str = f"{ibd_program}\t{network_id}\t{pair.form_id_str()}\t{pair.chromosome}\t{self.gene_name}\t{pair.form_affected_string()}\t{pair.form_segment_info_str()}"
 
                     logger.debug(output_str)
 
