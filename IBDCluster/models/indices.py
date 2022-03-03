@@ -112,7 +112,7 @@ class FileInfo:
             logger.critical(f"Attempts to find chromosome, {chr_num} in file list, {', '.join(file_list)}, resulted in the following index out of range error:")
             logger.critical(traceback, exc_info=1)
 
-        logger.debug(f"Found the ibd file, {ibd_file}, that matches the chromosome, chr_num")
+        logger.debug(f"Found the ibd file, {ibd_file}, that matches the chromosome, {chr_num}")
         
         return ibd_file
 
