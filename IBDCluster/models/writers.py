@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Protocol, Dict, List, Any
+from typing import Protocol, Dict, List, Tuple, Optional
 import os
 from collections import namedtuple
 from tqdm import tqdm
@@ -30,6 +30,7 @@ class Writer:
 
     output: str
     ibd_program: str
+    writer: Optional[WriteObject] = None
 
     def set_writer(self, writer: WriteObject) -> None:
         """Method that will set whether we are writing for networks or pairs"""
@@ -56,14 +57,17 @@ class PairWriter:
 
         # Appending the word Pair_1/Pair_2 to the column label and then joining them
         # into a string
-        pair_1_section: str = "\t".join(
-            ["Pair_1_" + label for label in self.phenotype_list]
-        )
-        pair_2_section: str = "\t".join(
-            ["Pair_2_" + label for label in self.phenotype_list]
-        )
 
-        return "\t".join([pair_1_section, pair_2_section])
+        header_list = []
+
+        for phecode in self.phenotype_list:
+
+            header_list.extend([
+                "".join([str(phecode), "_Pair_1_status"]), 
+                "".join([str(phecode), "Pair_2_status"])
+                ])
+
+        return "\t".join(header_list)
 
     def write(self, **kwargs) -> None:
         """Method to write the output to an allpairs.txt file"""
@@ -96,10 +100,11 @@ class PairWriter:
                 pairs = info["pairs"]
 
                 for pair in pairs:
+                    output_str = f"{ibd_program}\t{network_id}\t{pair.form_id_str()}\t{pair.chromosome}\t{self.gene_name}\t{pair.form_affected_string()}\t{pair.form_segment_info_str()}"
 
-                    output_file.write(
-                        f"{ibd_program}\t{network_id}\t{pair.form_id_str()}\t{pair.chromosome}\t{self.gene_name}\t{pair.carrier_str_1}\t{pair.carrier_str_2}\t{pair.form_segment_info_str()}"
-                    )
+                    logger.debug(output_str)
+
+                    output_file.write(output_str)
 
 
 @dataclass
@@ -131,7 +136,7 @@ class NetworkWriter:
 
         return "\t".join(column_list)
 
-    def _find_min_phecode(self, analysis_dict) -> List[Any]:
+    def _find_min_phecode(self, analysis_dict) -> Tuple[float, str]:
         """Function that will identify the lowest phecode and will write that and the phecode name to a column
 
         Parameters
@@ -141,24 +146,21 @@ class NetworkWriter:
 
         Returns
 
-        List[Any]
-            returns a list where the second item is the phecode and the first item is the pvalue
+        Tuple[float, str]
+            returns a tuple where the first element is the pvalue and
+            the second element is the phecode
         """
-        # creating a generic list that can be updated each iteration
-        min_pvalue = [1, "phecode"]
+        pvalue_dict: Dict[str, float] = {}
 
         for phenotype in self.carriers_columns:
 
             carrier_obj: CarriersInfo = analysis_dict[phenotype]
 
-            pvalue: float = carrier_obj.pvalue
+            pvalue_dict[phenotype] = carrier_obj.pvalue
+        # retu
+        pvalue_tuple = min(zip(pvalue_dict.values(), pvalue_dict.keys()))
 
-            if pvalue < min_pvalue[0]:
-
-                min_pvalue[1] = phenotype
-                min_pvalue[0] = pvalue
-
-        return [str(value) for value in min_pvalue]
+        return str(pvalue_tuple[0]), pvalue_tuple[1]
 
     def _form_analysis_string(self, analysis_dict: Dict[str, CarriersInfo]) -> str:
         """Method that will form a string for each phenotype. We need to use the self.carriers_columns so that the values line up with the columns
@@ -210,7 +212,7 @@ class NetworkWriter:
             encoding="utf-8",
         ) as output_file:
             output_file.write(
-                f"network_id\tprogram\tgene\tchromosome\tIIDs_count\thaplotypes_count\tIIDs\thaplotypes\tmin_pvalue\tmin_pvalue_phecode\t{self._form_phenotype_header()}\n"
+                f"program\tgene\tnetwork_id\tchromosome\tIIDs_count\thaplotypes_count\tIIDs\thaplotypes\tmin_pvalue\tmin_pvalue_phecode\t{self._form_phenotype_header()}\n"
             )
 
             for network_id, info in tqdm(
@@ -220,7 +222,7 @@ class NetworkWriter:
                 # network_id, ibd_program, the gene it is for and the
                 # chromosome number
                 networks: str = (
-                    f"{network_id}\t{ibd_program}\t{self.gene_name}\t{self.chromosome}"
+                    f"{ibd_program}\t{self.gene_name}\t{network_id}\t{self.chromosome}"
                 )
 
                 # string that has the number of individuals in the
@@ -231,8 +233,6 @@ class NetworkWriter:
                     f"{', '.join(info['IIDs'])}\t{', '.join(info['haplotypes'])}"
                 )
 
-                
-
                 # Getting the phenotype analysis infofrom the object
                 analysis_obj: Dict[str, CarriersInfo] = info["phenotype"]
 
@@ -240,7 +240,7 @@ class NetworkWriter:
                 # minimum pvalue and corresponding phecode for the network
                 min_pvalue_str: str = "\t".join(self._find_min_phecode(analysis_obj))
 
-                # creating a string that has the carrier count and the pvalues for each 
+                # creating a string that has the carrier count and the pvalues for each
                 # phecode
                 analysis_str: str = f"{self._form_analysis_string(analysis_obj)}"
 

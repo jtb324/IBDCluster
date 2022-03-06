@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-from dotenv import load_dotenv
 import callbacks
 import typer
 import cluster
@@ -16,17 +15,19 @@ app = typer.Typer(
     help="Tool that identifies ibd sharing for specific loci for individuals within biobanks",
 )
 
+
 def record_inputs(logger, **kwargs) -> None:
-    """function to record the user arguments that were passed to the 
-    program. Takes a logger and then a dictionary of the user 
+    """function to record the user arguments that were passed to the
+    program. Takes a logger and then a dictionary of the user
     arguments"""
 
     for parameter, value in kwargs.items():
         logger.info(f"{parameter}: {value}")
 
+
 @app.command()
 def main(
-    IBD_program: str = typer.Option(
+    ibd_program: str = typer.Option(
         "hapibd",
         "--ibd",
         "-i",
@@ -55,7 +56,7 @@ def main(
         "-c",
         help="Filepath to a text file that has the carrier status of all the individuals in the ibd dataset. The first column of these file should be a list of GRID ids and is expected to be called grids. If an individual has the phenotype they should be listed as a 1 otherwise they should be listed as 0.",
     ),
-    cM_threshold: int = typer.Option(
+    cm_threshold: int = typer.Option(
         3,
         "--cM",
         help="Centimorgan threshold to filter the ibd segments",
@@ -64,7 +65,7 @@ def main(
         "warning",
         "--loglevel",
         "-l",
-        help="This argument sets the logging level for the program",
+        help="This argument sets the logging level for the program. Accepts values 'debug', 'warning', and 'verbose'.",
         callback=callbacks.check_loglevel,
     ),
     log_to_console: bool = typer.Option(
@@ -74,10 +75,7 @@ def main(
         is_flag=True,
     ),
 ) -> None:
-    """Main function for the program that has all the parameters that the user can use with type
-    """
-    # loading in environmental variables from an env file
-    load_dotenv(env)
+    """Main function for the program that has all the parameters that the user can use with type"""
 
     # creating the logger and then configuring it
     logger = log.create_logger()
@@ -87,30 +85,38 @@ def main(
     # recording all the user inputs
     record_inputs(
         logger,
-        ibd_program_used=IBD_program,
+        ibd_program_used=ibd_program,
         output_path=output,
         environment_file=env,
         gene_info_file=gene_info_file,
         carrier_matrix=carriers,
-        centimorgan_threshold=cM_threshold,
-        loglevel=loglevel
-        )
-
-    networks: Dict[Tuple[str, int], Dict] = cluster.find_clusters(
-        IBD_program, gene_info_file, cM_threshold
+        centimorgan_threshold=cm_threshold,
+        loglevel=loglevel,
     )
-    
-    # create an object that will be used to write to an
-    # appropriate file
-    write_obj = Writer(output, IBD_program)
 
+    # need to first determine list of carriers for each phenotype
     carriers_df: pd.DataFrame = pd.read_csv(carriers, sep="\t")
 
+    phecode_list = carriers_df.columns[1:]
+
+    carriers_dict = cluster.generate_carrier_list(carriers_df)
+
+    # We can then determine the different clusters for each gene
+    networks: Dict[Tuple[str, int], Dict] = cluster.find_clusters(
+        ibd_program, gene_info_file, cm_threshold, carriers_dict, phecode_list
+    )
+
+    # create an object that will be used to write to an
+    # appropriate file
+    write_obj = Writer(output, ibd_program)
+
+    # iterate over each object
     for gene, networks_info in networks.items():
         # This is the main function that will run the analysis of the networks
-        analysis.analyze(gene, networks_info, carriers_df, write_obj)
+        analysis.analyze(gene, networks_info, carriers_df, write_obj, carriers_dict)
 
     logger.info("analysis_finished")
+
 
 if __name__ == "__main__":
     app()

@@ -1,7 +1,7 @@
 # script to determine percentages of each phenotype in the subset
 from typing import Dict
-import pandas as pd
 import os
+import pandas as pd
 from tqdm import tqdm
 import log
 
@@ -25,7 +25,9 @@ def _find_carrier_percentages(
     """
     try:
         percentage_dict[col_series.name] = col_series.value_counts(normalize=True)[1]
-        logger.debug(f"Phenotype prevalence for {col_series.name} is {col_series.value_counts(normalize=True)[1]}")
+        logger.debug(
+            f"Phenotype prevalence for {col_series.name} is {col_series.value_counts(normalize=True)[1]}"
+        )
     except KeyError:
         logger.warning(
             f"There were no individuals in the population affected by phenotype {col_series.name}"
@@ -45,10 +47,10 @@ def write_to_file(percentage_dict: Dict[str, float], output: str) -> None:
     output : str
         filepath to write the output to
     """
-    output_file_name =os.path.join(output, "percent_carriers_in_population.txt")
-    
+    output_file_name = os.path.join(output, "percent_carriers_in_population.txt")
+
     logger.info(f"Writing file with population prevalences to {output_file_name}")
-    
+
     with open(
         output_file_name,
         "w",
