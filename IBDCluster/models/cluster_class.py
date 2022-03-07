@@ -103,13 +103,11 @@ class Cluster:
             status_dict["_".join([str(phecode), "pair_2_status"])] = where(
                 self.ibd_df[pair_2_indx].isin(carrier_list), 1, 0
             )
-        print(self.ibd_df.shape[0])
+
         self.ibd_df = pd.concat([self.ibd_df.reset_index(drop=True), pd.DataFrame.from_dict(status_dict).reset_index(drop=True)], axis=1)
 
-        print(self.ibd_df.shape[0])
         del status_dict
 
-        print(self.ibd_df)
 
     def filter_cm_threshold(self, cM_threshold: int, len_index: int) -> None:
         """Method that will filter the self.ibd_df to only individuals larger than the specified threshold. This should be run after the load_file method.
