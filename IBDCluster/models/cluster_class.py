@@ -3,6 +3,7 @@ from typing import Dict, List, Set, Protocol, Tuple, Optional
 import pandas as pd
 from tqdm import tqdm
 import log
+import os
 from numpy import where
 
 from .pairs import Pairs
@@ -367,7 +368,7 @@ class Cluster:
             ind: str = iid_list[i]
             # if this iid has already been associated with a network then we need to skip it. If not then we can get the network connected to it
             if ind not in self.individuals_in_network:
-                logger.debug(f"search for clusters containing individual: {ind}")
+
                 # creating a key in the dictionary for the network id
                 network_info[self.network_id] = {}
 
@@ -437,9 +438,9 @@ class Cluster:
 
                 self.network_id += 1
             
-            # if the program is being run in debug mode then it will only run three times
-            print(f"logger level = {logger.level}")
-            if logger.level == 10:
+            # if the program is being run in debug mode then it will only this loop four times. This gives enough information 
+            # to see if the program is behaving properly
+            if int(os.environ.get('program_loglevel')) == 10:
                 if self.count == 3:
                     break
                 self.count += 1

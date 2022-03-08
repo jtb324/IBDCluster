@@ -3,9 +3,10 @@ from collections import namedtuple
 import models
 import log
 import pandas as pd
-import os
+# import os
 
 logger = log.get_logger(__name__)
+
 
 
 
@@ -41,7 +42,7 @@ def generate_carrier_list(carriers_matrix: pd.DataFrame) -> Dict[float, List[str
 
     # iterating over each phenotype which starts with the
     # second column
-    print(os.environ)
+
     for column in carriers_matrix.columns[1:]:
 
         filtered_matrix: pd.DataFrame = carriers_matrix[carriers_matrix[column] == 1][
@@ -63,7 +64,7 @@ def find_clusters(
     phecode_list: List[float]
 ) -> Dict[Tuple[str, int], Dict]:
     """Main function that will handle the clustering into networks"""
-    print(f"logger level: {logger.level}")
+
     # create a dictionary that will have the gene name and chromosome as keys and the network information as values
     return_dict: Dict[Tuple[str, int], Dict] = {}
 
