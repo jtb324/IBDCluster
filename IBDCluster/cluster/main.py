@@ -3,8 +3,10 @@ from collections import namedtuple
 import models
 import log
 import pandas as pd
+import os
 
 logger = log.get_logger(__name__)
+
 
 
 def load_gene_info(filepath: str) -> Generator:
@@ -22,7 +24,7 @@ def load_gene_info(filepath: str) -> Generator:
     Genes = namedtuple("Genes", ["name", "chr", "start", "end"])
 
     with open(filepath, "r", encoding="utf-8") as gene_input:
-        logger.info(
+        logger.debug(
             f"Loaded in the gene information from the file, {filepath}, into a generator"
         )
         for line in gene_input:
@@ -39,7 +41,7 @@ def generate_carrier_list(carriers_matrix: pd.DataFrame) -> Dict[float, List[str
 
     # iterating over each phenotype which starts with the
     # second column
-
+    print(os.environ)
     for column in carriers_matrix.columns[1:]:
 
         filtered_matrix: pd.DataFrame = carriers_matrix[carriers_matrix[column] == 1][
@@ -61,7 +63,7 @@ def find_clusters(
     phecode_list: List[float]
 ) -> Dict[Tuple[str, int], Dict]:
     """Main function that will handle the clustering into networks"""
-
+    print(f"logger level: {logger.level}")
     # create a dictionary that will have the gene name and chromosome as keys and the network information as values
     return_dict: Dict[Tuple[str, int], Dict] = {}
 
@@ -85,7 +87,8 @@ def find_clusters(
     # chromosome number to find the correct file. A Cluster object is then created which loads the pairs
     # that surround a certain location into a dataframe
     for gene_tuple in gene_generator:
-        logger.debug(f"finding clusters for the gene: {gene_tuple.name}")
+
+        logger.info(f"finding clusters for the gene: {gene_tuple.name}")
 
         file: str = indices.find_file("".join(["chr", gene_tuple.chr]), ibd_files)
 

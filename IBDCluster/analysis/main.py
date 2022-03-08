@@ -7,7 +7,9 @@ from models import PairWriter, NetworkWriter
 import analysis
 import log
 
+
 logger = log.get_logger(__name__)
+
 # named tuple that will contain info about the carriers in a specific network
 # as well the percentage, and the IIDs
 class CarriersInfo(

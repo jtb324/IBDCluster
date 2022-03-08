@@ -1,10 +1,12 @@
 from dataclasses import dataclass, field
-import pandas as pd
 from typing import Dict, List, Set, Protocol, Tuple, Optional
-from .pairs import Pairs
+import pandas as pd
 from tqdm import tqdm
 import log
 from numpy import where
+
+from .pairs import Pairs
+
 
 logger = log.get_logger(__name__)
 
@@ -45,6 +47,7 @@ class Cluster:
     )  # This attribute will keep track of all individuals that are in any network
     network_id: int = 1
     ibd_df: Optional[pd.DataFrame] = None
+    count: int = 0 # this is a counter that is used in testing to speed the process
 
     def load_file(self, start: int, end: int, start_indx: int, end_indx: int) -> None:
         """Method filters the ibd file based on location and loads this into memory as a dataframe
@@ -59,7 +62,7 @@ class Cluster:
             integer that desribes the end position of the gene of interest
         """
         logger.debug(
-            f"Gathering shared ibd segments that overlap the gene region from {start} to {end}"
+            f"Gathering shared ibd segments that overlap the gene region from {start} to {end} using the file {self.ibd_file}"
         )
         self.ibd_df: pd.DataFrame = pd.DataFrame()
 
@@ -88,7 +91,7 @@ class Cluster:
         carrier_list : Dict[float, List[str]]
             dictionary where the keys are the phecodes and the values are list of individuals who are carriers for a specific phecode
         """
-        logger.info(
+        logger.debug(
             f"Adding a carrier status of either 1 or 0 for all {len(carriers)} phecodes"
         )
         status_dict = {}
@@ -106,6 +109,7 @@ class Cluster:
 
         self.ibd_df = pd.concat([self.ibd_df.reset_index(drop=True), pd.DataFrame.from_dict(status_dict).reset_index(drop=True)], axis=1)
 
+        # release the memory from the status_dict
         del status_dict
 
 
@@ -121,7 +125,7 @@ class Cluster:
             column index for the hapibd or ilash file to find the 
             lengths of each segment for
         """
-        logger.debug(
+        logger.info(
             f"Filtering the dataframe of shared segments to greater than or equal to {cM_threshold}cM"
         )
         self.ibd_df = self.ibd_df[self.ibd_df[len_index] >= cM_threshold]
@@ -432,10 +436,14 @@ class Cluster:
                 )
 
                 self.network_id += 1
+            
+            # if the program is being run in debug mode then it will only run three times
+            print(f"logger level = {logger.level}")
+            if logger.level == 10:
+                if self.count == 3:
+                    break
+                self.count += 1
 
-            # if count == 3:
-            #     break
-            # count += 1
         # we can reset the network_id for the next cluster
         self.network_id = 1
 

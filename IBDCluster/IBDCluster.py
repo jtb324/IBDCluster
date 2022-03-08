@@ -4,6 +4,7 @@ import callbacks
 import typer
 import cluster
 import log
+import os
 import analysis
 import pandas as pd
 from typing import Dict, Tuple
@@ -21,8 +22,14 @@ def record_inputs(logger, **kwargs) -> None:
     program. Takes a logger and then a dictionary of the user
     arguments"""
 
+    logger.setLevel(20)
+
     for parameter, value in kwargs.items():
         logger.info(f"{parameter}: {value}")
+
+    # getting the correct log level to reset the logger
+    logger.setLevel(log.get_loglevel(kwargs["loglevel"]))
+
 
 
 @app.command()
@@ -76,6 +83,9 @@ def main(
     ),
 ) -> None:
     """Main function for the program that has all the parameters that the user can use with type"""
+
+    # adding the loglevel to the environment so that we can access it
+    os.environ.setdefault("program_loglevel", str(log.get_loglevel(loglevel)))
 
     # creating the logger and then configuring it
     logger = log.create_logger()

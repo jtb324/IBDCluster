@@ -6,6 +6,7 @@ import log
 
 logger = log.get_logger(__name__)
 
+
 class ProgramIndices(Protocol):
     """Interface indicating that the class has to have a gather files method"""
     file_dir: Optional[str]
@@ -31,7 +32,9 @@ class HapibdInfo(ProgramIndices):
             file: str = os.path.join(self.file_dir, file)
 
             file_list.append(file)
-    
+
+        logger.debug(f"Found {len(file_list)} with the extension '.ibd.gz' in the directory {self.file_dir}")
+
         return file_list
 
 @dataclass
@@ -50,7 +53,9 @@ class IlashInfo(ProgramIndices):
             file: str = os.path.join(self.file_dir, file)
 
             file_list.append(file)
-    
+
+        logger.debug(f"Found {len(file_list)} with the extension '.match.gz' in the directory {self.file_dir}")
+            
         return file_list
 
 @dataclass

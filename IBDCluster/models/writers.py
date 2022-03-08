@@ -7,6 +7,7 @@ import log
 
 logger = log.get_logger(__name__)
 
+
 CarriersInfo = namedtuple(
     "Carrier_Comp", ["ind_in_network", "percentage", "IIDs", "pvalue"]
 )
@@ -57,7 +58,7 @@ class PairWriter:
 
         # Appending the word Pair_1/Pair_2 to the column label and then joining them
         # into a string
-
+        logger.debug("Creating a string for all the phecode statuses to the allpairs.txt file")
         header_list = []
 
         for phecode in self.phenotype_list:
@@ -81,7 +82,7 @@ class PairWriter:
             output_dir, "".join(["IBD_", self.gene_name, "_allpairs.txt"])
         )
 
-        logger.info(f"Writing the allpairs.txt file to: {output_file_name}")
+        logger.debug(f"Writing the allpairs.txt file to: {output_file_name}")
         # opening the file and then writting the information from each
         # pair to that file. A file will be created for each gene
         with open(
@@ -204,7 +205,7 @@ class NetworkWriter:
             "".join([ibd_program, "_", self.gene_name, "_networks.txt"]),
         )
 
-        logger.info(f"Information written to a networks.txt at: {output_file_name}")
+        logger.debug(f"Information written to a networks.txt at: {output_file_name}")
 
         with open(
             output_file_name,
@@ -243,6 +244,9 @@ class NetworkWriter:
                 # creating a string that has the carrier count and the pvalues for each
                 # phecode
                 analysis_str: str = f"{self._form_analysis_string(analysis_obj)}"
+                
+                # if debug mode is choosen then it will write the output string to a file/console
+                logger.debug(f"{networks}\t{counts}\t{iids}\t{min_pvalue_str}\t{analysis_str}")
 
                 output_file.write(
                     f"{networks}\t{counts}\t{iids}\t{min_pvalue_str}\t{analysis_str}"
