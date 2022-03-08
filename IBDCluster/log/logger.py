@@ -12,7 +12,7 @@ def get_loglevel(loglevel: str):
     """Function that will return a log level based on the input"""
 
     return level_dict[loglevel]
-    
+
 def configure(
     logger: logging.Logger,
     output: str,
