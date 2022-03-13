@@ -101,7 +101,7 @@ class FileInfo:
         
         chr_num : str
             identifier for the chromosome number this wilk take the format 'chrX' or 'chrXX' depending on 
-            whether the X is < 10 or >= 10
+            whether the X is < 10 or >= 10. If the user names the files chr09 instead of chr9 then the program will fail with a critical message
         
         file_list : List[str]
             list of filepaths to the ibd files of interest
