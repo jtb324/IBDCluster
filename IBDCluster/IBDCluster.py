@@ -31,7 +31,6 @@ def record_inputs(logger, **kwargs) -> None:
     logger.setLevel(log.get_loglevel(kwargs["loglevel"]))
 
 
-
 @app.command()
 def main(
     ibd_program: str = typer.Option(
@@ -43,12 +42,6 @@ def main(
     ),
     output: str = typer.Option(
         "./", "--output", "-o", help="directory to write the output files into."
-    ),
-    env: str = typer.Option(
-        ...,
-        "--env",
-        "-e",
-        help="Filepath to an env file that has configuration setting. Program assumes that the default path is ../.env from the main file IBDCluster.py",
     ),
     gene_info_file: str = typer.Option(
         ...,
@@ -97,7 +90,6 @@ def main(
         logger,
         ibd_program_used=ibd_program,
         output_path=output,
-        environment_file=env,
         gene_info_file=gene_info_file,
         carrier_matrix=carriers,
         centimorgan_threshold=cm_threshold,

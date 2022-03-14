@@ -69,7 +69,7 @@ class PairWriter:
             header_list.extend(
                 [
                     "".join([str(phecode), "_Pair_1_status"]),
-                    "".join([str(phecode), "Pair_2_status"]),
+                    "".join([str(phecode), "_Pair_2_status"]),
                 ]
             )
 

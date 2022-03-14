@@ -9,6 +9,7 @@ logger = log.get_logger(__name__)
 
 class ProgramIndices(Protocol):
     """Interface indicating that the class has to have a gather files method"""
+
     file_dir: Optional[str]
     cM_indx: int
 
@@ -16,9 +17,11 @@ class ProgramIndices(Protocol):
         """Method to gather a list of output files for the correct ibd program"""
         ...
 
+
 @dataclass
 class HapibdInfo(ProgramIndices):
     """Class that has all of the indices as well as file paths for the hapibd files."""
+
     file_dir: Optional[str] = None
     cM_indx: int = 7
 
@@ -33,13 +36,17 @@ class HapibdInfo(ProgramIndices):
 
             file_list.append(file)
 
-        logger.debug(f"Found {len(file_list)} with the extension '.ibd.gz' in the directory {self.file_dir}")
+        logger.debug(
+            f"Found {len(file_list)} with the extension '.ibd.gz' in the directory {self.file_dir}"
+        )
 
         return file_list
+
 
 @dataclass
 class IlashInfo(ProgramIndices):
     """Class that has all of the indices as well as file paths for the ilash files."""
+
     file_dir: Optional[str] = None
     cM_indx: int = 9
 
@@ -54,19 +61,23 @@ class IlashInfo(ProgramIndices):
 
             file_list.append(file)
 
-        logger.debug(f"Found {len(file_list)} with the extension '.match.gz' in the directory {self.file_dir}")
-            
+        logger.debug(
+            f"Found {len(file_list)} with the extension '.match.gz' in the directory {self.file_dir}"
+        )
+
         return file_list
+
 
 @dataclass
 class FileInfo:
     """The child classes will have attributes such as:
-            'id1_indx': 0,
-            'id2_indx': 2,
-            'chr_indx': 4,
-            'str_indx': 5,
-            'end_indx': 6
+    'id1_indx': 0,
+    'id2_indx': 2,
+    'chr_indx': 4,
+    'str_indx': 5,
+    'end_indx': 6
     """
+
     id1_indx: int = 0
     id1_phase_indx: int = 1
     id2_indx: int = 2
@@ -79,30 +90,34 @@ class FileInfo:
 
     def set_program_indices(self, program_name: str) -> None:
         """Method that will set the program indices as either Hapibd_Info or Ilash_Info
-        
+
         Parameters
-        
+
         program_name : str
             This will be either ilash or hapibd
-        
+
         filepath : str
             string to the directory with ibd files
-        """ 
+        """
         if program_name == "hapibd":
-            self.program_indices = HapibdInfo("/data100t1/share/BioVU/shapeit4/Eur_70k/hapibd/")
+            self.program_indices = HapibdInfo(
+                "/data100t1/share/BioVU/shapeit4/Eur_70k/hapibd/"
+            )
         else:
-            self.program_indices = IlashInfo("/data100t1/share/BioVU/shapeit4/Eur_70k/iLash/min100gmap/")
-    
+            self.program_indices = IlashInfo(
+                "/data100t1/share/BioVU/shapeit4/Eur_70k/iLash/min100gmap/"
+            )
+
     @staticmethod
     def find_file(chr_num: str, file_list: List[str]) -> str:
         """Method that will find the appropriate file based on the correct chromosome number
-        
+
         Parameters
-        
+
         chr_num : str
-            identifier for the chromosome number this wilk take the format 'chrX' or 'chrXX' depending on 
+            identifier for the chromosome number this wilk take the format 'chrX' or 'chrXX' depending on
             whether the X is < 10 or >= 10. If the user names the files chr09 instead of chr9 then the program will fail with a critical message
-        
+
         file_list : List[str]
             list of filepaths to the ibd files of interest
 
@@ -110,18 +125,19 @@ class FileInfo:
 
         str
             returns the file as a string
-        """ 
+        """
         try:
-            ibd_file: str = [file for file in file_list if "".join([chr_num, "."]) in file][0]
+            ibd_file: str = [
+                file for file in file_list if "".join([chr_num, "."]) in file
+            ][0]
         except IndexError as traceback:
-            logger.critical(f"Attempts to find chromosome, {chr_num} in file list, {', '.join(file_list)}, resulted in the following index out of range error:")
+            logger.critical(
+                f"Attempts to find chromosome, {chr_num} in file list, {', '.join(file_list)}, resulted in the following index out of range error:"
+            )
             logger.critical(traceback, exc_info=1)
 
-        logger.debug(f"Found the ibd file, {ibd_file}, that matches the chromosome, {chr_num}")
-        
+        logger.debug(
+            f"Found the ibd file, {ibd_file}, that matches the chromosome, {chr_num}"
+        )
+
         return ibd_file
-
-
-
-    
-        

@@ -46,21 +46,26 @@ class Network:
     haplotypes: Set[str] = field(default_factory=set)
 
     def filter_for_seed(
-        self, ibd_df: pd.DataFrame, ind_seed: List[str], indices: FileInfo, exclusion: Set[str] = None
+        self,
+        ibd_df: pd.DataFrame,
+        ind_seed: List[str],
+        indices: FileInfo,
+        exclusion: Set[str] = None,
     ) -> pd.DataFrame:
         """Method to filter the ibd_df for the first individual. This gets the first level new_connections"""
         filtered_df: pd.DataFrame = ibd_df[
-            (ibd_df[indices.ind1_with_phase].isin(ind_seed)) | (ibd_df[indices.ind2_with_phase].isin(ind_seed))
+            (ibd_df[indices.ind1_with_phase].isin(ind_seed))
+            | (ibd_df[indices.ind2_with_phase].isin(ind_seed))
         ]
 
-        # in the secondary connections 
+        # in the secondary connections
         if exclusion:
-            logger.debug(f"excluding {', '.join(exclusion)}") 
+            logger.debug(f"excluding {', '.join(exclusion)}")
 
             filtered_df: pd.DataFrame = filtered_df[
-            ~(filtered_df[indices.ind1_with_phase].isin(exclusion))
-            & ~(filtered_df[indices.ind2_with_phase].isin(exclusion))
-        ]
+                ~(filtered_df[indices.ind1_with_phase].isin(exclusion))
+                & ~(filtered_df[indices.ind2_with_phase].isin(exclusion))
+            ]
         logger.debug(
             f"found {filtered_df.shape[0]} pairs that contain the individuals: {', '.join(ind_seed)}"
         )
@@ -118,15 +123,15 @@ class Network:
             f"updating the pairs, iids, and haplotype attributes for the network {self.network_id}"
         )
 
-        self.pairs = list(
-            ibd_df.apply(lambda row: self._determine_pairs(row, indices), axis=1)
+        self.pairs.extend(
+            list(ibd_df.apply(lambda row: self._determine_pairs(row, indices), axis=1))
         )
 
         # updating the iids attribute with what is in the ibd_df
-        self.iids = self.gather_grids(ibd_df, indices.id1_indx, indices.id2_indx)
+        self.iids.update(self.gather_grids(ibd_df, indices.id1_indx, indices.id2_indx))
 
         # now need to get a list of haplotypes
-        self.haplotypes = set(
+        self.haplotypes.update(
             ibd_df[indices.ind1_with_phase].values.tolist()
             + ibd_df[indices.ind2_with_phase].values.tolist()
         )
@@ -138,7 +143,7 @@ class Cluster:
 
     ibd_file: str
     count: int = 0  # this is a counter that is used in testing to speed the process
-    ibd_df: Optional[pd.DataFrame] = None
+    ibd_df: Optional[pd.DataFrame] = field(default_factory=pd.DataFrame)
 
     def load_file(self, start: int, end: int, start_indx: int, end_indx: int) -> None:
         """Method filters the ibd file based on location and loads this into memory as a dataframe
@@ -155,7 +160,6 @@ class Cluster:
         logger.debug(
             f"Gathering shared ibd segments that overlap the gene region from {start} to {end} using the file {self.ibd_file}"
         )
-        self.ibd_df: pd.DataFrame = pd.DataFrame()
 
         for chunk in pd.read_csv(
             self.ibd_file, sep="\t", header=None, chunksize=1000000
@@ -281,43 +285,48 @@ class Cluster:
         exclusion: Set[str],
         indices: FileInfo,
         network: Network,
-        inds_in_network: Set[str]
+        inds_in_network: Set[str],
     ) -> None:
         """Function that will find the secondary connections within the graph
 
         Parameters
 
         new_individuals : List[str]
-            List of iids that are not the exclusion iid. The list will be all
-            individuals who share with the iid
+            List of iids that are not the exclusion iid. The list will be
+            all individuals who share with the iid
 
         exclusion : Set[str]
-            This is a set of iids that we want to keep out of the secondary cluster because we
-            seeded from this iid so we have these connections
+            This is a set of iids that we want to keep out of the secondary
+            cluster because we seeded from this iid so we have these
+            connections
 
         indices : FileInfo
-            object that has all the indices values for the correct column in the hapibd file
+            object that has all the indices values for the correct column
+            in the hapibd file
 
         network : Network
             class that has attributes for the pairs, iids, and haplotypes
-        
+
 
         """
         # filtering the dataframe with the new individuals
-        second_filter: pd.DataFrame = network.filter_for_seed(self.ibd_df, new_individuals, indices, exclusion)
+        second_filter: pd.DataFrame = network.filter_for_seed(
+            self.ibd_df, new_individuals, indices, exclusion
+        )
 
         if not second_filter.empty:
             # getting a list of all new individuals
-            new_connections: List[str] = list(network.gather_grids(second_filter, indices.ind1_with_phase, indices.ind2_with_phase)
+            new_connections: List[str] = list(
+                network.gather_grids(
+                    second_filter, indices.ind1_with_phase, indices.ind2_with_phase
+                )
             )
 
             network.update(second_filter, indices)
 
             # need to create a list of people in the network
-            inds_in_network.update(
-                new_connections
-            )
-            
+            inds_in_network.update(new_connections)
+
             # updating the exclusion set so that the individuals that we seeded of of this iteration are added to it
             exclusion.update(new_individuals)
 
@@ -327,7 +336,7 @@ class Cluster:
                 exclusion,
                 indices,
                 network,
-                inds_in_network
+                inds_in_network,
             )
 
     def find_networks(
@@ -362,14 +371,12 @@ class Cluster:
         for ind in tqdm(iid_list, desc="pairs in clusters"):
             # if this iid has already been associated with a network then we need to skip it. If not then we can get the network connected to it
             if ind not in inds_in_network:
-                
+
                 network_obj = Network(gene_name, chromosome, network_id)
 
                 # filtering the network object for the
                 # connections to the first seed
-                filtered_df = network_obj.filter_for_seed(
-                    self.ibd_df, [ind], indices
-                )
+                filtered_df = network_obj.filter_for_seed(self.ibd_df, [ind], indices)
 
                 network_obj.update(filtered_df, indices)
 
@@ -380,7 +387,6 @@ class Cluster:
                     )
                 )
 
-            
                 # finding the secondary connections. These are connections to all
                 # individuals in the self.individuals_in_network set that are not the
                 # seeding individual
@@ -389,15 +395,11 @@ class Cluster:
                 )
 
                 self._find_secondary_connections(
-                    [
-                        iid
-                        for iid in network_obj.haplotypes
-                        if iid != ind
-                    ],
+                    [iid for iid in network_obj.haplotypes if iid != ind],
                     set([ind]),
                     indices,
                     network_obj,
-                    inds_in_network
+                    inds_in_network,
                 )
 
                 logger.debug(
@@ -415,6 +417,5 @@ class Cluster:
                 if self.count == 3:
                     break
                 self.count += 1
-
 
         return network_list
