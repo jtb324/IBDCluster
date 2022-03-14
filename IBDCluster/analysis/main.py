@@ -3,7 +3,7 @@ from collections import namedtuple
 import pandas as pd
 from scipy.stats import binom
 from tqdm import tqdm
-from models import PairWriter, NetworkWriter
+from models import PairWriter, NetworkWriter, Network
 import analysis
 import log
 
@@ -71,26 +71,26 @@ def determine_pvalue(
 
 def determine_in_networks(
     carriers_list: Dict[str, List[str]],
-    info_dict: Dict[int, Dict],
+    network_list: List[Network],
     percentage_pop_phenotypes: Dict[str, float],
 ) -> None:
     """Function that will determine information about how many carriers are in each
     network, the percentage, the IIDs of the carriers in the network, and the pvalue for
     the network. These values are stored in the namedtuple CarriersInfo, and then
-    finally stored in the phenotype key of the inner info_dict dictionary
+    finally stored in the phenotype attribute of the network object
 
     Parameters
 
     carriers_list : dict[str, List[str]]
         Dictionaary that has all the carriers in list for each phenotype of interest
 
-    info_dict : Dict[int, Dict]
-        dictionary where the keys are network ids and the inner dictionary has information about the network ind different keys
+    network_list : List[Network]
+        List of Network objects which have attributes for iids, pairs, and haplotypes
     """
 
-    for _, info in tqdm(info_dict.items(), desc="Analyzing networks: "):
+    for network in tqdm(network_list, desc="Analyzing networks: "):
 
-        iids_in_network: Set[str] = info["IIDs"]
+        iids_in_network: Set[str] = network.iids
 
         phenotype_info: Dict[str, CarriersInfo] = {}
 
@@ -118,16 +118,16 @@ def determine_in_networks(
 
             logger.debug(carrier_info)
 
-        info["phenotype"] = phenotype_info
+        network.phenotype = phenotype_info
 
 
 def analyze(
     gene_info: Tuple[str, str],
-    network_info: Dict[int, Dict],
+    network_list: List[Network],
     carriers_pheno_matrix: pd.DataFrame,
     writer: Writer,
     carriers_lists: Dict[float, List[str]],
-):
+) -> None:
     """Main function from the analyze module that will determine the
     pvalues and the number of haplotypes, and individuals and will
     write this all to file.
@@ -137,7 +137,7 @@ def analyze(
     gene_info : Tuple[str, str]
         Tuple that contains the gene name and the chromosome number
 
-    network_info : Dict[int, Dict]
+    network_list : List[Network]
         Dictionary that has the network id as the outer key,
         and the inner dictionary has information about the
         individuals in the network, the haplotypes, and the
@@ -170,17 +170,16 @@ def analyze(
     # we will iterate over each network and basically
     # determine the number of carriers for each grid as well
     # as the percent
-    determine_in_networks(carriers_lists, network_info, percent_carriers_in_pop)
+    determine_in_networks(carriers_lists, network_list, percent_carriers_in_pop)
 
     # creating the _networks.txt file using the writer object
     writer.set_writer(NetworkWriter(gene_info[0], gene_info[1], phenotype_list))
 
-    writer.write_to_file(network_info)
-
-    # # adding information to the pair about the carrier string
-    # analyze_pair_carrier_status(phenotype_list, carriers_lists, network_info)
+    writer.write_to_file(network_list)
 
     # creating the allpairs.txt file
     writer.set_writer(PairWriter(gene_info[0], gene_info[1], phenotype_list))
 
-    writer.write_to_file(network_info)
+    writer.write_to_file(network_list)
+
+    # Need to determine if any of the networks are significant

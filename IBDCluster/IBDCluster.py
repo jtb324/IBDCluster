@@ -7,7 +7,7 @@ import log
 import os
 import analysis
 import pandas as pd
-from typing import Dict, Tuple
+from typing import Dict, Tuple, List
 from models import Writer
 
 
@@ -112,7 +112,7 @@ def main(
     carriers_dict = cluster.generate_carrier_list(carriers_df)
 
     # We can then determine the different clusters for each gene
-    networks: Dict[Tuple[str, int], Dict] = cluster.find_clusters(
+    networks: Dict[Tuple[str, int], List] = cluster.find_clusters(
         ibd_program, gene_info_file, cm_threshold, carriers_dict, phecode_list
     )
 
@@ -121,9 +121,9 @@ def main(
     write_obj = Writer(output, ibd_program)
 
     # iterate over each object
-    for gene, networks_info in networks.items():
+    for gene, networks_list in networks.items():
         # This is the main function that will run the analysis of the networks
-        analysis.analyze(gene, networks_info, carriers_df, write_obj, carriers_dict)
+        analysis.analyze(gene, networks_list, carriers_df, write_obj, carriers_dict)
 
     logger.info("analysis_finished")
 

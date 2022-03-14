@@ -4,6 +4,7 @@ import os
 from collections import namedtuple
 from tqdm import tqdm
 import log
+from models import Network
 
 logger = log.get_logger(__name__)
 
@@ -58,15 +59,19 @@ class PairWriter:
 
         # Appending the word Pair_1/Pair_2 to the column label and then joining them
         # into a string
-        logger.debug("Creating a string for all the phecode statuses to the allpairs.txt file")
+        logger.debug(
+            "Creating a string for all the phecode statuses to the allpairs.txt file"
+        )
         header_list = []
 
         for phecode in self.phenotype_list:
 
-            header_list.extend([
-                "".join([str(phecode), "_Pair_1_status"]), 
-                "".join([str(phecode), "Pair_2_status"])
-                ])
+            header_list.extend(
+                [
+                    "".join([str(phecode), "_Pair_1_status"]),
+                    "".join([str(phecode), "Pair_2_status"]),
+                ]
+            )
 
         return "\t".join(header_list)
 
@@ -74,7 +79,7 @@ class PairWriter:
         """Method to write the output to an allpairs.txt file"""
         # get the necessary information from the kwargs
         output_dir: str = kwargs["output"]
-        networks_info: Dict = kwargs["network_info"]
+        network_list: List[Network] = kwargs["network_info"]
         ibd_program: str = kwargs["program"]
 
         # full filepath to write the output to
@@ -94,14 +99,12 @@ class PairWriter:
             output_file.write(
                 f"program\tnetwork_id\tpair_1\tpair_2\tphase_1\tphase_2\tchromosome\tgene_name\t{self._form_phenotype_header()}\tstart\tend\tlength\n"
             )
-            for network_id, info in tqdm(
-                networks_info.items(), desc="Networks written to file: "
-            ):
+            for network in tqdm(network_list, desc="Networks written to file: "):
 
-                pairs = info["pairs"]
+                pairs = network.pairs
 
                 for pair in pairs:
-                    output_str = f"{ibd_program}\t{network_id}\t{pair.form_id_str()}\t{pair.chromosome}\t{self.gene_name}\t{pair.form_affected_string()}\t{pair.form_segment_info_str()}"
+                    output_str = f"{ibd_program}\t{network.network_id}\t{pair.form_id_str()}\t{pair.chromosome}\t{self.gene_name}\t{pair.form_affected_string()}\t{pair.form_segment_info_str()}"
 
                     logger.debug(output_str)
 
@@ -197,7 +200,7 @@ class NetworkWriter:
 
     def write(self, **kwargs) -> None:
         """Method to write the output to a networks.txt file"""
-        networks_info: Dict = kwargs["network_info"]
+        network_list: List[Network] = kwargs["network_info"]
         ibd_program: str = kwargs["program"]
 
         output_file_name = os.path.join(
@@ -216,26 +219,22 @@ class NetworkWriter:
                 f"program\tgene\tnetwork_id\tchromosome\tIIDs_count\thaplotypes_count\tIIDs\thaplotypes\tmin_pvalue\tmin_pvalue_phecode\t{self._form_phenotype_header()}\n"
             )
 
-            for network_id, info in tqdm(
-                networks_info.items(), desc="Networks written to file: "
-            ):
+            for network in tqdm(network_list, desc="Networks written to file: "):
                 # string that has the network information such as the
                 # network_id, ibd_program, the gene it is for and the
                 # chromosome number
-                networks: str = (
-                    f"{ibd_program}\t{self.gene_name}\t{network_id}\t{self.chromosome}"
-                )
+                networks: str = f"{ibd_program}\t{self.gene_name}\t{network.network_id}\t{self.chromosome}"
 
                 # string that has the number of individuals in the
                 # network as well as the the number of haplotypes
-                counts: str = f"{len(info['IIDs'])}\t{len(info['haplotypes'])}"
+                counts: str = f"{len(network.iids)}\t{len(network.haplotypes)}"
                 # string that has the list of GRID IIDs and the haplotype phases
                 iids: str = (
-                    f"{', '.join(info['IIDs'])}\t{', '.join(info['haplotypes'])}"
+                    f"{', '.join(network.iids)}\t{', '.join(network.haplotypes)}"
                 )
 
                 # Getting the phenotype analysis infofrom the object
-                analysis_obj: Dict[str, CarriersInfo] = info["phenotype"]
+                analysis_obj: Dict[str, CarriersInfo] = network.phenotype
 
                 # Creating a string that has the information about the
                 # minimum pvalue and corresponding phecode for the network
@@ -244,9 +243,11 @@ class NetworkWriter:
                 # creating a string that has the carrier count and the pvalues for each
                 # phecode
                 analysis_str: str = f"{self._form_analysis_string(analysis_obj)}"
-                
+
                 # if debug mode is choosen then it will write the output string to a file/console
-                logger.debug(f"{networks}\t{counts}\t{iids}\t{min_pvalue_str}\t{analysis_str}")
+                logger.debug(
+                    f"{networks}\t{counts}\t{iids}\t{min_pvalue_str}\t{analysis_str}"
+                )
 
                 output_file.write(
                     f"{networks}\t{counts}\t{iids}\t{min_pvalue_str}\t{analysis_str}"

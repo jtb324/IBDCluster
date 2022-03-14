@@ -108,7 +108,7 @@ def find_clusters(
         cluster_model.add_carrier_status(carriers, indices.id1_indx, indices.id2_indx, phecode_list)
     
 
-        network_info: Dict = cluster_model.find_networks(gene_tuple.name, gene_tuple.chr, indices)
+        network_info: List = cluster_model.find_networks(gene_tuple.name, gene_tuple.chr, indices)
 
         return_dict[(gene_tuple.name, gene_tuple.chr)] = network_info
 

@@ -62,7 +62,7 @@ class Network:
             & ~(filtered_df[indices.ind2_with_phase].isin(exclusion))
         ]
         logger.debug(
-            f"found {filtered_df.shape[0]} pairs that contain the individual {ind_seed}"
+            f"found {filtered_df.shape[0]} pairs that contain the individuals: {', '.join(ind_seed)}"
         )
 
         return filtered_df
@@ -248,7 +248,7 @@ class Cluster:
         List[str]
             returns a list of unique individuals in the dataframe
         """
-        print(f"indices: {indices}")
+
         self.ibd_df["ind_1"] = (
             self.ibd_df[indices.id1_indx]
             + "."
@@ -391,7 +391,7 @@ class Cluster:
                 self._find_secondary_connections(
                     [
                         iid
-                        for iid in network_obj.iids
+                        for iid in network_obj.haplotypes
                         if iid != ind
                     ],
                     set([ind]),
