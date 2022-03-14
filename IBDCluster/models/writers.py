@@ -17,7 +17,7 @@ CarriersInfo = namedtuple(
 class WriteObject(Protocol):
     """Interface indicating that the writer object needs to have the methods write to file"""
 
-    def _form_phenotype_header(self) -> str:
+    def _form_header(self) -> str:
         """method used to form a dynamic column header for different phenotypes. That way the columns can scale with different number of phenotypes that are added"""
         ...
 
@@ -38,12 +38,45 @@ class Writer:
         """Method that will set whether we are writing for networks or pairs"""
         self.writer: WriteObject = writer
 
-    def write_to_file(self, networks_dict: Dict) -> None:
+    def write_to_file(
+        self,
+        networks_list: List[Network] = None,
+        gini_coefficients: Dict[str, float] = None,
+    ) -> None:
         """Method that will call the write method of the self.writer class"""
-        logger.info(f"writing the output to the directory: {self.output}")
         self.writer.write(
-            output=self.output, network_info=networks_dict, program=self.ibd_program
+            output=self.output,
+            network_info=networks_list,
+            program=self.ibd_program,
+            gini_coef=gini_coefficients,
         )
+
+
+@dataclass
+class CoefficientWriter:
+    """Class object that will write the genie coefficients to file"""
+
+    def _form_header(self) -> str:
+        """This just forms the header of the file to be consistent with the protocol"""
+
+        return "phecode\tgini_coefficient\n"
+
+    def write(self, **kwargs) -> None:
+        """Method to write the output to an gini_coefficients.txt file"""
+
+        output_dir: str = kwargs["output"]
+        gini_coef: Dict[str, float] = kwargs["gini_coef"]
+        output_file_name: str = os.path.join(output_dir, "gini_coefficients.txt")
+
+        logger.info(f"Writing the allpairs.txt file to: {output_file_name}")
+
+        with open(output_file_name, "w", encoding="utf-8") as output:
+
+            output.write(self._form_header())
+
+            for phecode, coefficient in gini_coef.items():
+
+                output.write(f"{phecode}\t{coefficient}\n")
 
 
 @dataclass
@@ -54,7 +87,7 @@ class PairWriter:
     chromosome: str
     phenotype_list: List[str]
 
-    def _form_phenotype_header(self) -> str:
+    def _form_header(self) -> str:
         """Method that will form the phenotype section of the header string"""
 
         # Appending the word Pair_1/Pair_2 to the column label and then joining them
@@ -87,7 +120,7 @@ class PairWriter:
             output_dir, "".join(["IBD_", self.gene_name, "_allpairs.txt"])
         )
 
-        logger.debug(f"Writing the allpairs.txt file to: {output_file_name}")
+        logger.info(f"Writing the allpairs.txt file to: {output_file_name}")
         # opening the file and then writting the information from each
         # pair to that file. A file will be created for each gene
         with open(
@@ -97,7 +130,7 @@ class PairWriter:
         ) as output_file:
 
             output_file.write(
-                f"program\tnetwork_id\tpair_1\tpair_2\tphase_1\tphase_2\tchromosome\tgene_name\t{self._form_phenotype_header()}\tstart\tend\tlength\n"
+                f"program\tnetwork_id\tpair_1\tpair_2\tphase_1\tphase_2\tchromosome\tgene_name\t{self._form_header()}\tstart\tend\tlength\n"
             )
             for network in tqdm(network_list, desc="Networks written to file: "):
 
@@ -119,7 +152,7 @@ class NetworkWriter:
     chromosome: str
     carriers_columns: List[str]
 
-    def _form_phenotype_header(self) -> str:
+    def _form_header(self) -> str:
         """Method that will form the phenotype section of the header string. Need to
         append the words ind_in_network and pvalue to the phenotype name."""
         # pulling out all of the phenotype names from the carriers matrix
@@ -216,7 +249,7 @@ class NetworkWriter:
             encoding="utf-8",
         ) as output_file:
             output_file.write(
-                f"program\tgene\tnetwork_id\tchromosome\tIIDs_count\thaplotypes_count\tIIDs\thaplotypes\tmin_pvalue\tmin_pvalue_phecode\t{self._form_phenotype_header()}\n"
+                f"program\tgene\tnetwork_id\tchromosome\tIIDs_count\thaplotypes_count\tIIDs\thaplotypes\tmin_pvalue\tmin_pvalue_phecode\t{self._form_header()}\n"
             )
 
             for network in tqdm(network_list, desc="Networks written to file: "):
