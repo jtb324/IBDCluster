@@ -8,7 +8,6 @@ import log
 logger = log.get_logger(__name__)
 
 
-
 def _find_carrier_percentages(
     col_series: pd.Series, percentage_dict: Dict[str, float]
 ) -> None:
