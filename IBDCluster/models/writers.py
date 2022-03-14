@@ -223,7 +223,7 @@ class NetworkWriter:
                 # string that has the network information such as the
                 # network_id, ibd_program, the gene it is for and the
                 # chromosome number
-                networks: str = f"{ibd_program}\t{self.gene_name}\t{network.network_id}\t{self.chromosome}"
+                networks: str = f"{ibd_program}\t{network.gene_name}\t{network.network_id}\t{network.gene_chr}"
 
                 # string that has the number of individuals in the
                 # network as well as the the number of haplotypes
