@@ -3,11 +3,10 @@ from collections import namedtuple
 import models
 import log
 import pandas as pd
+
 # import os
 
 logger = log.get_logger(__name__)
-
-
 
 
 def load_gene_info(filepath: str) -> Generator:
@@ -61,7 +60,7 @@ def find_clusters(
     gene_info_filepath: str,
     cm_threshold: int,
     carriers: Dict[float, List[str]],
-    phecode_list: List[float]
+    phecode_list: List[float],
 ) -> Dict[Tuple[str, int], Dict]:
     """Main function that will handle the clustering into networks"""
 
@@ -99,16 +98,19 @@ def find_clusters(
         cluster_model.load_file(
             gene_tuple.start, gene_tuple.end, indices.str_indx, indices.end_indx
         )
-        
+
         # filtering the dataframe to >= specific centimorgan threshold
         cluster_model.filter_cm_threshold(cm_threshold, indices.program_indices.cM_indx)
 
-        # adding the affected status of 1 or 0 for each pair for each 
+        # adding the affected status of 1 or 0 for each pair for each
         # phenotype
-        cluster_model.add_carrier_status(carriers, indices.id1_indx, indices.id2_indx, phecode_list)
-    
+        cluster_model.add_carrier_status(
+            carriers, indices.id1_indx, indices.id2_indx, phecode_list
+        )
 
-        network_info: List = cluster_model.find_networks(gene_tuple.name, gene_tuple.chr, indices)
+        network_info: List = cluster_model.find_networks(
+            gene_tuple.name, gene_tuple.chr, indices
+        )
 
         return_dict[(gene_tuple.name, gene_tuple.chr)] = network_info
 
