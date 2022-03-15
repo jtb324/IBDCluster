@@ -1,9 +1,9 @@
-from typing import Protocol, Dict, Tuple, List, Set
+from typing import Protocol, Dict, Tuple, List
 from collections import namedtuple
 import pandas as pd
 from scipy.stats import binom
 from tqdm import tqdm
-from models import PairWriter, NetworkWriter, Network
+from models import PairWriter, NetworkWriter, Network, CoefficientWriter
 import analysis
 import log
 
@@ -13,7 +13,10 @@ logger = log.get_logger(__name__)
 # named tuple that will contain info about the carriers in a specific network
 # as well the percentage, and the IIDs
 class CarriersInfo(
-    namedtuple("Carrier_Comp", ["ind_in_network", "percentage", "IIDs", "pvalue"])
+    namedtuple(
+        "Carrier_Comp",
+        ["ind_in_network", "percentage", "IIDs", "pvalue", "network_len"],
+    )
 ):
     """This is an extension of the class tuple so that I can overwrite the __str__ method"""
 
@@ -39,7 +42,12 @@ class Writer(Protocol):
         """Method that determine the writer for the appropriate output"""
         ...
 
-    def write_to_file(self, output: str, networks_dict: Dict) -> None:
+    def write_to_file(
+        self,
+        networks_list: List[Network] = None,
+        gini_coefficients: Dict[str, float] = None,
+    ) -> None:
+        """Method that will call the write method of the writer object"""
         ...
 
 
@@ -90,28 +98,27 @@ def determine_in_networks(
 
     for network in tqdm(network_list, desc="Analyzing networks: "):
 
-        iids_in_network: Set[str] = network.iids
-
         phenotype_info: Dict[str, CarriersInfo] = {}
 
         for phenotype, carriers in carriers_list.items():
 
             carriers_in_network: List[str] = [
-                iid for iid in iids_in_network if iid in carriers
+                iid for iid in network.iids if iid in carriers
             ]
 
             num_carriers_in_network: int = len(carriers_in_network)
 
             carrier_info: CarriersInfo = CarriersInfo(
                 num_carriers_in_network,
-                num_carriers_in_network / len(iids_in_network),
+                num_carriers_in_network / len(network.iids),
                 carriers_in_network,
                 determine_pvalue(
                     phenotype,
                     percentage_pop_phenotypes,
                     num_carriers_in_network,
-                    len(iids_in_network),
+                    len(network.iids),
                 ),
+                len(network.iids),
             )
 
             phenotype_info[phenotype] = carrier_info
@@ -175,11 +182,18 @@ def analyze(
     # creating the _networks.txt file using the writer object
     writer.set_writer(NetworkWriter(gene_info[0], gene_info[1], phenotype_list))
 
-    writer.write_to_file(network_list)
+    writer.write_to_file(networks_list=network_list)
 
     # creating the allpairs.txt file
     writer.set_writer(PairWriter(gene_info[0], gene_info[1], phenotype_list))
 
-    writer.write_to_file(network_list)
+    writer.write_to_file(networks_list=network_list)
 
-    # Need to determine if any of the networks are significant
+    # Need to determine if any of the phenotypes are significant
+    gini_coef: Dict[str, float] = analysis.determine_phecode_genie_coefficient(
+        network_list
+    )
+
+    writer.set_writer(CoefficientWriter())
+
+    writer.write_to_file(gini_coefficients=gini_coef)
