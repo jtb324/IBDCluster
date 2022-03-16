@@ -114,5 +114,4 @@ def find_clusters(
 
         return_dict[(gene_tuple.name, gene_tuple.chr)] = network_info
 
-    print(return_dict)
     return return_dict
