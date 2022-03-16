@@ -67,7 +67,7 @@ def determine_pvalue(
     # the probability is 1 if the carrier count is zero because it is chances of finding
     # 0 or higher which is everyone
     if carriers_count == 0:
-        logger.debug(f"carrier count = 0 therefore pvalue for {phenotype} = {1}")
+        logger.debug(f"carrier count = 0 therefore pvalue for {phenotype} = 1")
         return 1
 
     prob: float = 1 - binom.cdf(

@@ -1,9 +1,10 @@
-import numpy as np
-import pandas as pd
 from typing import List, Dict
 from models import Network
 from tqdm import tqdm
 from collections import namedtuple
+import log
+
+logger = log.get_logger(__name__)
 
 
 class CarriersInfo(
@@ -18,25 +19,25 @@ class CarriersInfo(
         return f"Carrier Info Object - Individuals in Network: {self.ind_in_network}, Percentages: {self.percentage}, IID List: {self.IIDs}, pvalue: {self.pvalue}"
 
 
-def _gini(input_vector: List[str], weights=None) -> float:
-    """Function to calculate the gini coeffficient"""
-    # Array indexing requires reset indexes.
-    input_vector = pd.Series(input_vector).reset_index(drop=True)
-    if weights is None:
-        weights = np.ones_like(input_vector)
-    weights = pd.Series(weights).reset_index(drop=True)
-    n = input_vector.size
-    wxsum = sum(weights * input_vector)
-    wsum = sum(weights)
-    sxw = np.argsort(input_vector)
-    sx = input_vector[sxw] * weights[sxw]
-    sw = weights[sxw]
-    pxi = np.cumsum(sx) / wxsum
-    pci = np.cumsum(sw) / wsum
-    g = 0.0
-    for i in np.arange(1, n):
-        g = g + pxi.iloc[i] * pci.iloc[i - 1] - pci.iloc[i] * pxi.iloc[i - 1]
-    return g
+def _gini(input_vector: List[str], phecode: str) -> float:
+    """Function to calculate the gini coeffficient. This uses the biased calculation. Found at https://www.had2know.org/academics/gini-coefficient-calculator.html"""
+
+    input_vector.sort()
+
+    upper_val = 0
+
+    for index, value in enumerate(input_vector):
+
+        upper_val += (len(input_vector) + 1 - (index + 1)) * value
+
+    try:
+        return ((len(input_vector) + 1) / len(input_vector)) - (
+            (2 * upper_val) / (len(input_vector) * sum(input_vector))
+        )
+    except ZeroDivisionError:
+        logger.warning(
+            f"Zero division error produced when determining the gini coefficient for {phecode}. The sum of the input vector was {sum(input_vector)}"
+        )
 
 
 def _process(phenotype_dict: Dict[str, CarriersInfo], carrier_dict: Dict) -> None:
@@ -46,7 +47,7 @@ def _process(phenotype_dict: Dict[str, CarriersInfo], carrier_dict: Dict) -> Non
         phenotype_dict.items(), desc="gini coefficients calculated: "
     ):
 
-        carrier_dict.setdefault(phenotype, {"num_of_carriers": []})
+        _ = carrier_dict.setdefault(phenotype, {"num_of_carriers": []})
 
         carrier_dict[phenotype]["num_of_carriers"].append(carrier_obj.ind_in_network)
 
@@ -60,7 +61,7 @@ def _determine_gini_coefficient(
 
     for phecode, carrier_list in phecode_carriers.items():
         print(carrier_list)
-        gini_coef[phecode] = _gini(carrier_list["num_of_carriers"])
+        gini_coef[phecode] = _gini(carrier_list["num_of_carriers"], phecode)
 
     return gini_coef
 
