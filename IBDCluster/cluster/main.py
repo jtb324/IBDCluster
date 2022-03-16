@@ -4,8 +4,8 @@ import models
 import log
 import pandas as pd
 
-# import os
 
+# getting the logger object
 logger = log.get_logger(__name__)
 
 
