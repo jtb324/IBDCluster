@@ -26,18 +26,21 @@ def _gini(input_vector: List[str], phecode: str) -> float:
 
     upper_val = 0
 
+    bias_cor = len(input_vector) / (len(input_vector) - 1)
+
     for index, value in enumerate(input_vector):
 
         upper_val += (len(input_vector) + 1 - (index + 1)) * value
 
     try:
-        return ((len(input_vector) + 1) / len(input_vector)) - (
+        return bias_cor * ((len(input_vector) + 1) / len(input_vector)) - (
             (2 * upper_val) / (len(input_vector) * sum(input_vector))
         )
     except ZeroDivisionError:
         logger.warning(
             f"Zero division error produced when determining the gini coefficient for {phecode}. The sum of the input vector was {sum(input_vector)}"
         )
+        return "N/A"
 
 
 def _process(phenotype_dict: Dict[str, CarriersInfo], carrier_dict: Dict) -> None:
@@ -60,7 +63,7 @@ def _determine_gini_coefficient(
     gini_coef: Dict[str, float] = {}
 
     for phecode, carrier_list in phecode_carriers.items():
-        print(carrier_list)
+
         gini_coef[phecode] = _gini(carrier_list["num_of_carriers"], phecode)
 
     return gini_coef

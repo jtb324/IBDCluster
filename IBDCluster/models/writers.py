@@ -68,7 +68,7 @@ class CoefficientWriter:
         gini_coef: Dict[str, float] = kwargs["gini_coef"]
         output_file_name: str = os.path.join(output_dir, "gini_coefficients.txt")
 
-        logger.info(f"Writing the allpairs.txt file to: {output_file_name}")
+        logger.info(f"Writing the gini_coefficients to: {output_file_name}")
 
         with open(output_file_name, "w", encoding="utf-8") as output:
 
