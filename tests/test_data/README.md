@@ -23,4 +23,4 @@ ___
     * has information about the gene in four columns. First column is name. SEcond column is the chromosome. Third column is the gene start position. And the fourth column is the gene end position. These positions are taken from GnomAD build37
 
 * **shared_segment_test_data.txt**
-    * file that has the shared ibd pairwise segment data. The columns are: pair id 1, individual 1 phase, pair id 2, individual 2 phase, chromosome, segment start, segment end, and segment length. The pairs are matched to those 100 indivdua
+    * file that has the shared ibd pairwise segment data. The columns are: pair id 1, individual 1 phase, pair id 2, individual 2 phase, chromosome, segment start, segment end, and segment length. The pairs are matched to those 100 indivduals in the _percent_affected_phecode_matrix.txt.

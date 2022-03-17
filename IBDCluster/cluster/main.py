@@ -92,7 +92,7 @@ def find_clusters(
 
         file: str = indices.find_file("".join(["chr", gene_tuple.chr]), ibd_files)
 
-        cluster_model: models.Cluster = models.Cluster(file)
+        cluster_model: models.Cluster = models.Cluster(file, ibd_program)
 
         # loading in all the dataframe for the genetic locus
         cluster_model.load_file(

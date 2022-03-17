@@ -61,6 +61,19 @@ def write_to_file(percentage_dict: Dict[str, float], output: str) -> None:
             output_file.write(f"{phenotype}\t{percent}\n")
 
 
+def check_phenotype_prevalence(percentage_dict: Dict[str, float]) -> None:
+    """Function that will make sure that all the percentages are not 0. If they are then that will get logged to the output
+
+    Parameters
+
+    percentage_dict : Dict[str, float]
+        dictionary where the key is the phenotype and the values are the prevalence in the population
+    """
+
+    if not any(percentage_dict.values()):
+        logger.warning("All phenotypes have a population prevalence of 0%")
+
+
 def get_percentages(carrier_matrix: pd.DataFrame) -> Dict[str, float]:
     """Function that will take the carrier matrix and determine the percentage of carriers out of the whole dataset
 

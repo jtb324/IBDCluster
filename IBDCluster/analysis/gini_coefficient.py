@@ -46,9 +46,7 @@ def _gini(input_vector: List[str], phecode: str) -> float:
 def _process(phenotype_dict: Dict[str, CarriersInfo], carrier_dict: Dict) -> None:
     """Function that will create a dictionary where the keys are the phenotype and the keys are the the phecode and then the number of carriers for each network is stored in a list in an inner key"""
 
-    for phenotype, carrier_obj in tqdm(
-        phenotype_dict.items(), desc="gini coefficients calculated: "
-    ):
+    for phenotype, carrier_obj in phenotype_dict.items():
 
         _ = carrier_dict.setdefault(phenotype, {"num_of_carriers": []})
 
@@ -62,7 +60,9 @@ def _determine_gini_coefficient(
 
     gini_coef: Dict[str, float] = {}
 
-    for phecode, carrier_list in phecode_carriers.items():
+    for phecode, carrier_list in tqdm(
+        phecode_carriers.items(), desc="gini coefficients calculated"
+    ):
 
         gini_coef[phecode] = _gini(carrier_list["num_of_carriers"], phecode)
 
