@@ -14,3 +14,4 @@ dependencies:
  - six=1.16.0
  - typer=0.4.0
  - scipy=1.8.0
+ - tqdm=4.62.3
