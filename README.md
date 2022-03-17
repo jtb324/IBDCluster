@@ -91,6 +91,7 @@ ___
 ├── IBDCluster
 │   ├── analysis
 │   │   ├── main.py
+│   │   ├── gini_coefficient.py
 │   │   ├── percentages.py
 │   ├── callbacks
 │   │   ├── check_inputs.py
