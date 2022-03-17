@@ -106,7 +106,6 @@ class FileInfo:
             string to the directory with ibd files
         """
         if program_name == "hapibd":
-            logger.warning(f"HAPIBD_PATH: {os.getenv('HAPIBD_PATH')}")
 
             self.program_indices = HapibdInfo(os.getenv("HAPIBD_PATH"))
         else:
