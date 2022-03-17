@@ -238,7 +238,7 @@ class Cluster:
         logger.info(
             f"Filtering the dataframe of shared segments to greater than or equal to {cM_threshold}cM"
         )
-        logger.info(self.ibd_df)
+
         self.ibd_df = self.ibd_df[self.ibd_df[len_index] >= cM_threshold]
 
     def _find_all_grids(self, indices) -> List[str]:
