@@ -27,14 +27,20 @@ class HapibdInfo(ProgramIndices):
 
     def gather_files(self) -> List[str]:
         """Function that will gather together all the files in the file_dir that have the ext and will store them in a list"""
+        # saving the initial directory to a variable
+        start_dir = os.getcwd()
 
         file_list = []
+        # changing the directory to where the files are stored
+        os.chdir(self.file_dir)
 
-        for file in glob(os.path.join(self.file_dir, "*.ibd.gz")):
+        for file in glob(os.path.join("*.ibd.gz")):
 
             file: str = os.path.join(self.file_dir, file)
 
             file_list.append(file)
+        # changing back to the initial directory
+        os.chdir(start_dir)
 
         logger.debug(
             f"Found {len(file_list)} with the extension '.ibd.gz' in the directory {self.file_dir}"
@@ -100,13 +106,11 @@ class FileInfo:
             string to the directory with ibd files
         """
         if program_name == "hapibd":
-            self.program_indices = HapibdInfo(
-                "/data100t1/share/BioVU/shapeit4/Eur_70k/hapibd/"
-            )
+            logger.warning(f"HAPIBD_PATH: {os.getenv('HAPIBD_PATH')}")
+
+            self.program_indices = HapibdInfo(os.getenv("HAPIBD_PATH"))
         else:
-            self.program_indices = IlashInfo(
-                "/data100t1/share/BioVU/shapeit4/Eur_70k/iLash/min100gmap/"
-            )
+            self.program_indices = IlashInfo(os.getenv("ILASH_PATH"))
 
     @staticmethod
     def find_file(chr_num: str, file_list: List[str]) -> str:

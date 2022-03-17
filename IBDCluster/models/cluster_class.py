@@ -142,6 +142,7 @@ class Cluster:
     """Class object that will handle preparing the data to be clustered"""
 
     ibd_file: str
+    ibd_program: str
     count: int = 0  # this is a counter that is used in testing to speed the process
     ibd_df: Optional[pd.DataFrame] = field(default_factory=pd.DataFrame)
 
@@ -161,8 +162,13 @@ class Cluster:
             f"Gathering shared ibd segments that overlap the gene region from {start} to {end} using the file {self.ibd_file}"
         )
 
+        if self.ibd_program == "hapibd":
+            name_cols = [0, 1, 2, 3, 4, 5, 6, 7]
+        else:
+            name_cols = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+
         for chunk in pd.read_csv(
-            self.ibd_file, sep="\t", header=None, chunksize=1000000
+            self.ibd_file, sep="\t", header=None, chunksize=1000000, names=name_cols
         ):
 
             filtered_chunk: pd.DataFrame = chunk[
@@ -232,6 +238,7 @@ class Cluster:
         logger.info(
             f"Filtering the dataframe of shared segments to greater than or equal to {cM_threshold}cM"
         )
+        logger.info(self.ibd_df)
         self.ibd_df = self.ibd_df[self.ibd_df[len_index] >= cM_threshold]
 
     def _find_all_grids(self, indices) -> List[str]:

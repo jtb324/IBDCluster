@@ -6,6 +6,7 @@ import cluster
 import log
 import os
 import analysis
+from dotenv import load_dotenv
 import pandas as pd
 from typing import Dict, Tuple, List
 from models import Writer
@@ -42,6 +43,12 @@ def main(
     ),
     output: str = typer.Option(
         "./", "--output", "-o", help="directory to write the output files into."
+    ),
+    env_path: str = typer.Option(
+        "./.env",
+        "--env",
+        "-e",
+        help="path to a .env file that has variables for the hapibd files directory and the ilash file directory. These variables are called HAPIBD_PATH and ILASH_PATH respectively.",
     ),
     gene_info_file: str = typer.Option(
         ...,
@@ -80,6 +87,9 @@ def main(
     # adding the loglevel to the environment so that we can access it
     os.environ.setdefault("program_loglevel", str(log.get_loglevel(loglevel)))
 
+    # loading in the environmental variables from the .env file
+    load_dotenv(env_path)
+
     # creating the logger and then configuring it
     logger = log.create_logger()
 
@@ -90,6 +100,7 @@ def main(
         logger,
         ibd_program_used=ibd_program,
         output_path=output,
+        environment_file=env_path,
         gene_info_file=gene_info_file,
         carrier_matrix=carriers,
         centimorgan_threshold=cm_threshold,
