@@ -3,7 +3,7 @@ from collections import namedtuple
 import pandas as pd
 from scipy.stats import binom
 from tqdm import tqdm
-from models import PairWriter, NetworkWriter, Network, CoefficientWriter
+from models import PairWriter, NetworkWriter, Network
 import analysis
 import log
 
@@ -45,7 +45,6 @@ class Writer(Protocol):
     def write_to_file(
         self,
         networks_list: List[Network] = None,
-        gini_coefficients: Dict[str, float] = None,
     ) -> None:
         """Method that will call the write method of the writer object"""
         ...
@@ -188,12 +187,3 @@ def analyze(
     writer.set_writer(PairWriter(gene_info[0], gene_info[1], phenotype_list))
 
     writer.write_to_file(networks_list=network_list)
-
-    # Need to determine if any of the phenotypes are significant
-    gini_coef: Dict[str, float] = analysis.determine_phecode_genie_coefficient(
-        network_list
-    )
-
-    writer.set_writer(CoefficientWriter())
-
-    writer.write_to_file(gini_coefficients=gini_coef)

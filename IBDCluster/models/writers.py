@@ -41,42 +41,13 @@ class Writer:
     def write_to_file(
         self,
         networks_list: List[Network] = None,
-        gini_coefficients: Dict[str, float] = None,
     ) -> None:
         """Method that will call the write method of the self.writer class"""
         self.writer.write(
             output=self.output,
             network_info=networks_list,
             program=self.ibd_program,
-            gini_coef=gini_coefficients,
         )
-
-
-@dataclass
-class CoefficientWriter:
-    """Class object that will write the genie coefficients to file"""
-
-    def _form_header(self) -> str:
-        """This just forms the header of the file to be consistent with the protocol"""
-
-        return "phecode\tgini_coefficient\n"
-
-    def write(self, **kwargs) -> None:
-        """Method to write the output to an gini_coefficients.txt file"""
-
-        output_dir: str = kwargs["output"]
-        gini_coef: Dict[str, float] = kwargs["gini_coef"]
-        output_file_name: str = os.path.join(output_dir, "gini_coefficients.txt")
-
-        logger.info(f"Writing the gini_coefficients to: {output_file_name}")
-
-        with open(output_file_name, "w", encoding="utf-8") as output:
-
-            output.write(self._form_header())
-
-            for phecode, coefficient in gini_coef.items():
-
-                output.write(f"{phecode}\t{coefficient}\n")
 
 
 @dataclass
