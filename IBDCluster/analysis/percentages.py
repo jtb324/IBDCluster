@@ -8,9 +8,7 @@ import log
 logger = log.get_logger(__name__)
 
 
-def _find_carrier_percentages(
-    col_series: pd.Series, percentage_dict: Dict[str, float]
-) -> None:
+def _find_carrier_percentages(dataframe: pd.DataFrame) -> Dict[str, float]:
     """Function that will determine the percentages of carriers in each network
 
     Parameters
@@ -19,20 +17,12 @@ def _find_carrier_percentages(
         pandas series that has 0s and 1s for the carrier status of each
         individual for the specific phenotype
 
-    percentage_dict : Dict[str, float]
-        dictionary that has the phenotype name as the key and the
-        percentage of carriers out of the population as values
     """
-    try:
-        percentage_dict[col_series.name] = col_series.value_counts(normalize=True)[1]
-        logger.debug(
-            f"Phenotype prevalence for {col_series.name} is {col_series.value_counts(normalize=True)[1]}"
-        )
-    except KeyError:
-        logger.warning(
-            f"There were no individuals in the population affected by phenotype {col_series.name}"
-        )
-        percentage_dict[col_series.name] = 0
+    # get the carrier count for each column using sum and then dividing it by the total size of the
+    # column to normalize
+    normalized_carrier_counts: pd.Series = dataframe.sum(axis=0) / dataframe.count()
+
+    return normalized_carrier_counts.to_dict()
 
 
 def write_to_file(percentage_dict: Dict[str, float], output: str) -> None:
@@ -93,12 +83,7 @@ def get_percentages(carrier_matrix: pd.DataFrame) -> Dict[str, float]:
     """
     logger.info("Determining the dataset prevalance of each phenotype")
 
-    percent_carriers: Dict[str, float] = {}
-
     # setting up a progress bar for this operation
-    tqdm.pandas(desc="phenotypes population percentages calculated: ")
-    carrier_matrix.iloc[:, 1:].progress_apply(
-        lambda x: _find_carrier_percentages(x, percent_carriers)
-    )
+    percent_carriers = _find_carrier_percentages(carrier_matrix.iloc[:, 1:])
 
     return percent_carriers
