@@ -201,7 +201,9 @@ class Cluster:
         )
         status_dict = {}
 
-        for phecode in phecode_list:
+        for phecode in tqdm(
+            phecode_list, desc="Adding the carrier status of 0/1 to the dataframe: "
+        ):
             carrier_list = carriers[phecode]
 
             status_dict["_".join([str(phecode), "pair_1_status"])] = where(
@@ -375,7 +377,7 @@ class Cluster:
         # count = 1
         # iterate over each iid in the original dataframe
         # creating a progress bar
-        for ind in tqdm(iid_list, desc="pairs in clusters"):
+        for ind in tqdm(iid_list, desc="pairs in clusters: "):
             # if this iid has already been associated with a network then we need to skip it. If not then we can get the network connected to it
             if ind not in inds_in_network:
 
