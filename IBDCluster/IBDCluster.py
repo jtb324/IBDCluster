@@ -10,6 +10,7 @@ from dotenv import load_dotenv
 import pandas as pd
 from typing import Dict, Tuple, List
 from models import Writer
+import pathlib
 
 
 app = typer.Typer(
@@ -119,12 +120,17 @@ def main(
         ibd_program, gene_info_file, cm_threshold, carriers_dict, phecode_list
     )
 
-    # create an object that will be used to write to an
-    # appropriate file
-    write_obj = Writer(output, ibd_program)
-
     # iterate over each object
     for gene, networks_list in networks.items():
+
+        gene_output = os.path.join(output, gene[0])
+
+        pathlib.Path(gene_output).mkdir(parents=True, exist_ok=True)
+
+        # create an object that will be used to write to an
+        # appropriate file
+        write_obj = Writer(gene_output, ibd_program)
+
         # This is the main function that will run the analysis of the networks
         analysis.analyze(gene, networks_list, carriers_df, write_obj, carriers_dict)
 
