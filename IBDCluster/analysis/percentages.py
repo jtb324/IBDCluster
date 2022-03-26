@@ -20,7 +20,10 @@ def _find_carrier_percentages(dataframe: pd.DataFrame) -> Dict[str, float]:
     """
     # get the carrier count for each column using sum and then dividing it by the total size of the
     # column to normalize
-    normalized_carrier_counts: pd.Series = dataframe.sum(axis=0) / dataframe.count()
+
+    normalized_carrier_counts: pd.Series = (
+        dataframe.iloc[:, 1:].sum(axis=0) / dataframe.iloc[:, 1:].count()
+    )
 
     return normalized_carrier_counts.to_dict()
 

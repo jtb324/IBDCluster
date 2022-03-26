@@ -40,7 +40,9 @@ def test_percent_carriers_output():
 
     errors = []
 
-    percentage_df = pd.read_csv("percent_carriers_in_population.txt", sep="\t")
+    percentage_df = pd.read_csv(
+        "./TEST_GENE/percent_carriers_in_population.txt", sep="\t"
+    )
 
     # first we are going to make sure that the percentage_df has the
     # right column
@@ -55,6 +57,7 @@ def test_percent_carriers_output():
         errors.append(error)
 
     if any(percentage_df.percentage_in_population.values):
+        print(percentage_df.percentage_in_population.values)
         error = f"expected the percentages in the percentage_df determined from cftr_and_vw_test_phecode_matrix.txt to both be 0. Instead these values were {', '.join(percentage_df.percentage_in_population.values)}"
 
         errors.append(error)
@@ -78,7 +81,7 @@ def test_allpairs():
     """This test is going to check the output of the allpairs.txt file."""
     errors = []
 
-    allpairs_df = pd.read_csv("IBD_TEST_GENE_allpairs.txt", sep="\t")
+    allpairs_df = pd.read_csv("./TEST_GENE/IBD_TEST_GENE_allpairs.txt", sep="\t")
 
     # first going to make sure there are the right number of columns
     if len(allpairs_df.columns) != 15:
