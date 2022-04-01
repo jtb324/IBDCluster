@@ -87,6 +87,6 @@ def get_percentages(carrier_matrix: pd.DataFrame) -> Dict[str, float]:
     logger.info("Determining the dataset prevalance of each phenotype")
 
     # setting up a progress bar for this operation
-    percent_carriers = _find_carrier_percentages(carrier_matrix.iloc[:, 1:])
+    percent_carriers = _find_carrier_percentages(carrier_matrix)
 
     return percent_carriers
