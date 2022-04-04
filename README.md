@@ -91,7 +91,6 @@ ___
 ├── IBDCluster
 │   ├── analysis
 │   │   ├── main.py
-│   │   ├── gini_coefficient.py
 │   │   ├── percentages.py
 │   ├── callbacks
 │   │   ├── check_inputs.py
@@ -112,4 +111,8 @@ ___
 ├── pyproject.toml
 ├── README.md
 ├── requirements.txt
+│   ├── tests
+│   │   ├── test_data
+│   │   ├── test_integration
+
 ```

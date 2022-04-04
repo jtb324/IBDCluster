@@ -6,6 +6,7 @@ from tqdm import tqdm
 from models import PairWriter, NetworkWriter, Network
 import analysis
 import log
+from decimal import Decimal
 
 
 logger = log.get_logger(__name__)
@@ -69,9 +70,12 @@ def determine_pvalue(
         logger.debug(f"carrier count = 0 therefore pvalue for {phenotype} = 1")
         return 1
 
-    prob: float = 1 - binom.cdf(
-        carriers_count - 1, network_size, percentage_pop_phenotypes[phenotype]
+    prob: float = 1 - Decimal(
+        binom.cdf(
+            carriers_count - 1, network_size, percentage_pop_phenotypes[phenotype]
+        )
     )
+
     logger.debug(f"pvalue for {phenotype} = {prob}")
     return prob
 
@@ -163,6 +167,8 @@ def analyze(
         are list of IIDs affected with that phecode
     """
 
+    phenotype_list: List[str] = carriers_pheno_matrix.columns[1:]
+
     # getting the percentage of carriers for each phenotype per the input population
     percent_carriers_in_pop: Dict[str, float] = analysis.get_percentages(
         carriers_pheno_matrix
@@ -172,7 +178,6 @@ def analyze(
     # ADDING THIS AS ANOTHER CLASS WITHIN THE WRITER
     analysis.write_to_file(percent_carriers_in_pop, writer.output)
 
-    phenotype_list: List[str] = carriers_pheno_matrix.columns[1:]
     # we will iterate over each network and basically
     # determine the number of carriers for each grid as well
     # as the percent

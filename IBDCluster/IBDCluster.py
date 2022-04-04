@@ -120,10 +120,9 @@ def main(
         ibd_program, gene_info_file, cm_threshold, carriers_dict, phecode_list
     )
 
-    # iterate over each object
-    for gene, networks_list in networks.items():
+    for gene_info, networks_list in networks.items():
 
-        gene_output = os.path.join(output, gene[0])
+        gene_output = os.path.join(output, gene_info[0])
 
         pathlib.Path(gene_output).mkdir(parents=True, exist_ok=True)
 
@@ -132,7 +131,9 @@ def main(
         write_obj = Writer(gene_output, ibd_program)
 
         # This is the main function that will run the analysis of the networks
-        analysis.analyze(gene, networks_list, carriers_df, write_obj, carriers_dict)
+        analysis.analyze(
+            gene_info, networks_list, carriers_df, write_obj, carriers_dict
+        )
 
     logger.info("analysis_finished")
 
