@@ -144,7 +144,7 @@ class NetworkWriter:
 
         return "\t".join(column_list)
 
-    def _find_min_phecode(self, analysis_dict) -> Tuple[float, str]:
+    def _find_min_phecode(self, analysis_dict) -> Tuple[str, str]:
         """Function that will identify the lowest phecode and will write that and the phecode name to a column
 
         Parameters

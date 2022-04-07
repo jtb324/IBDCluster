@@ -56,7 +56,7 @@ def determine_pvalue(
     percentage_pop_phenotypes: Dict[str, int],
     carriers_count: int,
     network_size: int,
-) -> float:
+) -> str:
     """Function that will determine the pvalue for each network
 
     Returns
@@ -68,11 +68,14 @@ def determine_pvalue(
     # 0 or higher which is everyone
     if carriers_count == 0:
         logger.debug(f"carrier count = 0 therefore pvalue for {phenotype} = 1")
-        return 1
+        return "1"
 
-    prob: float = 1 - Decimal(
-        binom.cdf(
-            carriers_count - 1, network_size, percentage_pop_phenotypes[phenotype]
+    prob = str(
+        Decimal(1)
+        - Decimal(
+            binom.cdf(
+                carriers_count - 1, network_size, percentage_pop_phenotypes[phenotype]
+            )
         )
     )
 
