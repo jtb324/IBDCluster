@@ -6,7 +6,6 @@ from tqdm import tqdm
 from models import PairWriter, NetworkWriter, Network
 import analysis
 import log
-from decimal import Decimal
 
 
 logger = log.get_logger(__name__)
@@ -71,11 +70,9 @@ def determine_pvalue(
         return "1"
 
     prob = str(
-        Decimal(1)
-        - Decimal(
-            binom.cdf(
-                carriers_count - 1, network_size, percentage_pop_phenotypes[phenotype]
-            )
+        1
+        - binom.cdf(
+            carriers_count - 1, network_size, percentage_pop_phenotypes[phenotype]
         )
     )
 
