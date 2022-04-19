@@ -6,6 +6,9 @@ from tqdm import tqdm
 from models import PairWriter, NetworkWriter, Network
 import analysis
 import log
+import plugins
+import os
+import json
 
 
 logger = log.get_logger(__name__)
@@ -192,3 +195,14 @@ def analyze(
     writer.set_writer(PairWriter(gene_info[0], gene_info[1], phenotype_list))
 
     writer.write_to_file(networks_list=network_list)
+
+    # This section will load in the analysis plugins
+    config = json.load(os.environ.get("json_path"))
+
+    plugins.load_plugins(config["plugins"])
+
+    # loading in the predetermined models such as the writers
+    analysis_plugins = [plugins.factory_create(item) for item in config["modules"]]
+
+    for analysis_obj in analysis_plugins:
+        print(f"running the analysis object: {analysis_obj.name}")
