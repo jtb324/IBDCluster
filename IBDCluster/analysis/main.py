@@ -201,8 +201,13 @@ def analyze(
 
     plugins.load_plugins(config["plugins"])
 
+    # Now we are going to register the actual plugins
+    plugins.factory_register("phecode_percentages", ...)
     # loading in the predetermined models such as the writers
     analysis_plugins = [plugins.factory_create(item) for item in config["modules"]]
 
     for analysis_obj in analysis_plugins:
         print(f"running the analysis object: {analysis_obj.name}")
+        return_dict = analysis_obj.analyze(pheno_matrix=carriers_pheno_matrix)
+
+        analysis_obj.write(input_dict=return_dict, output=writer.output)

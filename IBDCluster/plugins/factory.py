@@ -16,11 +16,14 @@ class PluginNotFound(Exception):
 class AnalysisObj(Protocol):
     """Basic representation of an Analysis object"""
 
-    def analyze(self) -> None:
+    def analyze(self, **kwargs) -> Dict[str, Any]:
         """
         Method that will analyze the inputs according to the purpose
         of the plugin
         """
+
+    def write(**kwargs) -> None:
+        """Method that will write to a file for each Plugin"""
 
 
 analyze_obj_creation_funcs: Dict[str, Callable[..., AnalysisObj]] = {}

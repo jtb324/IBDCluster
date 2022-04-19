@@ -1,7 +1,14 @@
 {
     "plugins":["plugins.phecode_pvalue_distributions"],
-    "modules": 
-    {
-        "name": "writer"
-    }
+    "modules": [
+        {
+            "name": "writer"
+        },
+        {
+            "name": "phecode_percentages"
+        },
+        {
+            "name": "phecode_pvalue_distributions"
+        }
+    ]
 }
