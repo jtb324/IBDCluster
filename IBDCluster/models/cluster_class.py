@@ -187,43 +187,37 @@ class Cluster:
         carriers: Dict[float, List[str]],
         pair_1_indx: int,
         pair_2_indx: int,
-        phecode_list: List[float],
     ) -> None:
         """Method that will determine the carrier status for each pair
 
         Parameters
 
-        carrier_list : Dict[float, List[str]]
+        carriers : Dict[float, List[str]]
             dictionary where the keys are the phecodes and the values are list of individuals who are carriers for a specific phecode
+
+        pair_1_indx : int
+            index where the pair 1 value is in the self.ibd_df
+
+        pair_2_indx : int
+            index where the  pair 2 value is in the self.ibd_df
+
         """
         logger.debug(
             f"Adding a carrier status of either 1 or 0 for all {len(carriers)} phecodes"
         )
-        status_dict = {}
 
         for phecode in tqdm(
-            phecode_list, desc="Adding the carrier status of 0/1 to the dataframe: "
+            carriers.keys(), desc="Adding the carrier status of 0/1 to the dataframe: "
         ):
             carrier_list = carriers[phecode]
 
-            status_dict["_".join([str(phecode), "pair_1_status"])] = where(
+            self.ibd_df.loc[:, "_".join([str(phecode), "pair_1_status"])] = where(
                 self.ibd_df[pair_1_indx].isin(carrier_list), 1, 0
             )
 
-            status_dict["_".join([str(phecode), "pair_2_status"])] = where(
+            self.ibd_df.loc[:, "_".join([str(phecode), "pair_2_status"])] = where(
                 self.ibd_df[pair_2_indx].isin(carrier_list), 1, 0
             )
-
-        self.ibd_df = pd.concat(
-            [
-                self.ibd_df.reset_index(drop=True),
-                pd.DataFrame.from_dict(status_dict).reset_index(drop=True),
-            ],
-            axis=1,
-        )
-
-        # release the memory from the status_dict
-        del status_dict
 
     def filter_cm_threshold(self, cM_threshold: int, len_index: int) -> None:
         """Method that will filter the self.ibd_df to only individuals larger than the specified threshold. This should be run after the load_file method.

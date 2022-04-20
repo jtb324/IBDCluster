@@ -104,9 +104,7 @@ def find_clusters(
 
         # adding the affected status of 1 or 0 for each pair for each
         # phenotype
-        cluster_model.add_carrier_status(
-            carriers, indices.id1_indx, indices.id2_indx, phecode_list
-        )
+        cluster_model.add_carrier_status(carriers, indices.id1_indx, indices.id2_indx)
 
         network_info: List = cluster_model.find_networks(
             gene_tuple.name, gene_tuple.chr, indices
