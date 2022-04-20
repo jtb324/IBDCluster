@@ -2,10 +2,10 @@
     "plugins":["plugins.phecode_pvalue_distributions"],
     "modules": [
         {
-            "name": "writer"
+            "name": "phecode_percentages"
         },
         {
-            "name": "phecode_percentages"
+            "name": "writer"
         },
         {
             "name": "phecode_pvalue_distributions"

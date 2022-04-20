@@ -3,6 +3,8 @@ from collections import namedtuple
 import models
 import log
 import pandas as pd
+from tqdm import tqdm
+import os
 
 
 # getting the logger object
@@ -92,7 +94,7 @@ def find_clusters(
 
         file: str = indices.find_file("".join(["chr", gene_tuple.chr]), ibd_files)
 
-        cluster_model: models.Cluster = models.Cluster(file, ibd_program)
+        cluster_model: models.Cluster = models.Cluster(file, ibd_program, indices)
 
         # loading in all the dataframe for the genetic locus
         cluster_model.load_file(
@@ -106,10 +108,23 @@ def find_clusters(
         # phenotype
         cluster_model.add_carrier_status(carriers, indices.id1_indx, indices.id2_indx)
 
-        network_info: List = cluster_model.find_networks(
-            gene_tuple.name, gene_tuple.chr, indices
-        )
+        all_grids: List[str] = cluster_model.find_all_grids(indices)
 
-        return_dict[(gene_tuple.name, gene_tuple.chr)] = network_info
+        for ind in tqdm(all_grids, desc="pairs in clusters: "):
+
+            network_obj = models.Network(
+                gene_tuple.name, gene_tuple.chr, cluster_model.network_id
+            )
+
+            cluster_model.construct_network(ind, network_obj)
+
+            # if the program is being run in debug mode then it will only this loop four times. This gives enough information
+            # to see if the program is behaving properly
+            if int(os.environ.get("program_loglevel")) == 10:
+                if cluster_model.network_id == 3:
+                    break
+
+        # accessing the network list attribute from the cluster model so that you can list the networks
+        return_dict[(gene_tuple.name, gene_tuple.chr)] = cluster_model.network_list
 
     return return_dict

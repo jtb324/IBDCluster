@@ -5,6 +5,7 @@ from typing import Dict, List, Set, Protocol, Optional
 import log
 import os
 from numpy import where
+import models
 
 from .pairs import Pairs
 
@@ -143,8 +144,14 @@ class Cluster:
 
     ibd_file: str
     ibd_program: str
-    count: int = 0  # this is a counter that is used in testing to speed the process
+    indices: models.FileInfo
+    count: int = 0  # this is a counter that is used in testing to speed up the process
     ibd_df: Optional[pd.DataFrame] = field(default_factory=pd.DataFrame)
+    network_id: str = 1  # this is a id that the cluster object will use when it updates each network in the find networks function. This will be increased by 1 for each network
+    inds_in_network: Set[str] = field(
+        default_factory=set
+    )  # This attribute will be used to keep track of the individuals that are in any network
+    network_list: List[Network] = field(default_factory=list)
 
     def load_file(self, start: int, end: int, start_indx: int, end_indx: int) -> None:
         """Method filters the ibd file based on location and loads this into memory as a dataframe
@@ -237,15 +244,11 @@ class Cluster:
 
         self.ibd_df = self.ibd_df[self.ibd_df[len_index] >= cM_threshold]
 
-    def _find_all_grids(self, indices) -> List[str]:
+    def find_all_grids(self, indices) -> List[str]:
         """Method that will take the dataframe that is filtered for the location and the haplotype and return
         a list of all unique individuals in that dataframe
 
         Parameters
-
-        dataframe : pd.DataFrame
-            dataframe that has the pairs of individuals who share an ibd segment. This dataframe is filtered for a
-            specific loci and matching haplotype phase.
 
         indices : FileInfo
             object that has all the indices for the file of interest
@@ -255,29 +258,34 @@ class Cluster:
         List[str]
             returns a list of unique individuals in the dataframe
         """
-
-        self.ibd_df["ind_1"] = (
-            self.ibd_df[indices.id1_indx]
-            + "."
-            + self.ibd_df[indices.id1_phase_indx].astype(str)
-        )
-
-        self.ibd_df["ind_2"] = (
-            self.ibd_df[indices.id2_indx]
-            + "."
-            + self.ibd_df[indices.id2_phase_indx].astype(str)
-        )
-
-        # adding these new categories as indices to the indices object
-        indices.ind1_with_phase = "ind_1"
-        indices.ind2_with_phase = "ind_2"
-
-        grids: List[str] = list(
-            set(
-                self.ibd_df["ind_1"].values.tolist()
-                + self.ibd_df["ind_2"].values.tolist()
+        if self.ibd_program.lower() == "hapibd":
+            self.ibd_df["ind_1"] = (
+                self.ibd_df[indices.id1_indx]
+                + "."
+                + self.ibd_df[indices.id1_phase_indx].astype(str)
             )
-        )
+
+            self.ibd_df["ind_2"] = (
+                self.ibd_df[indices.id2_indx]
+                + "."
+                + self.ibd_df[indices.id2_phase_indx].astype(str)
+            )
+
+            # adding these new categories as indices to the indices object
+            indices.ind1_with_phase = "ind_1"
+            indices.ind2_with_phase = "ind_2"
+
+            grids: List[str] = list(
+                set(
+                    self.ibd_df["ind_1"].values.tolist()
+                    + self.ibd_df["ind_2"].values.tolist()
+                )
+            )
+
+        # This else statment will be used if we were to try to run ilash because the grids in it does not have to be formatted
+        else:
+            raise NotImplementedError
+
         logger.debug(f"Found {len(grids)} unique individual that will be clustered")
 
         return grids
@@ -342,9 +350,7 @@ class Cluster:
                 inds_in_network,
             )
 
-    def find_networks(
-        self, gene_name: str, chromosome: str, indices: FileInfo
-    ) -> List[Network]:
+    def construct_network(self, ind: str, network_obj: Network) -> None:
         """Method that will go through the dataframe and will identify networks.
 
         Parameters
@@ -358,67 +364,46 @@ class Cluster:
             returns a dictionary with the following structure:
             {network_id: {pairs: List[Pair_objects], in_network: List[str], haplotypes_list: List[str]}}. Other data information will be added to this file
         """
-        # First need to get a list of all the unique individuals in the ibd_file
-        iid_list: List[str] = self._find_all_grids(indices)
 
-        # determining values that will be used in the function
-        network_id = 1
-        inds_in_network = set()
-
-        # making a list that will be returned that has the Network objects as values
-        network_list = []
-
-        # count = 1
         # iterate over each iid in the original dataframe
         # creating a progress bar
-        for ind in tqdm(iid_list, desc="pairs in clusters: "):
-            # if this iid has already been associated with a network then we need to skip it. If not then we can get the network connected to it
-            if ind not in inds_in_network:
+        # if this iid has already been associated with a network then we need to skip it. If not then we can get the network connected to it
+        if ind not in self.inds_in_network:
 
-                network_obj = Network(gene_name, chromosome, network_id)
+            # filtering the network object for the
+            # connections to the first seed
+            filtered_df = network_obj.filter_for_seed(self.ibd_df, [ind], self.indices)
 
-                # filtering the network object for the
-                # connections to the first seed
-                filtered_df = network_obj.filter_for_seed(self.ibd_df, [ind], indices)
+            network_obj.update(filtered_df, self.indices)
 
-                network_obj.update(filtered_df, indices)
-
-                # need to create a list of people in the network. This will be individuals with the phase
-                inds_in_network.update(
-                    network_obj.gather_grids(
-                        filtered_df, indices.ind1_with_phase, indices.ind2_with_phase
-                    )
+            # need to create a list of people in the network. This will be individuals with the phase
+            self.inds_in_network.update(
+                network_obj.gather_grids(
+                    filtered_df,
+                    self.indices.ind1_with_phase,
+                    self.indices.ind2_with_phase,
                 )
+            )
 
-                # finding the secondary connections. These are connections to all
-                # individuals in the self.individuals_in_network set that are not the
-                # seeding individual
-                logger.debug(
-                    f"Finding secondary connections to {ind} in network {network_id}"
-                )
+            # finding the secondary connections. These are connections to all
+            # individuals in the self.individuals_in_network set that are not the
+            # seeding individual
+            logger.debug(
+                f"Finding secondary connections to {ind} in network {self.network_id}"
+            )
 
-                self._find_secondary_connections(
-                    [iid for iid in network_obj.haplotypes if iid != ind],
-                    set([ind]),
-                    indices,
-                    network_obj,
-                    inds_in_network,
-                )
+            self._find_secondary_connections(
+                [iid for iid in network_obj.haplotypes if iid != ind],
+                set([ind]),
+                self.indices,
+                network_obj,
+                self.inds_in_network,
+            )
 
-                logger.debug(
-                    f"number of iids in network {network_id}: {len(network_obj.iids)}"
-                )
+            logger.debug(
+                f"number of iids in network {self.network_id}: {len(network_obj.iids)}"
+            )
 
-                network_id += 1
+            self.network_id += 1
 
-                # adding the full network to the list
-                network_list.append(network_obj)
-
-            # if the program is being run in debug mode then it will only this loop four times. This gives enough information
-            # to see if the program is behaving properly
-            if int(os.environ.get("program_loglevel")) == 10:
-                if self.count == 3:
-                    break
-                self.count += 1
-
-        return network_list
+            self.network_list.append(network_obj)
