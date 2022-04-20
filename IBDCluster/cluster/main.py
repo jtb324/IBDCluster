@@ -62,7 +62,6 @@ def find_clusters(
     gene_info_filepath: str,
     cm_threshold: int,
     carriers: Dict[float, List[str]],
-    phecode_list: List[float],
 ) -> Dict[Tuple[str, int], Dict]:
     """Main function that will handle the clustering into networks"""
 

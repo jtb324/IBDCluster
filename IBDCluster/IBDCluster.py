@@ -111,29 +111,27 @@ def main(
     # need to first determine list of carriers for each phenotype
     carriers_df: pd.DataFrame = pd.read_csv(carriers, sep="\t")
 
-    phecode_list = carriers_df.columns[1:]
-
     carriers_dict = cluster.generate_carrier_list(carriers_df)
 
     # We can then determine the different clusters for each gene
     networks: Dict[Tuple[str, int], List] = cluster.find_clusters(
-        ibd_program, gene_info_file, cm_threshold, carriers_dict, phecode_list
+        ibd_program, gene_info_file, cm_threshold, carriers_dict
     )
 
-    # for gene_info, networks_list in networks.items():
+    for gene_info, networks_list in networks.items():
 
-    #     gene_output = os.path.join(output, gene_info[0])
+        gene_output = os.path.join(output, gene_info[0])
 
-    #     pathlib.Path(gene_output).mkdir(parents=True, exist_ok=True)
+        pathlib.Path(gene_output).mkdir(parents=True, exist_ok=True)
 
-    #     # create an object that will be used to write to an
-    #     # appropriate file
-    #     write_obj = Writer(gene_output, ibd_program)
+        # create an object that will be used to write to an
+        # appropriate file
+        write_obj = Writer(gene_output, ibd_program)
 
-    #     # This is the main function that will run the analysis of the networks
-    #     analysis.analyze(
-    #         gene_info, networks_list, carriers_df, write_obj, carriers_dict
-    #     )
+        # This is the main function that will run the analysis of the networks
+        analysis.analyze(
+            gene_info, networks_list, carriers_df, write_obj, carriers_dict
+        )
 
     logger.info("analysis_finished")
 
