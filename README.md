@@ -164,3 +164,34 @@ classDiagram
     }
     Cluster o-- Network
 ```
+
+## Entity relationships:
+___
+```mermaid
+erDiagram
+    NETWORK }|--|{ PAIRS : contains
+    NETWORK {
+        string gene_name
+        string chromosome
+        int network_id
+    }
+    NETWORK }|--|{ IIDS : contains
+    NETWORK }|--|{ HAPLOTYPES : contains
+    PAIRS {
+       string pair_1_id
+       string pair_1_phase 
+       string pair_2_id
+       string pair_2_phase 
+       int chromosome_number
+       int segment_start 
+       int segment_end
+       float length 
+       series affected_statuses 
+    }
+    IIDS {
+        string Individual-ids
+    }
+    HAPLOTYPES {
+        string haplotype-phase
+    }
+```
