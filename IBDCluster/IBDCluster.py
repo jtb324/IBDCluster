@@ -10,7 +10,6 @@ from dotenv import load_dotenv
 import pandas as pd
 from typing import Dict, Tuple, List
 from models import DataHolder
-import pathlib
 
 
 app = typer.Typer(
@@ -84,7 +83,14 @@ def main(
     ),
 ) -> None:
     """Main function for the program that has all the parameters that the user can use with type"""
+
     print(os.path.realpath(__file__))
+    # adding the json to the environment so that we can access it
+    os.environ.setdefault(
+        "json_path",
+        "/belowshare/vumcshare/data100t1/home/james/bin/IBDCluster/config.json",
+    )
+
     # adding the loglevel to the environment so that we can access it
     os.environ.setdefault("program_loglevel", str(log.get_loglevel(loglevel)))
 
@@ -123,10 +129,6 @@ def main(
     data_container = DataHolder(
         networks, carriers_dict, carriers_df, carriers_df.columns[1:], ibd_program
     )
-
-    gene_output = os.path.join(output, gene_info[0])
-
-    pathlib.Path(gene_output).mkdir(parents=True, exist_ok=True)
 
     # This is the main function that will run the analysis of the networks
     analysis.analyze(data_container, output)

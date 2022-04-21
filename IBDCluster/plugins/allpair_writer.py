@@ -5,6 +5,7 @@ import log
 import os
 from tqdm import tqdm
 from plugins import factory_register
+import pathlib
 
 logger = log.get_logger(__name__)
 
@@ -66,7 +67,7 @@ class AllpairWriter:
         """
         Main function that will create a dictionary of strings that will be used when writting the file
         """
-        data: DataHolder = kwargs["data_container"]
+        data: DataHolder = kwargs["data"]
         output_path: str = kwargs["output"]
 
         # This iwll be a list of strings that has the output for each network
@@ -99,8 +100,13 @@ class AllpairWriter:
         """Method to write the output to an allpairs.txt file"""
         # get the necessary information from the kwargs
         data = kwargs["input_data"]
+        phenotypes: List[str] = kwargs["phenotype_list"]
 
         for gene_name in data.keys():
+            gene_output = data[gene_name]["path"]
+
+            pathlib.Path(gene_output).mkdir(parents=True, exist_ok=True)
+
             # full filepath to write the output to
             output_file_name = os.path.join(
                 data[gene_name]["path"], "".join(["IBD_", gene_name, "_allpairs.txt"])
@@ -116,7 +122,7 @@ class AllpairWriter:
             ) as output_file:
 
                 output_file.write(
-                    f"program\tnetwork_id\tpair_1\tpair_2\tphase_1\tphase_2\tchromosome\tgene_name\t{self._form_header()}\tstart\tend\tlength\n"
+                    f"program\tnetwork_id\tpair_1\tpair_2\tphase_1\tphase_2\tchromosome\tgene_name\t{self._form_header(phenotypes)}\tstart\tend\tlength\n"
                 )
                 for pair in tqdm(
                     data[gene_name]["output"], desc="Networks written to file: "

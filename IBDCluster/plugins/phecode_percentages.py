@@ -4,6 +4,7 @@ import pandas as pd
 import log
 import os
 from plugins import factory_register
+import pathlib
 
 logger = log.get_logger(__name__)
 
@@ -17,23 +18,24 @@ class PhecodePercentages:
         """
         Function that will determine the percentages of each phenotype and then add it to the dataholder object for other analyses.
         """
-        data = kwargs["data_container"]
-
-        pheno_matrix: pd.DataFrame = kwargs["pheno_matrix"]
+        data_container = kwargs["data"]
 
         logger.info("Determining the dataset prevalance of each phenotype")
 
         # creating a dictionary that has the phecode value as the key and
         # the phecode percentage as the value
-        prevalence_dict = self._find_carrier_percentages(pheno_matrix)
+        prevalence_dict = self._find_carrier_percentages(data_container.phenotype_table)
         # adding the phenotype prevalence to the datacontainer since these plugin
         # calculates that. This will allow the phenotype percentages to be used
         # by other plugins
-        data.phenotype_percentages = prevalence_dict
+        data_container.phenotype_percentages = prevalence_dict
 
         self.check_phenotype_prevalence(prevalence_dict)
 
-        return {"output": data.phenotype_percentages, "path": kwargs["output"]}
+        return {
+            "output": data_container.phenotype_percentages,
+            "path": kwargs["output"],
+        }
 
     @staticmethod
     def _find_carrier_percentages(dataframe: pd.DataFrame) -> Dict[str, float]:
@@ -56,7 +58,6 @@ class PhecodePercentages:
         return normalized_carrier_counts.to_dict()
 
     # TODO: Fix this section because the kwargs need to be better specified
-    @staticmethod
     def write(self, **kwargs) -> None:
         """Writing the dictionary to a file
 
@@ -71,6 +72,8 @@ class PhecodePercentages:
         """
         percentage_dict = kwargs["input_data"]["output"]
         output_path = kwargs["input_data"]["path"]
+
+        pathlib.Path(output_path).mkdir(parents=True, exist_ok=True)
 
         output_file_name = os.path.join(
             output_path, "percent_carriers_in_population.txt"

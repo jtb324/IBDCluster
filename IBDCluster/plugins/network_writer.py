@@ -3,10 +3,10 @@ from dataclasses import dataclass, field
 import log
 import pandas as pd
 from scipy.stats import binom
-from collections import namedtuple
 import os
 from tqdm import tqdm
 from plugins import factory_register
+import pathlib
 
 logger = log.get_logger(__name__)
 
@@ -70,7 +70,7 @@ class NetworkWriter:
         phenotype_percent: int,
         carriers_count: int,
         network_size: int,
-    ) -> str:
+    ) -> float:
         """Function that will determine the pvalue for each network
 
         Returns
@@ -82,11 +82,12 @@ class NetworkWriter:
         # 0 or higher which is everyone
         if carriers_count == 0:
             logger.debug(f"carrier count = 0 therefore pvalue for {phenotype} = 1")
-            return "1"
+            return 1
 
-        prob = str(1 - binom.cdf(carriers_count - 1, network_size, phenotype_percent))
+        prob = 1 - binom.cdf(carriers_count - 1, network_size, phenotype_percent)
 
         logger.debug(f"pvalue for {phenotype} = {prob}")
+
         return prob
 
     @staticmethod
@@ -96,7 +97,6 @@ class NetworkWriter:
         """
         Function that will compare the min_pvalue to the calculate pvalue to see which is smaller
         """
-
         if cal_pvalue < min_pvalue and cal_pvalue != 0:
             min_pvalue = cal_pvalue
             return min_pvalue, phenotype
@@ -109,7 +109,7 @@ class NetworkWriter:
         network: Network,
         phenotype_list: List[str],
         percentage_pop_phenotypes: Dict[str, float],
-    ) -> Tuple[str, Any]:
+    ) -> Tuple[str, str]:
         """Function that will determine information about how many carriers are in each
         network, the percentage, the IIDs of the carriers in the network, and use this to calculate the pvalue for the network. The function keeps track of the smallest non-zero pvalue and returns it or NA
 
@@ -129,7 +129,7 @@ class NetworkWriter:
 
         output_str = ""
         # crea
-        min_pvalue = 1
+        min_pvalue: int = 1
         min_phecode = "N/A"
 
         # iterating over each phenotype
@@ -161,23 +161,26 @@ class NetworkWriter:
             )
 
             # Next two lines create the string and then concats it to the output_str
-            phenotype_str = f"{num_carriers_in_network}\t{pvalue}"
+            phenotype_str = f"{num_carriers_in_network}\t{pvalue}\t"
 
             output_str += phenotype_str
+
             # logging the string in debug mode. This logs the individual phenotype string not the total output for size
             logger.debug(
-                f"network_id {network.network_id}: phenotype_str - {phenotype_str}"
+                f"network_id {network.network_id}: phenotype_str - {output_str}"
             )
+        # remove the trailing tab space
+        output_str = output_str.rstrip("\t")
         # return the pvalue_output string first and either a tuple of N/As or the min pvalue/min_phecode
         return output_str + "\n", ("N/A", "N/A") if min_pvalue == 1 else (
-            min_pvalue,
+            str(min_pvalue),
             min_phecode,
         )
 
     def analyze(self, **kwargs) -> Tuple[int, Any]:
         """main function of the plugin. It needs to determine the pvalue"""
 
-        data: DataHolder = kwargs["data_container"]
+        data: DataHolder = kwargs["data"]
         output_path = kwargs["output"]
 
         # This iwll be a list of strings that has the output for each network
@@ -220,7 +223,8 @@ class NetworkWriter:
                 "output": networks_analysis_list,
                 "path": os.path.join(output_path, gene_info[0]),
             }
-            # TODO: need to return this values as well as the output path.
+
+        return output_dict
 
     def write(self, **kwargs) -> None:
         """Method to write the output to a networks.txt file"""
@@ -231,8 +235,12 @@ class NetworkWriter:
         # Iterate over every gene so that we can write to different files.
         for gene_name in data.keys():
             # forming the correct output path based on the gene name
+            gene_output = data[gene_name]["path"]
+
+            pathlib.Path(gene_output).mkdir(parents=True, exist_ok=True)
+
             output_file_name = os.path.join(
-                data[gene_name]["path"],
+                gene_output,
                 "".join([ibd_program, "_", gene_name, "_networks.txt"]),
             )
 
@@ -249,7 +257,9 @@ class NetworkWriter:
                     f"program\tgene\tnetwork_id\tchromosome\tIIDs_count\thaplotypes_count\tIIDs\thaplotypes\tmin_pvalue\tmin_pvalue_phecode\t{self._form_header(phenotype_list)}\n"
                 )
                 # iterating over each network and writing the values to file
-                for network in tqdm(data["output"], desc="Networks written to file: "):
+                for network in tqdm(
+                    data[gene_name]["output"], desc="Networks written to file: "
+                ):
 
                     # if debug mode is choosen then it will write the output string to a file/console
                     logger.debug(network)

@@ -1,5 +1,5 @@
 {
-    "plugins":["plugins.phecode_pvalue_distributions"],
+    "plugins":["plugins.phecode_percentages", "plugins.network_writer", "plugins.allpair_writer", "plugins.phecode_pvalue_distributions"],
     "modules": [
         {
             "name": "phecode_percentages"

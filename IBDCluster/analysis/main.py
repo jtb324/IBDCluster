@@ -16,28 +16,30 @@ def analyze(data_container: DataHolder, output: str) -> None:
 
     Parameters
 
-    data_container : DataHolder
+    data_container : DataHoldexr
 
     output : str
     """
-
+    print(os.environ.get("json_path"))
     # This section will load in the analysis plugins
-    config = json.load(os.environ.get("json_path"))
+    with open(os.environ.get("json_path")) as json_config:
 
-    plugins.load_plugins(config["plugins"])
+        config = json.load(json_config)
 
-    analysis_plugins = [plugins.factory_create(item) for item in config["modules"]]
+        plugins.load_plugins(config["plugins"])
 
-    # iterating over every plugin and then running the analyze and write method
-    for analysis_obj in analysis_plugins:
-        print(f"running the analysis object: {analysis_obj.name}")
+        analysis_plugins = [plugins.factory_create(item) for item in config["modules"]]
 
-        return_data: Dict[str, Any] = analysis_obj.analyze(
-            data_container, output=output
-        )
-        # writing the output to a file
-        analysis_obj.write(
-            input_data=return_data,
-            ibd_program=data_container.ibd_program,
-            phenotype_list=data_container.phenotype_cols,
-        )
+        # iterating over every plugin and then running the analyze and write method
+        for analysis_obj in analysis_plugins:
+            print(f"running the analysis object: {analysis_obj.name}")
+
+            return_data: Dict[str, Any] = analysis_obj.analyze(
+                data=data_container, output=output
+            )
+            # writing the output to a file
+            analysis_obj.write(
+                input_data=return_data,
+                ibd_program=data_container.ibd_program,
+                phenotype_list=data_container.phenotype_cols,
+            )
