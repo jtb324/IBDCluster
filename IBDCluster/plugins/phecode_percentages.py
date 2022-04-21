@@ -1,8 +1,9 @@
 from dataclasses import dataclass
-from typing import Dict, Any
+from typing import Dict, Any, Tuple
 import pandas as pd
 import log
 import os
+from plugins import factory_register
 
 logger = log.get_logger(__name__)
 
@@ -12,24 +13,30 @@ class PhecodePercentages:
 
     name: str = "Population Phecode Percentages"
 
-    def analyze(self, **kwargs) -> Dict[str, Any]:
+    def analyze(self, **kwargs) -> Dict[int, Any]:
         """
-        Function that will determine the percentages of each phenotype and then write them to a file
+        Function that will determine the percentages of each phenotype and then add it to the dataholder object for other analyses.
         """
+        data = kwargs["data_container"]
+
         pheno_matrix: pd.DataFrame = kwargs["pheno_matrix"]
 
         logger.info("Determining the dataset prevalance of each phenotype")
 
         # creating a dictionary that has the phecode value as the key and
         # the phecode percentage as the value
-        prevalence_dict = self.find_carrier_percentages(pheno_matrix)
+        prevalence_dict = self._find_carrier_percentages(pheno_matrix)
+        # adding the phenotype prevalence to the datacontainer since these plugin
+        # calculates that. This will allow the phenotype percentages to be used
+        # by other plugins
+        data.phenotype_percentages = prevalence_dict
 
         self.check_phenotype_prevalence(prevalence_dict)
 
-        return prevalence_dict
+        return {"output": data.phenotype_percentages, "path": kwargs["output"]}
 
     @staticmethod
-    def find_carrier_percentages(dataframe: pd.DataFrame) -> Dict[str, float]:
+    def _find_carrier_percentages(dataframe: pd.DataFrame) -> Dict[str, float]:
         """Function that will determine the percentages of carriers in each network
 
         Parameters
@@ -48,8 +55,9 @@ class PhecodePercentages:
 
         return normalized_carrier_counts.to_dict()
 
+    # TODO: Fix this section because the kwargs need to be better specified
     @staticmethod
-    def write(**kwargs) -> None:
+    def write(self, **kwargs) -> None:
         """Writing the dictionary to a file
 
         Parameters (Expected to be keys in kwargs)
@@ -61,10 +69,12 @@ class PhecodePercentages:
         output : str
             filepath to write the output to
         """
-        output = kwargs["output"]
-        percentage_dict = kwargs["input_dict"]
+        percentage_dict = kwargs["input_data"]["output"]
+        output_path = kwargs["input_data"]["path"]
 
-        output_file_name = os.path.join(output, "percent_carriers_in_population.txt")
+        output_file_name = os.path.join(
+            output_path, "percent_carriers_in_population.txt"
+        )
 
         logger.info(f"Writing file with population prevalences to {output_file_name}")
 
@@ -74,6 +84,7 @@ class PhecodePercentages:
             encoding="utf-8",
         ) as output_file:
             output_file.write("phenotype\tpercentage_in_population\n")
+            # iterate over each item in the percentage dict and write the items to a file
             for phenotype, percent in percentage_dict.items():
                 output_file.write(f"{phenotype}\t{percent}\n")
 
@@ -88,3 +99,7 @@ class PhecodePercentages:
 
         if not any(percentage_dict.values()):
             logger.warning("All phenotypes have a population prevalence of 0%")
+
+
+def initialize() -> None:
+    factory_register("phecode_percentages", PhecodePercentages)

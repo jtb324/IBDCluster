@@ -1,3 +1,4 @@
+from dataclasses import dataclass, field
 from typing import Dict, Generator, List, Tuple
 from collections import namedtuple
 import models
@@ -62,11 +63,12 @@ def find_clusters(
     gene_info_filepath: str,
     cm_threshold: int,
     carriers: Dict[float, List[str]],
-) -> Dict[Tuple[str, int], Dict]:
+) -> Dict[Tuple[str, int], List[models.Network]]:
     """Main function that will handle the clustering into networks"""
 
-    # create a dictionary that will have the gene name and chromosome as keys and the network information as values
-    return_dict: Dict[Tuple[str, int], Dict] = {}
+    # create a list that has the network data and gene information
+    # within the DataHolder class
+    return_data: Dict[Tuple[str, int], List[models.Network]] = {}
 
     # Next two lines create an object with the shared indices for each
     # ibd program. Then it loads the proper unique indices for the correct
@@ -124,6 +126,6 @@ def find_clusters(
                     break
 
         # accessing the network list attribute from the cluster model so that you can list the networks
-        return_dict[(gene_tuple.name, gene_tuple.chr)] = cluster_model.network_list
+        return_data[(gene_tuple.name, gene_tuple.chr)] = cluster_model.network_list
 
-    return return_dict
+    return return_data

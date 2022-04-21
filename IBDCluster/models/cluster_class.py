@@ -3,7 +3,6 @@ import pandas as pd
 from tqdm import tqdm
 from typing import Dict, List, Set, Protocol, Optional
 import log
-import os
 from numpy import where
 import models
 

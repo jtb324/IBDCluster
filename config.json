@@ -5,7 +5,10 @@
             "name": "phecode_percentages"
         },
         {
-            "name": "writer"
+            "name": "network_writer"
+        },
+        {
+            "name": "allpair_writer"
         },
         {
             "name": "phecode_pvalue_distributions"

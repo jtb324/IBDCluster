@@ -1,5 +1,6 @@
 from dataclasses import dataclass
-import plugins
+from typing import Dict, Any
+from plugins import factory_register
 
 
 @dataclass
@@ -7,12 +8,13 @@ class Phecode_Pvalue_Distributions:
 
     name: str = "Phecode_Pvalue_Distributions"
 
-    def analyze(self, **kwargs) -> None:
+    def analyze(self, **kwargs) -> Dict[str, Any]:
         """execute method"""
-        print(f"networks_file: {kwargs['network_filepath']}")
+        print("Not implemented")
+
+    def write(self, **kwargs) -> None:
+        print("not implemented")
 
 
 def initialize() -> None:
-    plugins.factory_register(
-        "phecode_pvalue_distributions", Phecode_Pvalue_Distributions
-    )
+    factory_register("phecode_pvalue_distributions", Phecode_Pvalue_Distributions)

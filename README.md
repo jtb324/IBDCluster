@@ -195,3 +195,20 @@ erDiagram
         string haplotype-phase
     }
 ```
+## Plugins: (all the plugins are classes)
+___
+**NetworkWriter**
+```mermaid
+classDiagram
+    class NetworkWriter {
+        gene_name: str
+        chromosome: str
+        carrier_cols: List[str]
+        #_form_header() -> str
+        #_find_min_phecode(analysis_dict: Dict) -> Tuple[str, str]
+        #_form_analysis_string(analysis_dict: Dict) -> str
+        +write(**kwargs) -> None
+
+    }
+
+```

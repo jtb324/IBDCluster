@@ -22,7 +22,7 @@ class AnalysisObj(Protocol):
         of the plugin
         """
 
-    def write(**kwargs) -> None:
+    def write(self, **kwargs) -> None:
         """Method that will write to a file for each Plugin"""
 
 
