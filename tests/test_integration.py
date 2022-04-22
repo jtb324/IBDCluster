@@ -27,6 +27,8 @@ def test_sucessful_run():
             "5",
             "-l",
             "verbose",
+            "-j",
+            "./config.json",
         ],
     )
 
@@ -40,9 +42,7 @@ def test_percent_carriers_output():
 
     errors = []
 
-    percentage_df = pd.read_csv(
-        "./TEST_GENE/percent_carriers_in_population.txt", sep="\t"
-    )
+    percentage_df = pd.read_csv("./percent_carriers_in_population.txt", sep="\t")
 
     # first we are going to make sure that the percentage_df has the
     # right column

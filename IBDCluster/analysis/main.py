@@ -30,7 +30,9 @@ def analyze(data_container: DataHolder, output: str) -> None:
 
         analysis_plugins = [plugins.factory_create(item) for item in config["modules"]]
 
-        logger.info(f"Using plugins: {', '.join(analysis_plugins)}")
+        logger.info(
+            f"Using plugins: {', '.join([obj.name for obj in analysis_plugins])}"
+        )
 
         # iterating over every plugin and then running the analyze and write method
         for analysis_obj in analysis_plugins:

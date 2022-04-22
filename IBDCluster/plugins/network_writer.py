@@ -34,6 +34,7 @@ class DataHolder(Protocol):
     phenotype_cols: List[str]
     ibd_program: str
     phenotype_percentages: Dict[str, float] = field(default_factory=dict)
+    network_pvalues: Dict[int, Dict[str, float]] = field(default_factory=dict)
 
 
 @dataclass
@@ -109,7 +110,7 @@ class NetworkWriter:
         network: Network,
         phenotype_list: List[str],
         percentage_pop_phenotypes: Dict[str, float],
-    ) -> Tuple[str, str]:
+    ) -> Dict[str, Any]:
         """Function that will determine information about how many carriers are in each
         network, the percentage, the IIDs of the carriers in the network, and use this to calculate the pvalue for the network. The function keeps track of the smallest non-zero pvalue and returns it or NA
 
@@ -123,12 +124,17 @@ class NetworkWriter:
 
         Returns
 
-        str
-            returns a string that has the number of carriers first and then the pvalue. These values are tab separated and end with a newline
+        Dict[str, Any]
+            returns a Dictionary that has the pvalue string,
+            the min pvalue tuple, and the pvalue_dictionary as
+            values
         """
+        # dictionary that will contain the phecodes as keys
+        # and the pvalues as floats
+        pvalue_dictionary: Dict[str, float] = {}
 
         output_str = ""
-        # crea
+        # create place holders for the min_phecode and the minimum pvalue
         min_pvalue: int = 1
         min_phecode = "N/A"
 
@@ -169,13 +175,23 @@ class NetworkWriter:
             logger.debug(
                 f"network_id {network.network_id}: phenotype_str - {output_str}"
             )
+
+            # updating the pvalue_dictionary for this phenotype
+            pvalue_dictionary[phenotype] = pvalue
+
         # remove the trailing tab space
         output_str = output_str.rstrip("\t")
         # return the pvalue_output string first and either a tuple of N/As or the min pvalue/min_phecode
-        return output_str + "\n", ("N/A", "N/A") if min_pvalue == 1 else (
-            str(min_pvalue),
-            min_phecode,
-        )
+        return {
+            "pvalue_str": output_str + "\n",
+            "min_pvalue_str": ("N/A", "N/A")
+            if min_pvalue == 1
+            else (
+                str(min_pvalue),
+                min_phecode,
+            ),
+            "pvalue_dict": pvalue_dictionary,
+        }
 
     def analyze(self, **kwargs) -> Tuple[int, Any]:
         """main function of the plugin. It needs to determine the pvalue"""
@@ -183,6 +199,7 @@ class NetworkWriter:
         data: DataHolder = kwargs["data"]
         output_path = kwargs["output"]
 
+        # creating a dictionary that will have the pvalues for each network that way we can add them to teh data container
         # This iwll be a list of strings that has the output for each network
         output_dict: Dict[str, Dict[str, Any]] = {}
         # iterating over each gene
@@ -193,6 +210,8 @@ class NetworkWriter:
             for network in tqdm(
                 network_list, desc="networks with calculated pvalues: "
             ):
+                # adding a key for gene id and the network id to the data.network_pvalues
+                data.network_pvalues[gene_info[0]] = {}
                 # string that has the network information such as the
                 # network_id, ibd_program, the gene it is for and the
                 # chromosome number
@@ -206,18 +225,27 @@ class NetworkWriter:
                     f"{', '.join(network.iids)}\t{', '.join(network.haplotypes)}"
                 )
                 # Determining the pvalua and the tuple
-                pvalue_str, min_pvalue_tuple = self._determine_pvalues(
+                pvalue_output: Dict[str, Any] = self._determine_pvalues(
                     data.affected_inds,
                     network,
                     data.phenotype_cols,
                     data.phenotype_percentages,
                 )
+                # pulling out the min_pvalue_tuple and the pvalue_str from the pvalue_output dictionary
+                min_pvalue_tuple = pvalue_output["min_pvalue_str"]
+
+                pvalue_str = pvalue_output["pvalue_str"]
 
                 min_pvalue_str = f"{min_pvalue_tuple[0]}\t{min_pvalue_tuple[1]}"
 
                 networks_analysis_list.append(
                     f"{networks}\t{counts}\t{iids}\t{min_pvalue_str}\t{pvalue_str}\n"
                 )
+
+                # adding the pvalue_dictionary to the network_pvalues attribute of the dataHolder
+                data.network_pvalues[gene_info[0]][network.network_id] = pvalue_output[
+                    "pvalue_dict"
+                ]
 
             output_dict[gene_info[0]] = {
                 "output": networks_analysis_list,
