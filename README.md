@@ -6,6 +6,13 @@
 ___
 This project is a cli tool that clusters shared ibd segments within biobanks around a gene of interest. These network are then analyzed to determine how many individuals within a network are affected by a phenotype of interest.
 
+## General PipeLine:
+___
+```mermaid
+flowchart LR
+    A(IBD Information) --> B(Identified Networks) --> C(Binomial test for enrichment of Phenotypes)
+```
+
 ## installing:
 ___
 ***Cloning from github and modify permissions:***
@@ -91,7 +98,6 @@ ___
 ├── IBDCluster
 │   ├── analysis
 │   │   ├── main.py
-│   │   ├── gini_coefficient.py
 │   │   ├── percentages.py
 │   ├── callbacks
 │   │   ├── check_inputs.py
@@ -112,4 +118,97 @@ ___
 ├── pyproject.toml
 ├── README.md
 ├── requirements.txt
+│   ├── tests
+│   │   ├── test_data
+│   │   ├── test_integration
+
+```
+## Comments about models:
+___
+* Classes for the cluster_class.py:
+
+```mermaid
+classDiagram
+    class Cluster {
+        ibd_file: str
+        ibd_program: str
+        indices: models.FileInfo
+        count: int=0
+        ibd_df: pd.DataFrame=pd.DataFrame
+        network_id: str=1
+        inds_in_network: Set[str]=set
+        network_list: List[Network]=list
+    }
+    class Network {
+        gene_name: str
+        gene_chr: str
+        network_id: int
+        pairs: List[Pairs]=list
+        iids: Set[str]=set
+        haplotypes: Set[str]=set
+        +filter_for_seed(ibd_df: pd.DataFrame, ind_seed: List[str], indices: FileInfo, exclusion: Set[str]=None) -> pd.DataFrame
+        #determine_pairs(ibd_row: pd.Series, indices: FileInfo) -> Pairs
+        +gather_grids(dataframe: pd.DataFrame, pair_1_indx: int, pair_2_indx: int) -> Set[str]
+        +update(ibd_df: pd.DataFrame, indices: FileInfo) -> None
+    }
+    class FileInfo {
+        <<interface>>
+        id1_indx: int
+        ind1_with_phase: int
+        id2_indx: int
+        ind2_with_phase: int
+        chr_indx: int
+        str_indx: int
+        end_indx: int
+        +set_program_indices(program_name: str) -> None
+    }
+    Cluster o-- Network
+```
+
+## Entity relationships:
+___
+```mermaid
+erDiagram
+    NETWORK }|--|{ PAIRS : contains
+    NETWORK {
+        string gene_name
+        string chromosome
+        int network_id
+    }
+    NETWORK }|--|{ IIDS : contains
+    NETWORK }|--|{ HAPLOTYPES : contains
+    PAIRS {
+       string pair_1_id
+       string pair_1_phase 
+       string pair_2_id
+       string pair_2_phase 
+       int chromosome_number
+       int segment_start 
+       int segment_end
+       float length 
+       series affected_statuses 
+    }
+    IIDS {
+        string Individual-ids
+    }
+    HAPLOTYPES {
+        string haplotype-phase
+    }
+```
+## Plugins: (all the plugins are classes)
+___
+**NetworkWriter**
+```mermaid
+classDiagram
+    class NetworkWriter {
+        gene_name: str
+        chromosome: str
+        carrier_cols: List[str]
+        #_form_header() -> str
+        #_find_min_phecode(analysis_dict: Dict) -> Tuple[str, str]
+        #_form_analysis_string(analysis_dict: Dict) -> str
+        +write(**kwargs) -> None
+
+    }
+
 ```

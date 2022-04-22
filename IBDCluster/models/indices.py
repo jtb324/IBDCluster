@@ -22,7 +22,7 @@ class ProgramIndices(Protocol):
 class HapibdInfo(ProgramIndices):
     """Class that has all of the indices as well as file paths for the hapibd files."""
 
-    file_dir: Optional[str] = None
+    file_dir: str = "./"
     cM_indx: int = 7
 
     def gather_files(self) -> List[str]:
@@ -53,10 +53,10 @@ class HapibdInfo(ProgramIndices):
 class IlashInfo(ProgramIndices):
     """Class that has all of the indices as well as file paths for the ilash files."""
 
-    file_dir: Optional[str] = None
+    file_dir: str = "./"
     cM_indx: int = 9
 
-    def gather_files(self) -> None:
+    def gather_files(self) -> List[str]:
         """Function that will gather together all the files in the file_dir that have the ext and will store them in a list"""
 
         file_list = []
@@ -137,7 +137,7 @@ class FileInfo:
             logger.critical(
                 f"Attempts to find chromosome, {chr_num} in file list, {', '.join(file_list)}, resulted in the following index out of range error:"
             )
-            logger.critical(traceback, exc_info=1)
+            logger.critical(traceback, exc_info=True)
 
         logger.debug(
             f"Found the ibd file, {ibd_file}, that matches the chromosome, {chr_num}"

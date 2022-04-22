@@ -1,8 +1,11 @@
+from dataclasses import dataclass, field
 from typing import Dict, Generator, List, Tuple
 from collections import namedtuple
 import models
 import log
 import pandas as pd
+from tqdm import tqdm
+import os
 
 
 # getting the logger object
@@ -60,12 +63,12 @@ def find_clusters(
     gene_info_filepath: str,
     cm_threshold: int,
     carriers: Dict[float, List[str]],
-    phecode_list: List[float],
-) -> Dict[Tuple[str, int], Dict]:
+) -> Dict[Tuple[str, int], List[models.Network]]:
     """Main function that will handle the clustering into networks"""
 
-    # create a dictionary that will have the gene name and chromosome as keys and the network information as values
-    return_dict: Dict[Tuple[str, int], Dict] = {}
+    # create a list that has the network data and gene information
+    # within the DataHolder class
+    return_data: Dict[Tuple[str, int], List[models.Network]] = {}
 
     # Next two lines create an object with the shared indices for each
     # ibd program. Then it loads the proper unique indices for the correct
@@ -92,7 +95,7 @@ def find_clusters(
 
         file: str = indices.find_file("".join(["chr", gene_tuple.chr]), ibd_files)
 
-        cluster_model: models.Cluster = models.Cluster(file, ibd_program)
+        cluster_model: models.Cluster = models.Cluster(file, ibd_program, indices)
 
         # loading in all the dataframe for the genetic locus
         cluster_model.load_file(
@@ -104,14 +107,25 @@ def find_clusters(
 
         # adding the affected status of 1 or 0 for each pair for each
         # phenotype
-        cluster_model.add_carrier_status(
-            carriers, indices.id1_indx, indices.id2_indx, phecode_list
-        )
+        cluster_model.add_carrier_status(carriers, indices.id1_indx, indices.id2_indx)
 
-        network_info: List = cluster_model.find_networks(
-            gene_tuple.name, gene_tuple.chr, indices
-        )
+        all_grids: List[str] = cluster_model.find_all_grids(indices)
 
-        return_dict[(gene_tuple.name, gene_tuple.chr)] = network_info
+        for ind in tqdm(all_grids, desc="pairs in clusters: "):
 
-    return return_dict
+            network_obj = models.Network(
+                gene_tuple.name, gene_tuple.chr, cluster_model.network_id
+            )
+
+            cluster_model.construct_network(ind, network_obj)
+
+            # if the program is being run in debug mode then it will only this loop four times. This gives enough information
+            # to see if the program is behaving properly
+            if int(os.environ.get("program_loglevel")) == 10:
+                if cluster_model.network_id == 3:
+                    break
+
+        # accessing the network list attribute from the cluster model so that you can list the networks
+        return_data[(gene_tuple.name, gene_tuple.chr)] = cluster_model.network_list
+
+    return return_data

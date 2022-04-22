@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "cluster"
-version = "0.9.1"
+version = "1.0.0"
 description = "A tool to help analyze ibd sharing across a locus of interest for all phenotypes."
 authors = ["jtb324 <james.baker@vanderbilt.edu>"]
 

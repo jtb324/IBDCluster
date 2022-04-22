@@ -9,7 +9,7 @@ import analysis
 from dotenv import load_dotenv
 import pandas as pd
 from typing import Dict, Tuple, List
-from models import Writer
+from models import DataHolder
 import pathlib
 
 
@@ -46,10 +46,13 @@ def main(
         "./", "--output", "-o", help="directory to write the output files into."
     ),
     env_path: str = typer.Option(
-        "./.env",
+        "",
         "--env",
         "-e",
         help="path to a .env file that has variables for the hapibd files directory and the ilash file directory. These variables are called HAPIBD_PATH and ILASH_PATH respectively.",
+    ),
+    json_path: str = typer.Option(
+        "", "--json-config", "-j", help="path to the json config file"
     ),
     gene_info_file: str = typer.Option(
         ...,
@@ -85,11 +88,31 @@ def main(
 ) -> None:
     """Main function for the program that has all the parameters that the user can use with type"""
 
+    # create the directory that the IBDCluster.log will be in
+    pathlib.Path(output).mkdir(parents=True, exist_ok=True)
+
+    # if the user doesn't specify a new json path then it uses the programs original config.json
+    if not json_path:
+
+        program_dir: str = "/".join(os.path.realpath(__file__).split("/")[:-2])
+        # adding the json to the environment so that we can access it
+        os.environ.setdefault("json_path", "/".join([program_dir, "config.json"]))
+    else:
+        os.environ.setdefault("json_path", json_path)
+
+    # if the user doesn't specify a new path to a .env then
+    # the program will use the default path is in the
+    # IBDCluster directory
+    if not env_path:
+
+        program_dir: str = "/".join(os.path.realpath(__file__).split("/")[:-2])
+        # adding the json to the environment so that we can access it
+        load_dotenv("/".join([program_dir, ".env"]))
+    else:
+        load_dotenv(env_path)
+
     # adding the loglevel to the environment so that we can access it
     os.environ.setdefault("program_loglevel", str(log.get_loglevel(loglevel)))
-
-    # loading in the environmental variables from the .env file
-    load_dotenv(env_path)
 
     # creating the logger and then configuring it
     logger = log.create_logger()
@@ -111,28 +134,21 @@ def main(
     # need to first determine list of carriers for each phenotype
     carriers_df: pd.DataFrame = pd.read_csv(carriers, sep="\t")
 
-    phecode_list = carriers_df.columns[1:]
-
     carriers_dict = cluster.generate_carrier_list(carriers_df)
 
     # We can then determine the different clusters for each gene
     networks: Dict[Tuple[str, int], List] = cluster.find_clusters(
-        ibd_program, gene_info_file, cm_threshold, carriers_dict, phecode_list
+        ibd_program, gene_info_file, cm_threshold, carriers_dict
     )
 
-    # iterate over each object
-    for gene, networks_list in networks.items():
+    # adding the networks, the carriers_df, the carriers_dict, and the
+    # phenotype columns to a object that will be used in the analysis
+    data_container = DataHolder(
+        networks, carriers_dict, carriers_df, carriers_df.columns[1:], ibd_program
+    )
 
-        gene_output = os.path.join(output, gene[0])
-
-        pathlib.Path(gene_output).mkdir(parents=True, exist_ok=True)
-
-        # create an object that will be used to write to an
-        # appropriate file
-        write_obj = Writer(gene_output, ibd_program)
-
-        # This is the main function that will run the analysis of the networks
-        analysis.analyze(gene, networks_list, carriers_df, write_obj, carriers_dict)
+    # This is the main function that will run the analysis of the networks
+    analysis.analyze(data_container, output)
 
     logger.info("analysis_finished")
 
