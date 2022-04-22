@@ -212,18 +212,31 @@ class Cluster:
             f"Adding a carrier status of either 1 or 0 for all {len(carriers)} phecodes"
         )
 
+        status_dict = {}
+
         for phecode in tqdm(
             carriers.keys(), desc="Adding the carrier status of 0/1 to the dataframe: "
         ):
             carrier_list = carriers[phecode]
 
-            self.ibd_df.loc[:, "_".join([str(phecode), "pair_1_status"])] = where(
+            status_dict["_".join([str(phecode), "pair_1_status"])] = where(
                 self.ibd_df[pair_1_indx].isin(carrier_list), 1, 0
             )
 
-            self.ibd_df.loc[:, "_".join([str(phecode), "pair_2_status"])] = where(
+            status_dict["_".join([str(phecode), "pair_2_status"])] = where(
                 self.ibd_df[pair_2_indx].isin(carrier_list), 1, 0
             )
+
+        self.ibd_df = pd.concat(
+            [
+                self.ibd_df.reset_index(drop=True),
+                pd.DataFrame.from_dict(status_dict).reset_index(drop=True),
+            ],
+            axis=1,
+        )
+
+        # release the memory from the status_dict
+        del status_dict
 
     def filter_cm_threshold(self, cM_threshold: int, len_index: int) -> None:
         """Method that will filter the self.ibd_df to only individuals larger than the specified threshold. This should be run after the load_file method.

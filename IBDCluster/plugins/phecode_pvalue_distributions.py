@@ -10,10 +10,10 @@ class Phecode_Pvalue_Distributions:
 
     def analyze(self, **kwargs) -> Dict[str, Any]:
         """execute method"""
-        print("Not implemented")
+        raise NotImplementedError
 
     def write(self, **kwargs) -> None:
-        print("not implemented")
+        raise NotImplementedError
 
 
 def initialize() -> None:

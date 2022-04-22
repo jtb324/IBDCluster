@@ -25,9 +25,9 @@ class PhecodePercentages:
         # creating a dictionary that has the phecode value as the key and
         # the phecode percentage as the value
         prevalence_dict = self._find_carrier_percentages(data_container.phenotype_table)
-        # adding the phenotype prevalence to the datacontainer since these plugin
-        # calculates that. This will allow the phenotype percentages to be used
-        # by other plugins
+        # adding the phenotype prevalence to the datacontainer
+        # since this plugin calculates that. This will allow
+        # the phenotype percentages to be used by other plugins
         data_container.phenotype_percentages = prevalence_dict
 
         self.check_phenotype_prevalence(prevalence_dict)
@@ -57,7 +57,6 @@ class PhecodePercentages:
 
         return normalized_carrier_counts.to_dict()
 
-    # TODO: Fix this section because the kwargs need to be better specified
     def write(self, **kwargs) -> None:
         """Writing the dictionary to a file
 
