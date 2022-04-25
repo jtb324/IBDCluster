@@ -1,6 +1,6 @@
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
-# IBDCluster v0.9.1:
+# IBDCluster v1.0.1:
 
 ## Purpose of the project: 
 ___
@@ -87,6 +87,10 @@ IBDCluster.py --help
 ## Running the code:
 ___
 *
+
+## Reporting Issues:
+___
+All issues can be reported using the templates in the .github/ folder. There are options for bug_reports and for feature_request
 
 ## Technical Details of the project:
 ___
