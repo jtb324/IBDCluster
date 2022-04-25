@@ -1,16 +1,18 @@
 #!/usr/bin/env python
-
-import callbacks
-import typer
-import cluster
-import log
+"""
+This module is the main script for the IBDCluster program. It contains the main cli and records inputs and creates the typer app.
+"""
 import os
-import analysis
+from typing import Dict, Tuple, List
+import pathlib
 from dotenv import load_dotenv
 import pandas as pd
-from typing import Dict, Tuple, List
+import typer
+import analysis
+import callbacks
+import cluster
+import log
 from models import DataHolder
-import pathlib
 
 
 app = typer.Typer(
