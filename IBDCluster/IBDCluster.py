@@ -12,6 +12,7 @@ import analysis
 import callbacks
 import cluster
 import log
+from datetime import datetime
 from models import DataHolder
 
 
@@ -90,6 +91,9 @@ def main(
 ) -> None:
     """Main function for the program that has all the parameters that the user can use with type"""
 
+    # getting the programs start time
+    start_time = datetime.now()
+
     # create the directory that the IBDCluster.log will be in
     pathlib.Path(output).mkdir(parents=True, exist_ok=True)
 
@@ -153,6 +157,7 @@ def main(
     analysis.analyze(data_container, output)
 
     logger.info("analysis_finished")
+    logger.info(f"Program Duration: {datetime.now() - start_time}")
 
 
 if __name__ == "__main__":
