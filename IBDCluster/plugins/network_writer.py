@@ -28,7 +28,9 @@ class Network(Protocol):
 
 @dataclass
 class DataHolder(Protocol):
-    networks_dict: Dict[Tuple[str, int], List[Network]]
+    gene_name: str
+    chromosome: int
+    networks_list: List[Network]
     affected_inds: Dict[float, List[str]]
     phenotype_table: pd.DataFrame
     phenotype_cols: List[str]
@@ -189,64 +191,58 @@ class NetworkWriter:
         # return the pvalue_output string first and either a tuple of N/As or the min pvalue/min_phecode
         return output_str + "\n", pvalue_dictionary
 
-    def analyze(self, **kwargs) -> Tuple[int, Any]:
+    def analyze(self, **kwargs) -> Dict[str, Any]:
         """main function of the plugin. It needs to determine the pvalue"""
 
         data: DataHolder = kwargs["data"]
         output_path = kwargs["output"]
 
-        # creating a dictionary that will have the pvalues for each network that way we can add them to teh data container
         # This iwll be a list of strings that has the output for each network
-        output_dict: Dict[str, Dict[str, Any]] = {}
-        # iterating over each gene
-        for gene_info, network_list in data.networks_dict.items():
+        networks_analysis_list: List[str] = []
 
-            networks_analysis_list: List[str] = []
+        for network in tqdm(
+            data.networks_list, desc="networks with calculated pvalues: "
+        ):
 
-            for network in tqdm(
-                network_list, desc="networks with calculated pvalues: "
-            ):
-                # adding a key for gene id and the network id to the data.network_pvalues
-                data.network_pvalues[gene_info[0]] = {}
-                # string that has the network information such as the
-                # network_id, ibd_program, the gene it is for and the
-                # chromosome number
-                networks: str = f"{data.ibd_program}\t{network.gene_name}\t{network.network_id}\t{network.gene_chr}"
+            # adding a key for gene id and the network id to the data.network_pvalues
+            data.network_pvalues[data.gene_name] = {}
+            # string that has the network information such as the
+            # network_id, ibd_program, the gene it is for and the
+            # chromosome number
+            networks: str = f"{data.ibd_program}\t{data.gene_name}\t{network.network_id}\t{data.chromosome}"
+            # string that has the number of individuals in the
+            # network as well as the the number of haplotypes
+            counts: str = f"{len(network.iids)}\t{len(network.haplotypes)}"
+            # string that has the list of GRID IIDs and the haplotype phases
+            iids: str = f"{', '.join(network.iids)}\t{', '.join(network.haplotypes)}"
+            # Determining the pvalua and the tuple
+            pvalue_str, phenotype_pvalue_dict = self._determine_pvalues(
+                data.affected_inds,
+                network,
+                data.phenotype_cols,
+                data.phenotype_percentages,
+            )
 
-                # string that has the number of individuals in the
-                # network as well as the the number of haplotypes
-                counts: str = f"{len(network.iids)}\t{len(network.haplotypes)}"
-                # string that has the list of GRID IIDs and the haplotype phases
-                iids: str = (
-                    f"{', '.join(network.iids)}\t{', '.join(network.haplotypes)}"
-                )
-                # Determining the pvalua and the tuple
-                pvalue_str, phenotype_pvalue_dict = self._determine_pvalues(
-                    data.affected_inds,
-                    network,
-                    data.phenotype_cols,
-                    data.phenotype_percentages,
-                )
+            # getting a string that has the phecode and the minimum pvalue
+            # for the network
+            min_pvalue_str = self._check_min_pvalue(phenotype_pvalue_dict)
 
-                # getting a string that has the phecode and the minimum pvalue
-                # for the network
-                min_pvalue_str = self._check_min_pvalue(phenotype_pvalue_dict)
+            networks_analysis_list.append(
+                f"{networks}\t{counts}\t{iids}\t{min_pvalue_str}\t{pvalue_str}"
+            )
 
-                networks_analysis_list.append(
-                    f"{networks}\t{counts}\t{iids}\t{min_pvalue_str}\t{pvalue_str}"
-                )
+            # adding the pvalue_dictionary to the network_pvalues attribute of the dataHolder
+            data.network_pvalues[data.gene_name][
+                network.network_id
+            ] = phenotype_pvalue_dict
 
-                # adding the pvalue_dictionary to the network_pvalues attribute of the dataHolder
-                data.network_pvalues[gene_info[0]][
-                    network.network_id
-                ] = phenotype_pvalue_dict
-
-            output_dict[gene_info[0]] = {
-                "output": networks_analysis_list,
-                "path": os.path.join(output_path, gene_info[0]),
-            }
-
-        return output_dict
+        # returning an object with the list of strings, the
+        # path, and the gene name
+        return {
+            "output": networks_analysis_list,
+            "path": os.path.join(output_path, data.gene_name),
+            "gene": data.gene_name,
+        }
 
     def write(self, **kwargs) -> None:
         """Method to write the output to a networks.txt file"""
@@ -254,39 +250,34 @@ class NetworkWriter:
         ibd_program = kwargs["ibd_program"]
         phenotype_list: List[str] = kwargs["phenotype_list"]
 
-        # Iterate over every gene so that we can write to different files.
-        for gene_name in data.keys():
-            # forming the correct output path based on the gene name
-            gene_output = data[gene_name]["path"]
+        gene_name = data["gene"]
+        # forming the correct output path based on the gene name
+        gene_output = data["path"]
 
-            pathlib.Path(gene_output).mkdir(parents=True, exist_ok=True)
+        pathlib.Path(gene_output).mkdir(parents=True, exist_ok=True)
 
-            output_file_name = os.path.join(
-                gene_output,
-                "".join([ibd_program, "_", gene_name, "_networks.txt"]),
+        output_file_name = os.path.join(
+            gene_output,
+            "".join([ibd_program, "_", gene_name, "_networks.txt"]),
+        )
+
+        logger.debug(f"Information written to a networks.txt at: {output_file_name}")
+        # Opening the file and writing the head to it and then each network
+        with open(
+            output_file_name,
+            "w+",
+            encoding="utf-8",
+        ) as output_file:
+            output_file.write(
+                f"program\tgene\tnetwork_id\tchromosome\tIIDs_count\thaplotypes_count\tIIDs\thaplotypes\tmin_pvalue\tmin_pvalue_phecode\t{self._form_header(phenotype_list)}\n"
             )
+            # iterating over each network and writing the values to file
+            for network in tqdm(data["output"], desc="Networks written to file: "):
 
-            logger.debug(
-                f"Information written to a networks.txt at: {output_file_name}"
-            )
-            # Opening the file and writing the head to it and then each network
-            with open(
-                output_file_name,
-                "w+",
-                encoding="utf-8",
-            ) as output_file:
-                output_file.write(
-                    f"program\tgene\tnetwork_id\tchromosome\tIIDs_count\thaplotypes_count\tIIDs\thaplotypes\tmin_pvalue\tmin_pvalue_phecode\t{self._form_header(phenotype_list)}\n"
-                )
-                # iterating over each network and writing the values to file
-                for network in tqdm(
-                    data[gene_name]["output"], desc="Networks written to file: "
-                ):
+                # if debug mode is choosen then it will write the output string to a file/console
+                logger.debug(network)
 
-                    # if debug mode is choosen then it will write the output string to a file/console
-                    logger.debug(network)
-
-                    output_file.write(network)
+                output_file.write(network)
 
 
 def initialize() -> None:

@@ -27,7 +27,9 @@ class Network(Protocol):
 
 @dataclass
 class DataHolder(Protocol):
-    networks_dict: Dict[Tuple[str, int], List[Network]]
+    gene_name: str
+    chromosome: int
+    networks_list: List[Network]
     affected_inds: Dict[float, List[str]]
     phenotype_table: pd.DataFrame
     phenotype_cols: List[str]
@@ -71,63 +73,58 @@ class AllpairWriter:
         output_path: str = kwargs["output"]
 
         # This iwll be a list of strings that has the output for each network
-        output_dict: Dict[str, Dict[str, Any]] = {}
 
-        for gene_info, network_list in data.networks_dict.items():
+        pair_analysis_list: List[str] = []
 
-            pair_analysis_list: List[str] = []
+        for network in tqdm(
+            data.networks_list, desc="Networks with pairs written to file: "
+        ):
+            # upacking the pairs for each network
+            pairs = network.pairs
 
-            for network in tqdm(
-                network_list, desc="Networks with pairs written to file: "
-            ):
-                # upacking the pairs for each network
-                pairs = network.pairs
+            for pair in pairs:
+                # creating a string that has all the information
+                output_str = f"{data.ibd_program}\t{network.network_id}\t{pair.form_id_str()}\t{pair.chromosome}\t{data.gene_name}\t{pair.form_affected_string()}\t{pair.form_segment_info_str()}\n"
 
-                for pair in pairs:
+                pair_analysis_list.append(output_str)
 
-                    output_str = f"{data.ibd_program}\t{network.network_id}\t{pair.form_id_str()}\t{pair.chromosome}\t{gene_info[0]}\t{pair.form_affected_string()}\t{pair.form_segment_info_str()}\n"
-
-                    pair_analysis_list.append(output_str)
-
-            output_dict[gene_info[0]] = {
-                "output": pair_analysis_list,
-                "path": os.path.join(output_path, gene_info[0]),
-            }
-
-        return output_dict
+        return {
+            "output": pair_analysis_list,
+            "path": os.path.join(output_path, data.gene_name),
+            "gene": data.gene_name,
+        }
 
     def write(self, **kwargs) -> None:
         """Method to write the output to an allpairs.txt file"""
         # get the necessary information from the kwargs
-        data = kwargs["input_data"]
+        data: Dict[str, Any] = kwargs["input_data"]
         phenotypes: List[str] = kwargs["phenotype_list"]
+        # pulling out the gene name and the output path
+        gene_name: str = data["gene"]
+        gene_output: str = data["path"]
 
-        for gene_name in data.keys():
-            gene_output = data[gene_name]["path"]
+        pathlib.Path(gene_output).mkdir(parents=True, exist_ok=True)
 
-            pathlib.Path(gene_output).mkdir(parents=True, exist_ok=True)
+        # full filepath to write the output to
+        output_file_name = os.path.join(
+            gene_output, "".join(["IBD_", gene_name, "_allpairs.txt"])
+        )
 
-            # full filepath to write the output to
-            output_file_name = os.path.join(
-                data[gene_name]["path"], "".join(["IBD_", gene_name, "_allpairs.txt"])
+        logger.info(f"Writing the allpairs.txt file to: {output_file_name}")
+        # opening the file and then writting the information from each
+        # pair to that file. A file will be created for each gene
+        with open(
+            output_file_name,
+            "w",
+            encoding="utf-8",
+        ) as output_file:
+
+            output_file.write(
+                f"program\tnetwork_id\tpair_1\tpair_2\tphase_1\tphase_2\tchromosome\tgene_name\t{self._form_header(phenotypes)}\tstart\tend\tlength\n"
             )
-
-            logger.info(f"Writing the allpairs.txt file to: {output_file_name}")
-            # opening the file and then writting the information from each
-            # pair to that file. A file will be created for each gene
-            with open(
-                output_file_name,
-                "w",
-                encoding="utf-8",
-            ) as output_file:
-
-                output_file.write(
-                    f"program\tnetwork_id\tpair_1\tpair_2\tphase_1\tphase_2\tchromosome\tgene_name\t{self._form_header(phenotypes)}\tstart\tend\tlength\n"
-                )
-                for pair in tqdm(
-                    data[gene_name]["output"], desc="Networks written to file: "
-                ):
-                    output_file.write(pair)
+            for pair in tqdm(data["output"], desc="Networks written to file: "):
+                logger.debug(pair)
+                output_file.write(pair)
 
 
 def initialize() -> None:

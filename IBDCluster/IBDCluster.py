@@ -1,16 +1,19 @@
 #!/usr/bin/env python
-
-import callbacks
-import typer
-import cluster
-import log
+"""
+This module is the main script for the IBDCluster program. It contains the main cli and records inputs and creates the typer app.
+"""
 import os
-import analysis
+from typing import Dict, Tuple, List
+import pathlib
 from dotenv import load_dotenv
 import pandas as pd
-from typing import Dict, Tuple, List
-from models import DataHolder
-import pathlib
+import typer
+import analysis
+import callbacks
+import cluster
+import log
+from datetime import datetime
+from models import DataHolder, Network
 
 
 app = typer.Typer(
@@ -88,6 +91,9 @@ def main(
 ) -> None:
     """Main function for the program that has all the parameters that the user can use with type"""
 
+    # getting the programs start time
+    start_time = datetime.now()
+
     # create the directory that the IBDCluster.log will be in
     pathlib.Path(output).mkdir(parents=True, exist_ok=True)
 
@@ -136,21 +142,32 @@ def main(
 
     carriers_dict = cluster.generate_carrier_list(carriers_df)
 
+    genes_generator = cluster.load_gene_info(gene_info_file)
+
     # We can then determine the different clusters for each gene
-    networks: Dict[Tuple[str, int], List] = cluster.find_clusters(
-        ibd_program, gene_info_file, cm_threshold, carriers_dict
-    )
+    for gene in genes_generator:
 
-    # adding the networks, the carriers_df, the carriers_dict, and the
-    # phenotype columns to a object that will be used in the analysis
-    data_container = DataHolder(
-        networks, carriers_dict, carriers_df, carriers_df.columns[1:], ibd_program
-    )
+        networks_list: List[Network] = cluster.find_clusters(
+            ibd_program, gene, cm_threshold, carriers_dict
+        )
 
-    # This is the main function that will run the analysis of the networks
-    analysis.analyze(data_container, output)
+        # adding the networks, the carriers_df, the carriers_dict, and the
+        # phenotype columns to a object that will be used in the analysis
+        data_container = DataHolder(
+            gene.name,
+            gene.chr,
+            networks_list,
+            carriers_dict,
+            carriers_df,
+            carriers_df.columns[1:],
+            ibd_program,
+        )
+
+        # This is the main function that will run the analysis of the networks
+        analysis.analyze(data_container, output)
 
     logger.info("analysis_finished")
+    logger.info(f"Program Duration: {datetime.now() - start_time}")
 
 
 if __name__ == "__main__":

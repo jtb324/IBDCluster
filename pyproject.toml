@@ -24,6 +24,7 @@ pydantic = "^1.9.0"
 snakeviz = "^2.1.1"
 data-science-types = "^0.2.23"
 pre-commit = "^2.17.0"
+perflint = "^0.7.1"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

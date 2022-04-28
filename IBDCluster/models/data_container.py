@@ -1,12 +1,14 @@
 from dataclasses import dataclass, field
-from typing import Dict, Tuple, List
+from typing import Dict, List
 from models import Network
 import pandas as pd
 
 
 @dataclass
 class DataHolder:
-    networks_dict: Dict[Tuple[str, int], List[Network]]
+    gene_name: str
+    chromosome: int
+    networks_list: List[Network]
     affected_inds: Dict[float, List[str]]
     phenotype_table: pd.DataFrame
     phenotype_cols: List[str]

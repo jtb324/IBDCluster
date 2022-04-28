@@ -466,6 +466,17 @@ optional = false
 python-versions = "!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,>=2.7"
 
 [[package]]
+name = "perflint"
+version = "0.7.1"
+description = "Pylint extension with performance anti-patterns"
+category = "dev"
+optional = false
+python-versions = "*"
+
+[package.dependencies]
+pylint = ">=2.12.0,<3.0"
+
+[[package]]
 name = "pexpect"
 version = "4.8.0"
 description = "Pexpect allows easy control of interactive console applications."
@@ -874,7 +885,7 @@ python-versions = "!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,>=2.7"
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.8, <3.11"
-content-hash = "888a5a0e98b51ab6e1876d63c557254313feeae000a001f5d8464f1133a231f3"
+content-hash = "428521087a2ab33c759c362dc86b840e38bdef46a9a42ae64795153f8efb5436"
 
 [metadata.files]
 appnope = [
@@ -1248,6 +1259,10 @@ parso = [
 pathspec = [
     {file = "pathspec-0.9.0-py2.py3-none-any.whl", hash = "sha256:7d15c4ddb0b5c802d161efc417ec1a2558ea2653c2e8ad9c19098201dc1c993a"},
     {file = "pathspec-0.9.0.tar.gz", hash = "sha256:e564499435a2673d586f6b2130bb5b95f04a3ba06f81b8f895b651a3c76aabb1"},
+]
+perflint = [
+    {file = "perflint-0.7.1-py2.py3-none-any.whl", hash = "sha256:471ea1ab67a336409a3c0ac51fd8d15e3a79961fab2b408ed3b8718c62d9efd6"},
+    {file = "perflint-0.7.1.tar.gz", hash = "sha256:68711e3ec5020876bb8fee2ae94b75a77cfbc64231bb0d0645d58ee78a1255c2"},
 ]
 pexpect = [
     {file = "pexpect-4.8.0-py2.py3-none-any.whl", hash = "sha256:0b48a55dcb3c05f3329815901ea4fc1537514d6ba867a152b581d69ae3710937"},
