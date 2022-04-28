@@ -20,7 +20,7 @@ def analyze(data_container: DataHolder, output: str) -> None:
 
     output : str
     """
-    print(os.environ.get("json_path"))
+
     # This section will load in the analysis plugins
     with open(os.environ.get("json_path")) as json_config:
 
@@ -37,9 +37,12 @@ def analyze(data_container: DataHolder, output: str) -> None:
         # iterating over every plugin and then running the analyze and write method
         for analysis_obj in analysis_plugins:
 
+            logger.debug(analysis_obj.name)
+
             return_data: Dict[str, Any] = analysis_obj.analyze(
                 data=data_container, output=output
             )
+
             # writing the output to a file
             analysis_obj.write(
                 input_data=return_data,

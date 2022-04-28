@@ -1,4 +1,3 @@
-from dataclasses import dataclass, field
 from typing import Dict, Generator, List, Tuple
 from collections import namedtuple
 import models
@@ -7,7 +6,7 @@ import pandas as pd
 from tqdm import tqdm
 import os
 
-
+Genes = namedtuple("Genes", ["name", "chr", "start", "end"])
 # getting the logger object
 logger = log.get_logger(__name__)
 
@@ -23,8 +22,6 @@ def load_gene_info(filepath: str) -> Generator:
     Generator
         returns a generator of namedtuples that has the gene information
     """
-
-    Genes = namedtuple("Genes", ["name", "chr", "start", "end"])
 
     with open(filepath, "r", encoding="utf-8") as gene_input:
         logger.debug(
@@ -60,15 +57,11 @@ def generate_carrier_list(carriers_matrix: pd.DataFrame) -> Dict[float, List[str
 
 def find_clusters(
     ibd_program: str,
-    gene_info_filepath: str,
+    gene: Genes,
     cm_threshold: int,
     carriers: Dict[float, List[str]],
-) -> Dict[Tuple[str, int], List[models.Network]]:
+) -> List[models.Network]:
     """Main function that will handle the clustering into networks"""
-
-    # create a list that has the network data and gene information
-    # within the DataHolder class
-    return_data: Dict[Tuple[str, int], List[models.Network]] = {}
 
     # Next two lines create an object with the shared indices for each
     # ibd program. Then it loads the proper unique indices for the correct
@@ -83,49 +76,39 @@ def find_clusters(
     # Generate a list of files for the correct ibd program
     ibd_files = indices.program_indices.gather_files()
 
-    # creating a generator that returns the Genes namedtuple from the load_gene_info function
-    gene_generator: Generator = load_gene_info(gene_info_filepath)
-
     # This for loop will iterate through each gene tuple in the generator. It then uses the
     # chromosome number to find the correct file. A Cluster object is then created which loads the pairs
     # that surround a certain location into a dataframe
-    for gene_tuple in gene_generator:
 
-        logger.info(f"finding clusters for the gene: {gene_tuple.name}")
+    logger.info(f"finding clusters for the gene: {gene.name}")
 
-        file: str = indices.find_file("".join(["chr", gene_tuple.chr]), ibd_files)
+    file: str = indices.find_file("".join(["chr", gene.chr]), ibd_files)
 
-        cluster_model: models.Cluster = models.Cluster(file, ibd_program, indices)
+    cluster_model: models.Cluster = models.Cluster(file, ibd_program, indices)
 
-        # loading in all the dataframe for the genetic locus
-        cluster_model.load_file(
-            gene_tuple.start, gene_tuple.end, indices.str_indx, indices.end_indx
-        )
+    # loading in all the dataframe for the genetic locus
+    cluster_model.load_file(gene.start, gene.end, indices.str_indx, indices.end_indx)
 
-        # filtering the dataframe to >= specific centimorgan threshold
-        cluster_model.filter_cm_threshold(cm_threshold, indices.program_indices.cM_indx)
+    # filtering the dataframe to >= specific centimorgan threshold
+    cluster_model.filter_cm_threshold(cm_threshold, indices.program_indices.cM_indx)
 
-        # adding the affected status of 1 or 0 for each pair for each
-        # phenotype
-        cluster_model.add_carrier_status(carriers, indices.id1_indx, indices.id2_indx)
+    # adding the affected status of 1 or 0 for each pair for each
+    # phenotype
+    cluster_model.add_carrier_status(carriers, indices.id1_indx, indices.id2_indx)
 
-        all_grids: List[str] = cluster_model.find_all_grids(indices)
+    all_grids: List[str] = cluster_model.find_all_grids(indices)
 
-        for ind in tqdm(all_grids, desc="pairs in clusters: "):
+    for ind in tqdm(all_grids, desc="pairs in clusters: "):
 
-            network_obj = models.Network(
-                gene_tuple.name, gene_tuple.chr, cluster_model.network_id
-            )
+        network_obj = models.Network(gene.name, gene.chr, cluster_model.network_id)
 
-            cluster_model.construct_network(ind, network_obj)
+        cluster_model.construct_network(ind, network_obj)
 
-            # if the program is being run in debug mode then it will only this loop four times. This gives enough information
-            # to see if the program is behaving properly
-            if int(os.environ.get("program_loglevel")) == 10:
-                if cluster_model.network_id == 3:
-                    break
+        # if the program is being run in debug mode then it will only this loop four times. This gives enough information
+        # to see if the program is behaving properly
+        if int(os.environ.get("program_loglevel")) == 10:
+            if cluster_model.network_id == 3:
+                break
 
-        # accessing the network list attribute from the cluster model so that you can list the networks
-        return_data[(gene_tuple.name, gene_tuple.chr)] = cluster_model.network_list
-
-    return return_data
+    # accessing the network list attribute from the cluster model so that you can list the networks
+    return cluster_model.network_list
