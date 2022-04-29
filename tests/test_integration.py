@@ -11,7 +11,36 @@ runner = CliRunner()
 # integration test using the raw cftr_and_vw_test_phecode_matrix.txt
 # affected statuses
 @pytest.mark.integtest
-def test_sucessful_run():
+def test_sucessful_run_with_desc():
+    result = runner.invoke(
+        app,
+        [
+            "-o",
+            "./",
+            "-e",
+            "./test.env",
+            "-c",
+            "./test_data/cftr_and_vw_test_phecode_matrix.txt",
+            "-g",
+            "./test_data/gene_info.txt",
+            "--cM",
+            "5",
+            "-l",
+            "verbose",
+            "-j",
+            "./config.json",
+            "-d",
+            "./phecode_descriptions.txt",
+        ],
+    )
+
+    assert result.exit_code == 0
+
+
+# integration test using the raw cftr_and_vw_test_phecode_matrix.txt
+# affected statuses
+@pytest.mark.integtest
+def test_sucessful_run_no_desc():
     result = runner.invoke(
         app,
         [

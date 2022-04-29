@@ -13,5 +13,6 @@ class DataHolder:
     phenotype_table: pd.DataFrame
     phenotype_cols: List[str]
     ibd_program: str
+    phenotype_description: Dict[str, str] = None
     phenotype_percentages: Dict[str, float] = field(default_factory=dict)
     network_pvalues: Dict[int, Dict[str, float]] = field(default_factory=dict)

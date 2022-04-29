@@ -3,7 +3,7 @@
 This module is the main script for the IBDCluster program. It contains the main cli and records inputs and creates the typer app.
 """
 import os
-from typing import Dict, Tuple, List
+from typing import Dict, List, Optional
 import pathlib
 from dotenv import load_dotenv
 import pandas as pd
@@ -34,6 +34,31 @@ def record_inputs(logger, **kwargs) -> None:
 
     # getting the correct log level to reset the logger
     logger.setLevel(log.get_loglevel(kwargs["loglevel"]))
+
+
+def load_phecode_descriptions(phecode_desc_file: str) -> Dict[str, Dict[str, str]]:
+    """Function that will load the phecode_description file and then turn that into a dictionary
+
+    Parameters
+    ----------
+    phecode_desc_file : str
+        descriptions of each phecode
+
+    Returns
+    -------
+    Dict[str, Dict[str, str]]
+        returns a dictionary where the first key is the
+        phecode and value is a dictionary where the inner key
+        is 'phenotype' and the value is the descriptions
+    """
+
+    desc_df = pd.read_csv(phecode_desc_file, sep="\t", usecols=["phecode", "phenotype"])
+
+    # making sure that the phecode keys are a string
+    desc_df.phecode = desc_df.phecode.astype(str)
+
+    # converting the dataframe into a dictionar
+    return desc_df.set_index("phecode").T.to_dict()
 
 
 @app.command()
@@ -74,6 +99,12 @@ def main(
         3,
         "--cM",
         help="Centimorgan threshold to filter the ibd segments",
+    ),
+    phecode_descriptions: Optional[str] = typer.Option(
+        None,
+        "-d",
+        "--phecode_desc",
+        help="File that has the descriptions for each phecode. Expects two columns: 'phecode' and 'phenotype', that are tab separated.",
     ),
     loglevel: str = typer.Option(
         "warning",
@@ -144,6 +175,12 @@ def main(
 
     genes_generator = cluster.load_gene_info(gene_info_file)
 
+    # loading in the phecode_descriptions
+    if phecode_descriptions:
+        phecode_desc = load_phecode_descriptions(phecode_descriptions)
+    else:
+        phecode_desc = {}
+
     # We can then determine the different clusters for each gene
     for gene in genes_generator:
 
@@ -161,6 +198,7 @@ def main(
             carriers_df,
             carriers_df.columns[1:],
             ibd_program,
+            phecode_desc,
         )
 
         # This is the main function that will run the analysis of the networks

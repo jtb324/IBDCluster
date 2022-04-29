@@ -35,6 +35,7 @@ class DataHolder(Protocol):
     phenotype_table: pd.DataFrame
     phenotype_cols: List[str]
     ibd_program: str
+    phenotype_description: Dict[str, str] = None
     phenotype_percentages: Dict[str, float] = field(default_factory=dict)
     network_pvalues: Dict[int, Dict[str, float]] = field(default_factory=dict)
 
@@ -94,7 +95,7 @@ class NetworkWriter:
         return prob
 
     @staticmethod
-    def _check_min_pvalue(phenotype_pvalues: Dict[str, float]) -> str:
+    def _check_min_pvalue(phenotype_pvalues: Dict[str, float]) -> Tuple[str, str]:
         """
         Function that will determine the smallest pvalue and return the corresponding phecode
 
@@ -105,9 +106,9 @@ class NetworkWriter:
 
         Returns
 
-        str
+        Tuple[str, str]
 
-            returns a tab separated string where the first value is the pvalue and the
+            returns a tuple where the first value is the pvalue and the
             second is the phecode. If the minimum phecode is 1 (meaning that none of the phecodes had carriers) then the program returns N/A for both spots.
         """
 
@@ -116,9 +117,9 @@ class NetworkWriter:
         )
 
         if min_pvalue == 1:
-            return "N/A\tN/A"
+            return "N/A", " N/A"
         else:
-            return f"{min_pvalue}\t{min_phecode}"
+            return str(min_pvalue), min_phecode
 
     def _determine_pvalues(
         self,
@@ -191,13 +192,42 @@ class NetworkWriter:
         # return the pvalue_output string first and either a tuple of N/As or the min pvalue/min_phecode
         return output_str + "\n", pvalue_dictionary
 
+    @staticmethod
+    def get_descriptions(
+        phecode_desc: Dict[str, Dict[str, str]], min_phecode: str
+    ) -> str:
+        """Method to get the description for the minimum phecode
+
+        Parameters
+        ----------
+        phecode_desc : Dict[str, Dict[str, str]]
+            dictionary with descriptions of each phecode
+
+        min_phecode : str
+            minimum phecode string
+
+        Returns
+        -------
+        str
+            returns a string that has the phecode description
+        """
+        if phecode_desc:
+            # getting the inner dictionary if the key exists, otherwise getting
+            # an empty dictionary
+            desc_dict = phecode_desc.get(min_phecode, {})
+            # getting the phenotype string if key exists,
+            # otherwise returns an empty string
+            return desc_dict.get("phenotype", "N/A")
+
+        return "N/A"
+
     def analyze(self, **kwargs) -> Dict[str, Any]:
         """main function of the plugin. It needs to determine the pvalue"""
 
         data: DataHolder = kwargs["data"]
         output_path = kwargs["output"]
 
-        # This iwll be a list of strings that has the output for each network
+        # This will be a list of strings that has the output for each network
         networks_analysis_list: List[str] = []
 
         for network in tqdm(
@@ -225,10 +255,14 @@ class NetworkWriter:
 
             # getting a string that has the phecode and the minimum pvalue
             # for the network
-            min_pvalue_str = self._check_min_pvalue(phenotype_pvalue_dict)
+            min_pvalue, min_phecode = self._check_min_pvalue(phenotype_pvalue_dict)
+
+            phecode_desc = self.get_descriptions(
+                data.phenotype_description, min_phecode
+            )
 
             networks_analysis_list.append(
-                f"{networks}\t{counts}\t{iids}\t{min_pvalue_str}\t{pvalue_str}"
+                f"{networks}\t{counts}\t{iids}\t{min_pvalue}\t{min_phecode}\t{phecode_desc}\t{pvalue_str}"
             )
 
             # adding the pvalue_dictionary to the network_pvalues attribute of the dataHolder
@@ -269,7 +303,7 @@ class NetworkWriter:
             encoding="utf-8",
         ) as output_file:
             output_file.write(
-                f"program\tgene\tnetwork_id\tchromosome\tIIDs_count\thaplotypes_count\tIIDs\thaplotypes\tmin_pvalue\tmin_pvalue_phecode\t{self._form_header(phenotype_list)}\n"
+                f"program\tgene\tnetwork_id\tchromosome\tIIDs_count\thaplotypes_count\tIIDs\thaplotypes\tmin_pvalue\tmin_pvalue_phecode\tmin_pvalue_desc\t{self._form_header(phenotype_list)}\n"
             )
             # iterating over each network and writing the values to file
             for network in tqdm(data["output"], desc="Networks written to file: "):
