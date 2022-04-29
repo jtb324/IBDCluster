@@ -78,9 +78,14 @@ def main(
         "--env",
         "-e",
         help="path to a .env file that has variables for the hapibd files directory and the ilash file directory. These variables are called HAPIBD_PATH and ILASH_PATH respectively.",
+        callback=callbacks.check_env_path,
     ),
     json_path: str = typer.Option(
-        "", "--json-config", "-j", help="path to the json config file"
+        "",
+        "--json-config",
+        "-j",
+        help="path to the json config file",
+        callback=callbacks.check_json_path,
     ),
     gene_info_file: str = typer.Option(
         ...,
@@ -128,25 +133,11 @@ def main(
     # create the directory that the IBDCluster.log will be in
     pathlib.Path(output).mkdir(parents=True, exist_ok=True)
 
-    # if the user doesn't specify a new json path then it uses the programs original config.json
-    if not json_path:
+    # loading the
+    os.environ.setdefault("json_path", json_path)
 
-        program_dir: str = "/".join(os.path.realpath(__file__).split("/")[:-2])
-        # adding the json to the environment so that we can access it
-        os.environ.setdefault("json_path", "/".join([program_dir, "config.json"]))
-    else:
-        os.environ.setdefault("json_path", json_path)
-
-    # if the user doesn't specify a new path to a .env then
-    # the program will use the default path is in the
-    # IBDCluster directory
-    if not env_path:
-
-        program_dir: str = "/".join(os.path.realpath(__file__).split("/")[:-2])
-        # adding the json to the environment so that we can access it
-        load_dotenv("/".join([program_dir, ".env"]))
-    else:
-        load_dotenv(env_path)
+    # loading the .env file
+    load_dotenv(env_path)
 
     # adding the loglevel to the environment so that we can access it
     os.environ.setdefault("program_loglevel", str(log.get_loglevel(loglevel)))
@@ -162,6 +153,7 @@ def main(
         ibd_program_used=ibd_program,
         output_path=output,
         environment_file=env_path,
+        json_file=json_path,
         gene_info_file=gene_info_file,
         carrier_matrix=carriers,
         centimorgan_threshold=cm_threshold,

@@ -1,4 +1,5 @@
 from pathlib import Path
+import os
 
 
 class IncorrectFileType(Exception):
@@ -92,3 +93,49 @@ def check_loglevel(loglevel: str) -> str:
         raise UnsupportedLogLevel(loglevel)
 
     return loglevel.lower()
+
+
+def check_json_path(json_path: str) -> str:
+    """Callback function that creates the json path string. If the user provides a value then it uses the user provided value else it creates the path to the default file
+
+    Parameters
+    ----------
+    json_path : str
+        path to the json config file or an empty string
+
+    Returns
+    -------
+    str
+        returns the string to the file
+    """
+
+    if json_path:
+        return json_path
+    else:
+
+        program_dir: str = "/".join(os.path.realpath(__file__).split("/")[:-3])
+
+        return "/".join([program_dir, "config.json"])
+
+
+def check_env_path(env_path: str) -> str:
+    """Callback function that creates the .env path string. If the user provides a value then it just returns that otherwise it creates the path to the default .env file.
+
+    Parameters
+    ----------
+    env_path : str
+        path to the .env file or an empty string
+
+    Returns
+    -------
+    str
+        returns the string to the file
+    """
+    if not env_path:
+
+        filepath: str = "/".join(os.path.realpath(__file__).split("/")[:-3] + [".env"])
+
+        return filepath
+
+    else:
+        return env_path

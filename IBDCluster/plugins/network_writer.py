@@ -211,7 +211,10 @@ class NetworkWriter:
         str
             returns a string that has the phecode description
         """
+        logger.debug(f"phecode description: {bool(phecode_desc)}")
         if phecode_desc:
+            logger.debug(f"min phecode: {min_phecode}")
+            logger.debug(f"min_phecode typer: {type(min_phecode)}")
             # getting the inner dictionary if the key exists, otherwise getting
             # an empty dictionary
             desc_dict = phecode_desc.get(min_phecode, {})
@@ -256,7 +259,7 @@ class NetworkWriter:
             # getting a string that has the phecode and the minimum pvalue
             # for the network
             min_pvalue, min_phecode = self._check_min_pvalue(phenotype_pvalue_dict)
-
+            # BUG This is not returning the right value
             phecode_desc = self.get_descriptions(
                 data.phenotype_description, min_phecode
             )
@@ -303,7 +306,7 @@ class NetworkWriter:
             encoding="utf-8",
         ) as output_file:
             output_file.write(
-                f"program\tgene\tnetwork_id\tchromosome\tIIDs_count\thaplotypes_count\tIIDs\thaplotypes\tmin_pvalue\tmin_pvalue_phecode\tmin_pvalue_desc\t{self._form_header(phenotype_list)}\n"
+                f"program\tgene\tnetwork_id\tchromosome\tIIDs_count\thaplotypes_count\tIIDs\thaplotypes\tmin_pvalue\tmin_pvalue_phecode\tmin_phecode_desc\t{self._form_header(phenotype_list)}\n"
             )
             # iterating over each network and writing the values to file
             for network in tqdm(data["output"], desc="Networks written to file: "):
