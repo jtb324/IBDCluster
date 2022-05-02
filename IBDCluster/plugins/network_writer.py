@@ -2,7 +2,8 @@ from typing import List, Tuple, Dict, Protocol, Any, Set
 from dataclasses import dataclass, field
 import log
 import pandas as pd
-from scipy.stats import binom
+from scipy.stats import binom_test
+from numpy import float64
 import os
 from tqdm import tqdm
 from plugins import factory_register
@@ -74,7 +75,7 @@ class NetworkWriter:
         phenotype_percent: int,
         carriers_count: int,
         network_size: int,
-    ) -> float:
+    ) -> float64:
         """Function that will determine the pvalue for each network
 
         Returns
@@ -88,7 +89,7 @@ class NetworkWriter:
             logger.debug(f"carrier count = 0 therefore pvalue for {phenotype} = 1")
             return 1
 
-        prob = 1 - binom.cdf(carriers_count - 1, network_size, phenotype_percent)
+        prob = binom_test(carriers_count - 1, network_size, phenotype_percent)
 
         logger.debug(f"pvalue for {phenotype} = {prob}")
 
