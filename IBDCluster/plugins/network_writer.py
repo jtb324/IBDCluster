@@ -2,7 +2,7 @@ from typing import List, Tuple, Dict, Protocol, Any, Set
 from dataclasses import dataclass, field
 import log
 import pandas as pd
-from scipy.stats import binom_test
+from scipy.stats import binomtest
 from numpy import float64
 import os
 from tqdm import tqdm
@@ -89,11 +89,13 @@ class NetworkWriter:
             logger.debug(f"carrier count = 0 therefore pvalue for {phenotype} = 1")
             return 1
 
-        prob = binom_test(carriers_count - 1, network_size, phenotype_percent)
+        result = binomtest(carriers_count - 1, network_size, phenotype_percent)
 
-        logger.debug(f"pvalue for {phenotype} = {prob}")
+        pvalue = result.pvalue
 
-        return prob
+        logger.debug(f"pvalue for {phenotype} = {pvalue}")
+
+        return pvalue
 
     @staticmethod
     def _check_min_pvalue(phenotype_pvalues: Dict[str, float]) -> Tuple[str, str]:
