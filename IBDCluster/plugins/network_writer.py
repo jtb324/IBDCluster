@@ -240,8 +240,6 @@ class NetworkWriter:
             data.networks_list, desc="networks with calculated pvalues: "
         ):
 
-            # adding a key for gene id and the network id to the data.network_pvalues
-            data.network_pvalues[data.gene_name] = {}
             # string that has the network information such as the
             # network_id, ibd_program, the gene it is for and the
             # chromosome number
@@ -262,7 +260,7 @@ class NetworkWriter:
             # getting a string that has the phecode and the minimum pvalue
             # for the network
             min_pvalue, min_phecode = self._check_min_pvalue(phenotype_pvalue_dict)
-            # BUG This is not returning the right value
+
             phecode_desc = self.get_descriptions(
                 data.phenotype_description, min_phecode
             )
@@ -272,9 +270,7 @@ class NetworkWriter:
             )
 
             # adding the pvalue_dictionary to the network_pvalues attribute of the dataHolder
-            data.network_pvalues[data.gene_name][
-                network.network_id
-            ] = phenotype_pvalue_dict
+            data.network_pvalues[network.network_id] = phenotype_pvalue_dict
 
         # returning an object with the list of strings, the
         # path, and the gene name
