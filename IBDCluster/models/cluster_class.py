@@ -44,6 +44,7 @@ class Network:
     pairs: List[Pairs] = field(default_factory=list)
     iids: Set[str] = field(default_factory=set)
     haplotypes: Set[str] = field(default_factory=set)
+    pvalues: dict[str, float] = field(default_factory=dict)
 
     def filter_for_seed(
         self,
