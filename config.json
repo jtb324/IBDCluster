@@ -1,5 +1,5 @@
 {
-    "plugins":["plugins.phecode_percentages", "plugins.network_writer", "plugins.allpair_writer"],
+    "plugins":["plugins.phecode_percentages", "plugins.network_writer", "plugins.allpair_writer", "plugins.phecode_counter"],
     "modules": [
         {
             "name": "phecode_percentages"
@@ -9,6 +9,9 @@
         },
         {
             "name": "allpair_writer"
+        },
+        {
+            "name": "phecode_counter"
         }
     ]
 }
