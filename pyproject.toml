@@ -14,7 +14,7 @@ scipy = "^1.8.0"
 tqdm = "^4.62.3"
 
 [tool.poetry.dev-dependencies]
-black = "^22.1.0"
+black = "^22.3.0"
 pytest = "^7.0.0"
 pytest-cov = "^3.0.0"
 pylint = "^2.12.2"

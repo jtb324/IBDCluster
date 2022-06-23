@@ -89,7 +89,7 @@ def main(
     ),
     gene_info_file: str = typer.Option(
         ...,
-        "--gene_file",
+        "--gene-file",
         "-g",
         help="Filepath to a text file that has information about the genes it should have four columns: Gene name, chromosome, gene start, and gene end. The file is expected to not have a header",
         callback=callbacks.check_gene_file,
@@ -108,7 +108,7 @@ def main(
     phecode_descriptions: Optional[str] = typer.Option(
         None,
         "-d",
-        "--phecode_desc",
+        "--phecode-desc",
         help="File that has the descriptions for each phecode. Expects two columns: 'phecode' and 'phenotype', that are tab separated.",
     ),
     loglevel: str = typer.Option(
@@ -120,7 +120,7 @@ def main(
     ),
     log_to_console: bool = typer.Option(
         False,
-        "--log_to_console",
+        "--log-to-console",
         help="Optional flag to log to only the console or also a file",
         is_flag=True,
     ),
