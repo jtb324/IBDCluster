@@ -124,6 +124,18 @@ def main(
         help="Optional flag to log to only the console or also a file",
         is_flag=True,
     ),
+    debug_iterations: int = typer.Option(
+        3,
+        "--debug-iterations",
+        help="This argument will specify how many iterations the program should go through durign the clustering step before it moves on. This argument should only be used if the loglevel is set to debug. If you wish to run in debug for all of the program then set this argument to a high number. This practice is not recommend because the log file will get quite large. The default value is 3",
+    ),
+    version: bool = typer.Option(
+        False,
+        "--version",
+        callback=callbacks.display_version,
+        is_eager=True,
+        is_flag=True,
+    ),
 ) -> None:
     """Main function for the program that has all the parameters that the user can use with type"""
 
