@@ -154,6 +154,9 @@ def main(
     # adding the loglevel to the environment so that we can access it
     os.environ.setdefault("program_loglevel", str(log.get_loglevel(loglevel)))
 
+    # adding the debug_iterations to the environment so that we can access it
+    os.environ.setdefault("debug_iterations", str(debug_iterations))
+
     # creating the logger and then configuring it
     logger = log.create_logger()
 
