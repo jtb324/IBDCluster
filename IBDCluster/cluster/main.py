@@ -104,10 +104,12 @@ def find_clusters(
 
         cluster_model.construct_network(ind, network_obj)
 
-        # if the program is being run in debug mode then it will only this loop four times. This gives enough information
-        # to see if the program is behaving properly
+        # if the program is being run in debug mode then it
+        # will only this loop how ever many times the user
+        # wants. This gives enough information to see if
+        # the program is behaving properly
         if int(os.environ.get("program_loglevel")) == 10:
-            if cluster_model.network_id == 3:
+            if cluster_model.network_id == int(os.environ.get("debug_iterations")):
                 break
 
     # accessing the network list attribute from the cluster model so that you can list the networks
