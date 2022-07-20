@@ -1,13 +1,26 @@
 import logging
 from typing import Dict
 import os
-import pathlib
 
 level_dict: Dict[str, int] = {
     "verbose": logging.INFO,
     "debug": logging.DEBUG,
     "warning": logging.WARNING,
 }
+
+
+def record_inputs(logger, **kwargs) -> None:
+    """function to record the user arguments that were passed to the
+    program. Takes a logger and then a dictionary of the user
+    arguments"""
+
+    logger.setLevel(20)
+
+    for parameter, value in kwargs.items():
+        logger.info(f"{parameter}: {value}")
+
+    # getting the correct log level to reset the logger
+    logger.setLevel(get_loglevel(kwargs["loglevel"]))
 
 
 def get_loglevel(loglevel: str):
