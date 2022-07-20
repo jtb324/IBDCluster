@@ -22,20 +22,6 @@ app = typer.Typer(
 )
 
 
-def record_inputs(logger, **kwargs) -> None:
-    """function to record the user arguments that were passed to the
-    program. Takes a logger and then a dictionary of the user
-    arguments"""
-
-    logger.setLevel(20)
-
-    for parameter, value in kwargs.items():
-        logger.info(f"{parameter}: {value}")
-
-    # getting the correct log level to reset the logger
-    logger.setLevel(log.get_loglevel(kwargs["loglevel"]))
-
-
 def load_phecode_descriptions(phecode_desc_file: str) -> Dict[str, Dict[str, str]]:
     """Function that will load the phecode_description file and then turn that into a dictionary
 
@@ -145,17 +131,11 @@ def main(
     # create the directory that the IBDCluster.log will be in
     pathlib.Path(output).mkdir(parents=True, exist_ok=True)
 
-    # loading the
+    # setting a path to the json file
     os.environ.setdefault("json_path", json_path)
 
     # loading the .env file
     load_dotenv(env_path)
-
-    # adding the loglevel to the environment so that we can access it
-    os.environ.setdefault("program_loglevel", str(log.get_loglevel(loglevel)))
-
-    # adding the debug_iterations to the environment so that we can access it
-    os.environ.setdefault("debug_iterations", str(debug_iterations))
 
     # creating the logger and then configuring it
     logger = log.create_logger()
@@ -163,7 +143,7 @@ def main(
     log.configure(logger, output, loglevel=loglevel, to_console=log_to_console)
 
     # recording all the user inputs
-    record_inputs(
+    log.record_inputs(
         logger,
         ibd_program_used=ibd_program,
         output_path=output,
@@ -174,6 +154,12 @@ def main(
         centimorgan_threshold=cm_threshold,
         loglevel=loglevel,
     )
+
+    # adding the loglevel to the environment so that we can access it
+    os.environ.setdefault("program_loglevel", str(log.get_loglevel(loglevel)))
+
+    # adding the debug_iterations to the environment so that we can access it
+    os.environ.setdefault("debug_iterations", str(debug_iterations))
 
     # need to first determine list of carriers for each phenotype
     carriers_df: pd.DataFrame = pd.read_csv(carriers, sep="\t")
