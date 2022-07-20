@@ -1,4 +1,4 @@
-from typing import Dict, Generator, List, Tuple
+from typing import Generator
 from collections import namedtuple
 import models
 import log
@@ -28,29 +28,50 @@ def load_gene_info(filepath: str) -> Generator:
             f"Loaded in the gene information from the file, {filepath}, into a generator"
         )
         for line in gene_input:
-            split_line: List[str] = line.split()
+            split_line: list[str] = line.split()
 
             gene_tuple: Genes = Genes(*split_line)
 
             yield gene_tuple
 
 
-def generate_carrier_list(carriers_matrix: pd.DataFrame) -> Dict[float, List[str]]:
-    """Function that will take the carriers_pheno_matrix and generate a dictionary that has the list of carriers for each phenotype"""
+def _identify_carriers_indx(
+    carriers_series: pd.Series, return_dict: dict[str, list[int]]
+) -> None:
+    """Function that will insert the key, value pair of the phenotype and the carriers into the dictionary
+
+    Parameters
+    ----------
+    carriers_series : pd.Series
+        row of dataframe that is used in the apply function in
+        the generate_carrier_list function
+
+    return_dict : dict[str, list[int]]
+        dictionary where the phecodes will be the keys and the values will be a list of indices indicating which grids are carriers
+    """
+    return_dict[carriers_series.name] = list(
+        carriers_series[carriers_series == 1].index
+    )
+
+
+def generate_carrier_list(carriers_matrix: pd.DataFrame) -> dict[float, list[int]]:
+    """Function that will take the carriers_pheno_matrix and generate a dictionary that has the list of indices for each carrier
+
+    Parameters
+    ----------
+    carriers_matrix : pd.DataFrame
+        dataframe where the columns are the phecodes and have 0's or 1's for whether or not they have the phecodes
+
+    Returns
+    -------
+    dict[float, list[int]]
+        dictionary where the keys are phecodes and the values are list of integers
+    """
     return_dict = {}
 
     # iterating over each phenotype which starts with the
     # second column
-
-    for column in carriers_matrix.columns[1:]:
-
-        filtered_matrix: pd.DataFrame = carriers_matrix[carriers_matrix[column] == 1][
-            ["grids", column]
-        ]
-
-        return_dict[column] = filtered_matrix.grids.values.tolist()
-
-    logger.debug(f"identified carriers for {len(return_dict.keys())} phenotypes")
+    carriers_matrix.T.apply(lambda x: _identify_carriers_indx(x, return_dict), axis=1)
 
     return return_dict
 
@@ -59,8 +80,8 @@ def find_clusters(
     ibd_program: str,
     gene: Genes,
     cm_threshold: int,
-    carriers: Dict[float, List[str]],
-) -> List[models.Network]:
+    carriers: dict[float, list[int]],
+) -> list[models.Network]:
     """Main function that will handle the clustering into networks"""
 
     # Next two lines create an object with the shared indices for each
@@ -96,7 +117,7 @@ def find_clusters(
     # phenotype
     cluster_model.add_carrier_status(carriers, indices.id1_indx, indices.id2_indx)
 
-    all_grids: List[str] = cluster_model.find_all_grids(indices)
+    all_grids: list[str] = cluster_model.find_all_grids(indices)
 
     for ind in tqdm(all_grids, desc="pairs in clusters: "):
 
