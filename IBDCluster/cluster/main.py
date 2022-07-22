@@ -54,7 +54,7 @@ def _identify_carriers_indx(
     )
 
 
-def generate_carrier_list(carriers_matrix: pd.DataFrame) -> dict[float, list[int]]:
+def generate_carrier_dict(carriers_matrix: pd.DataFrame) -> dict[str, list[int]]:
     """Function that will take the carriers_pheno_matrix and generate a dictionary that has the list of indices for each carrier
 
     Parameters
@@ -64,7 +64,7 @@ def generate_carrier_list(carriers_matrix: pd.DataFrame) -> dict[float, list[int
 
     Returns
     -------
-    dict[float, list[int]]
+    dict[str, list[int]]
         dictionary where the keys are phecodes and the values are list of integers
     """
     return_dict = {}
@@ -76,11 +76,44 @@ def generate_carrier_list(carriers_matrix: pd.DataFrame) -> dict[float, list[int
     return return_dict
 
 
+def generate_carrier_hash(
+    carrier_df: pd.DataFrame,
+) -> tuple[dict[int, str], dict[str, int]]:
+    """Function that will create a mapping for the grids to their index in the carriers_df
+
+    Parameters
+    ----------
+    carrier_df : pd.DataFrame
+        dataframe where the first column is the list of grids and then the other columns
+        of 0's or 1's of individuals who carry a phecode.
+
+    Return
+    ------
+    tuple[dict[int, str], dict[str, int]]
+        returns a dictionary where the key is an integer of the index for the grid
+        and the value is the grid id
+    """
+    grid_list = []
+
+    for grid in carrier_df.grids.values:
+
+        grid_list.extend([grid + ".1", grid + ".2"])
+
+    grids_hash = list(zip(grid_list, range(grid_list)))
+
+    int_id_dict = {hash_int: grid_id for grid_id, hash_int in grids_hash}
+
+    grid_id_dict = {grid_id: hash_int for grid_id, hash_int in grids_hash}
+
+    return int_id_dict, grid_id_dict
+
+
 def find_clusters(
     ibd_program: str,
     gene: Genes,
     cm_threshold: int,
     carriers: dict[float, list[int]],
+    grid_id_hash: dict[str, int],
 ) -> list[models.Network]:
     """Main function that will handle the clustering into networks"""
 
@@ -97,9 +130,10 @@ def find_clusters(
     # Generate a list of files for the correct ibd program
     ibd_files = indices.program_indices.gather_files()
 
-    # This for loop will iterate through each gene tuple in the generator. It then uses the
-    # chromosome number to find the correct file. A Cluster object is then created which loads the pairs
-    # that surround a certain location into a dataframe
+    # This for loop will iterate through each gene tuple in the generator.
+    # It then uses the chromosome number to find the correct file. A
+    # Cluster object is then created which loads the pairs that surround
+    # a certain location into a dataframe
 
     logger.info(f"finding clusters for the gene: {gene.name}")
 
@@ -113,9 +147,9 @@ def find_clusters(
     # filtering the dataframe to >= specific centimorgan threshold
     cluster_model.filter_cm_threshold(cm_threshold, indices.program_indices.cM_indx)
 
-    # adding the affected status of 1 or 0 for each pair for each
-    # phenotype
-    cluster_model.add_carrier_status(carriers, indices.id1_indx, indices.id2_indx)
+    # adding the affected status of 1 or 0 for each pair for each phenotype
+    # THIS IS A VERY SLOW STEP AND PROBABLY UNNECESSARY
+    # cluster_model.add_carrier_status(carriers, indices.id1_indx, indices.id2_indx)
 
     all_grids: list[str] = cluster_model.find_all_grids(indices)
 
