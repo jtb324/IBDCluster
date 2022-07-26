@@ -3,7 +3,8 @@
 This module is the main script for the IBDCluster program. It contains the main cli and records inputs and creates the typer app.
 """
 import os
-from typing import Dict, List, Optional
+from enum import Enum
+from typing import Dict, Optional
 import pathlib
 from dotenv import load_dotenv
 import pandas as pd
@@ -14,6 +15,11 @@ import cluster
 import log
 from datetime import datetime
 from models import DataHolder, Network
+
+
+class IbdProgram(str, Enum):
+    hapibd = "hapibd"
+    ilash = "ilash"
 
 
 app = typer.Typer(
@@ -49,15 +55,21 @@ def load_phecode_descriptions(phecode_desc_file: str) -> Dict[str, Dict[str, str
 
 @app.command()
 def main(
-    ibd_program: str = typer.Option(
-        "hapibd",
+    ibd_program: IbdProgram = typer.Option(
+        IbdProgram.hapibd.value,
         "--ibd",
         "-i",
-        help="IBD detection software that the output came from. The program expects these values to be hapibd or ilash",
-        callback=callbacks.check_ibd_program,
+        help="IBD detection software that the output came from. The program expects these values to be hapibd or ilash. The program also expects these values to be lowercase",
+        case_sensitive=True,
     ),
     output: str = typer.Option(
         "./", "--output", "-o", help="directory to write the output files into."
+    ),
+    ibd_file: str = typer.Option(
+        ...,
+        "--ibd-file",
+        "-f",
+        help="path to either the hap-IBD or iLASH file that have the pairwise IBD sharing for each chromosome. This file should correspond to the chromosomes that are in the gene_info_file",
     ),
     env_path: str = typer.Option(
         "",
@@ -145,7 +157,8 @@ def main(
     # recording all the user inputs
     log.record_inputs(
         logger,
-        ibd_program_used=ibd_program,
+        ibd_program_used=ibd_program.value,
+        ibd_filepath=ibd_file,
         output_path=output,
         environment_file=env_path,
         json_file=json_path,
@@ -163,9 +176,11 @@ def main(
 
     # need to first determine list of carriers for each phenotype
     carriers_df: pd.DataFrame = pd.read_csv(carriers, sep="\t")
-
-    carriers_dict = cluster.generate_carrier_list(carriers_df)
-
+    # forming a dictionary where the keys are phecodes and the
+    # values are a list of indices in the carriers df that carry
+    # the phecode
+    carriers_dict = cluster.generate_carrier_dict(carriers_df)
+    # loading the genes information into a generator object
     genes_generator = cluster.load_gene_info(gene_info_file)
 
     # loading in the phecode_descriptions
@@ -177,8 +192,8 @@ def main(
     # We can then determine the different clusters for each gene
     for gene in genes_generator:
 
-        networks_list: List[Network] = cluster.find_clusters(
-            ibd_program, gene, cm_threshold, carriers_dict
+        networks_list: list[Network] = cluster.find_clusters(
+            ibd_program.value, gene, cm_threshold, carriers_dict
         )
 
         # adding the networks, the carriers_df, the carriers_dict, and the
