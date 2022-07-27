@@ -193,7 +193,7 @@ def main(
     for gene in genes_generator:
 
         networks_list: list[Network] = cluster.find_clusters(
-            ibd_program.value, gene, cm_threshold, carriers_dict
+            ibd_program.value, gene, cm_threshold, carriers_dict, ibd_file
         )
 
         # adding the networks, the carriers_df, the carriers_dict, and the
