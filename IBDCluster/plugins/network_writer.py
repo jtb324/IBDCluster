@@ -1,4 +1,4 @@
-from typing import List, Tuple, Dict, Protocol, Any, Set
+from typing import Protocol, Any
 from dataclasses import dataclass, field
 import log
 import pandas as pd
@@ -22,23 +22,23 @@ class Network(Protocol):
     gene_name: str
     gene_chr: str
     network_id: int
-    pairs: List = field(default_factory=list)
-    iids: Set[str] = field(default_factory=set)
-    haplotypes: Set[str] = field(default_factory=set)
+    pairs: list = field(default_factory=list)
+    iids: set[str] = field(default_factory=set)
+    haplotypes: set[str] = field(default_factory=set)
 
 
 @dataclass
 class DataHolder(Protocol):
     gene_name: str
     chromosome: int
-    networks_list: List[Network]
-    affected_inds: Dict[float, List[str]]
+    networks: Network
+    affected_inds: dict[float, list[str]]
     phenotype_table: pd.DataFrame
-    phenotype_cols: List[str]
+    phenotype_cols: list[str]
     ibd_program: str
-    phenotype_description: Dict[str, str] = None
-    phenotype_percentages: Dict[str, float] = field(default_factory=dict)
-    network_pvalues: Dict[int, Dict[str, float]] = field(default_factory=dict)
+    phenotype_description: dict[str, str] = None
+    phenotype_percentages: dict[str, float] = field(default_factory=dict)
+    network_pvalues: dict[int, dict[str, float]] = field(default_factory=dict)
 
 
 @dataclass
@@ -53,7 +53,7 @@ class NetworkWriter:
         append the words ind_in_network and pvalue to the phenotype name."""
         # pulling out all of the phenotype names from the carriers matrix
 
-        column_list: List[str] = []
+        column_list: list[str] = []
 
         for column in phenotype_columns:
 
@@ -98,7 +98,7 @@ class NetworkWriter:
         return pvalue
 
     @staticmethod
-    def _check_min_pvalue(phenotype_pvalues: Dict[str, float]) -> Tuple[str, str]:
+    def _check_min_pvalue(phenotype_pvalues: dict[str, float]) -> tuple[str, str]:
         """
         Function that will determine the smallest pvalue and return the corresponding phecode
 
@@ -109,7 +109,7 @@ class NetworkWriter:
 
         Returns
 
-        Tuple[str, str]
+        tuple[str, str]
 
             returns a tuple where the first value is the pvalue and the
             second is the phecode. If the minimum phecode is 1 (meaning that none of the phecodes had carriers) then the program returns N/A for both spots.
@@ -126,17 +126,17 @@ class NetworkWriter:
 
     def _determine_pvalues(
         self,
-        carriers_list: Dict[str, List[str]],
+        carriers_list: dict[str, list[str]],
         network: Network,
-        phenotype_list: List[str],
-        percentage_pop_phenotypes: Dict[str, float],
+        phenotype_list: list[str],
+        percentage_pop_phenotypes: dict[str, float],
     ) -> str:
         """Function that will determine information about how many carriers are in each
         network, the percentage, the IIDs of the carriers in the network, and use this to calculate the pvalue for the network. The function keeps track of the smallest non-zero pvalue and returns it or NA
 
         Parameters
 
-        carriers_list : dict[str, List[str]]
+        carriers_list : dict[str, list[str]]
             Dictionaary that has all the carriers in list for each phenotype of interest
 
         network : Network
@@ -149,7 +149,7 @@ class NetworkWriter:
         """
         # dictionary that will contain the phecodes as keys
         # and the pvalues as floats
-        pvalue_dictionary: Dict[str, float] = {}
+        pvalue_dictionary: dict[str, float] = {}
 
         output_str = ""
 
@@ -158,7 +158,7 @@ class NetworkWriter:
             # getting the list of iids in our population that carry the phenotype
             carriers = carriers_list[phenotype]
             # getting a list of iids in the network that are a carrier
-            carriers_in_network: List[str] = [
+            carriers_in_network: list[str] = [
                 iid for iid in network.iids if iid in carriers
             ]
 
@@ -197,13 +197,13 @@ class NetworkWriter:
 
     @staticmethod
     def get_descriptions(
-        phecode_desc: Dict[str, Dict[str, str]], min_phecode: str
+        phecode_desc: dict[str, dict[str, str]], min_phecode: str
     ) -> str:
         """Method to get the description for the minimum phecode
 
         Parameters
         ----------
-        phecode_desc : Dict[str, Dict[str, str]]
+        phecode_desc : dict[str, dict[str, str]]
             dictionary with descriptions of each phecode
 
         min_phecode : str
@@ -227,14 +227,14 @@ class NetworkWriter:
 
         return "N/A"
 
-    def analyze(self, **kwargs) -> Dict[str, Any]:
+    def analyze(self, **kwargs) -> dict[str, Any]:
         """main function of the plugin. It needs to determine the pvalue"""
 
         data: DataHolder = kwargs["data"]
         output_path = kwargs["output"]
 
         # This will be a list of strings that has the output for each network
-        networks_analysis_list: List[str] = []
+        networks_analysis_list: list[str] = []
 
         for network in tqdm(
             data.networks_list, desc="networks with calculated pvalues: "
@@ -288,7 +288,7 @@ class NetworkWriter:
         """Method to write the output to a networks.txt file"""
         data = kwargs["input_data"]
         ibd_program = kwargs["ibd_program"]
-        phenotype_list: List[str] = kwargs["phenotype_list"]
+        phenotype_list: list[str] = kwargs["phenotype_list"]
 
         gene_name = data["gene"]
         # forming the correct output path based on the gene name
