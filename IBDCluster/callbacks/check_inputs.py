@@ -14,14 +14,6 @@ class IncorrectFileType(Exception):
         super().__init__(message)
 
 
-class UnsupportedLogLevel(Exception):
-    """Error that will be raised if the user provides an incorrect loglevel"""
-
-    def __init__(self, loglevel: str) -> None:
-        self.message: str = f"The provided loglevel, {loglevel} is not supportted. Supported values are verbose, debug, warning (Case Insensitive)"
-        super().__init__(self.message)
-
-
 def check_gene_file(gene_filepath: str) -> str:
     """Function that will check to make sure the gene info file exist or else it will raise an error.
 
@@ -46,25 +38,6 @@ def check_gene_file(gene_filepath: str) -> str:
         )
 
     return gene_filepath
-
-
-def check_loglevel(loglevel: str) -> str:
-    """Function that will check to make sure the loglevel is either info, warning, or debug
-
-    Parameters
-
-    loglevel : str
-        parameter passed by the user to indicate what level of logging they want
-
-    Returns
-
-    str
-        returns the lower case log level"""
-
-    if loglevel.lower() not in ["verbose", "debug", "warning"]:
-        raise UnsupportedLogLevel(loglevel)
-
-    return loglevel.lower()
 
 
 def check_json_path(json_path: str) -> str:
