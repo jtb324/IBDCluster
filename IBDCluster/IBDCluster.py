@@ -22,9 +22,14 @@ class IbdProgram(str, Enum):
     ilash = "ilash"
 
 
+class LogLevel(str, Enum):
+    warning = "warning"
+    verbose = "verbose"
+    debug = "debug"
+
+
 app = typer.Typer(
     add_completion=False,
-    help="Tool that identifies ibd sharing for specific loci for individuals within biobanks",
 )
 
 
@@ -109,12 +114,12 @@ def main(
         "--phecode-desc",
         help="File that has the descriptions for each phecode. Expects two columns: 'phecode' and 'phenotype', that are tab separated.",
     ),
-    loglevel: str = typer.Option(
-        "warning",
+    loglevel: LogLevel = typer.Option(
+        LogLevel.warning.value,
         "--loglevel",
         "-l",
         help="This argument sets the logging level for the program. Accepts values 'debug', 'warning', and 'verbose'.",
-        callback=callbacks.check_loglevel,
+        case_sensitive=True,
     ),
     log_to_console: bool = typer.Option(
         False,
@@ -125,18 +130,18 @@ def main(
     debug_iterations: int = typer.Option(
         3,
         "--debug-iterations",
-        help="This argument will specify how many iterations the program should go through durign the clustering step before it moves on. This argument should only be used if the loglevel is set to debug. If you wish to run in debug for all of the program then set this argument to a high number. This practice is not recommend because the log file will get quite large. The default value is 3",
+        help="This argument will specify how many iterations the program should go through durign the clustering step before it moves on. This argument should only be used if the loglevel is set to debug. If you wish to run in debug mode for a whole data set then set this argument to a high number. This practice is not recommended because the log file will get extremely large (Potentially TB's).",
     ),
     version: bool = typer.Option(
         False,
         "--version",
+        help="version number of the IBDCluster program",
         callback=callbacks.display_version,
         is_eager=True,
         is_flag=True,
     ),
 ) -> None:
-    """Main function for the program that has all the parameters that the user can use with type"""
-
+    """C.L.I. tool to identify networks of individuals who share IBD segments overlapping a locus of interest and identify enrichment of phenotypes within biobanks"""
     # getting the programs start time
     start_time = datetime.now()
 
