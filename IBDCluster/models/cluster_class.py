@@ -42,6 +42,7 @@ class Network:
     iids: set[str] = field(default_factory=set)
     haplotypes: set[str] = field(default_factory=set)
     connections: dict[str, int] = field(default_factory=dict)
+    pvalues: None | str = None
 
     def filter_for_seed(
         self,
@@ -86,8 +87,7 @@ class Network:
             ibd_row[indices.chr_indx],
             ibd_row[indices.str_indx],
             ibd_row[indices.end_indx],
-            ibd_row[indices.program_indices.cM_indx],
-            affected_values,
+            ibd_row[indices.cM_indx],
         )
 
     @staticmethod
@@ -148,7 +148,6 @@ class Cluster:
     inds_in_network: set[str] = field(
         default_factory=set
     )  # This attribute will be used to keep track of the individuals that are in any network
-    network_list: list[Network] = field(default_factory=list)
 
     def load_file(self, start: int, end: int) -> None:
         """Method filters the ibd file based on location and loads this into memory as a dataframe
@@ -175,11 +174,6 @@ class Cluster:
             self.indices.end_indx,
             self.indices.cM_indx,
         ]
-
-        # if self.ibd_program == "hapibd":
-        #     name_cols = [0, 1, 2, 3, 4, 5, 6, 7]
-        # else:
-        #     name_cols = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
 
         for chunk in pd.read_csv(
             self.ibd_file, sep="\t", header=None, chunksize=1000000, usecols=cols
@@ -389,5 +383,3 @@ class Cluster:
             )
 
             self.network_id += 1
-
-            self.network_list.append(network_obj)

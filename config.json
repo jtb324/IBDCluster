@@ -1,8 +1,8 @@
 {
-    "plugins":["plugins.phecode_percentages", "plugins.network_writer", "plugins.allpair_writer"],
+    "plugins":["plugins.pvalues", "plugins.network_writer", "plugins.allpair_writer"],
     "modules": [
         {
-            "name": "phecode_percentages"
+            "name":"pvalues"
         },
         {
             "name": "network_writer"

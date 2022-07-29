@@ -1,5 +1,5 @@
 from typing import Dict, Any
-from models import DataHolder
+from models import DataHolder, Network
 import log
 import plugins
 import os
@@ -9,18 +9,26 @@ import json
 logger = log.get_logger(__name__)
 
 
-def analyze(data_container: DataHolder, output: str) -> None:
+def analyze(data_container: DataHolder, network_obj: Network, output: str) -> None:
     """Main function from the analyze module that will determine the
     pvalues and the number of haplotypes, and individuals and will
     write this all to file.
 
     Parameters
 
-    data_container : DataHoldexr
+    data_container : DataHolder
+        object that hass all the attributes that are used by
+        different plugins
+
+    network_obj : Network
+        network object that has attributes about haplotypes and
+        who is in the network
 
     output : str
+        filepath to write the output to
     """
 
+    # making sure that the output directory is created
     # This section will load in the analysis plugins
     with open(os.environ.get("json_path")) as json_config:
 
@@ -38,14 +46,7 @@ def analyze(data_container: DataHolder, output: str) -> None:
         for analysis_obj in analysis_plugins:
 
             logger.debug(analysis_obj.name)
-
-            return_data: Dict[str, Any] = analysis_obj.analyze(
-                data=data_container, output=output
-            )
-
-            # writing the output to a file
-            analysis_obj.write(
-                input_data=return_data,
-                ibd_program=data_container.ibd_program,
-                phenotype_list=data_container.phenotype_cols,
+            logger.debug(f"output being used in analysis: {output}")
+            analysis_obj.analyze(
+                data=data_container, network=network_obj, output=output
             )

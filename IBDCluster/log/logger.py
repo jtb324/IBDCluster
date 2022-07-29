@@ -1,8 +1,7 @@
 import logging
-from typing import Dict
 import os
 
-level_dict: Dict[str, int] = {
+level_dict: dict[str, int] = {
     "verbose": logging.INFO,
     "debug": logging.DEBUG,
     "warning": logging.WARNING,
@@ -23,7 +22,7 @@ def record_inputs(logger, **kwargs) -> None:
     logger.setLevel(get_loglevel(kwargs["loglevel"]))
 
 
-def get_loglevel(loglevel: str):
+def get_loglevel(loglevel: str) -> int:
     """Function that will return a log level based on the input"""
 
     return level_dict[loglevel]
@@ -35,6 +34,7 @@ def configure(
     filename: str = "IBDCluster.log",
     loglevel: str = "warning",
     to_console: bool = False,
+    format_str: str = "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
 ) -> None:
     """Function that will configure the level of logging"""
 
@@ -42,11 +42,8 @@ def configure(
 
     logger.setLevel(level_dict.get(loglevel, logging.WARNING))
 
-    file_formatter = logging.Formatter(
-        "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-    )
+    file_formatter = logging.Formatter(format_str)
 
-    stream_formatter = logging.Formatter("%(message)s")
     # program defaults to log to a file called IBDCluster.log in the
     # output directory
     fh = logging.FileHandler(filename, mode="w")
@@ -56,6 +53,8 @@ def configure(
     # If the user selects to also log to console then the program will
     # log information to the stderr
     if to_console:
+        stream_formatter = logging.Formatter("%(message)s")
+
         sh = logging.StreamHandler()
         sh.setFormatter(stream_formatter)
         logger.addHandler(sh)

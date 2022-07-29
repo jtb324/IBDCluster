@@ -14,7 +14,7 @@ import callbacks
 import cluster
 import log
 from datetime import datetime
-from models import DataHolder, Network
+from models import DataHolder
 
 
 class IbdProgram(str, Enum):
@@ -188,34 +188,44 @@ def main(
     # loading the genes information into a generator object
     genes_generator = cluster.load_gene_info(gene_info_file)
 
+    # This section will handle preparing the phenocode
+    # descriptions and the phenotype prevalances
+
     # loading in the phecode_descriptions
     if phecode_descriptions:
         phecode_desc = load_phecode_descriptions(phecode_descriptions)
     else:
         phecode_desc = {}
 
+    # Now we will find the phecode percentages which will be used later
+    phenotype_prevalances = cluster.get_phenotype_prevalances(
+        carriers_dict, carriers_df.shape[0]
+    )
+
     # We can then determine the different clusters for each gene
     for gene in genes_generator:
 
-        networks_list: list[Network] = cluster.find_clusters(
-            ibd_program.value, gene, cm_threshold, carriers_dict, ibd_file
+        network_generator = cluster.find_clusters(
+            ibd_program.value, gene, cm_threshold, ibd_file
         )
-
-        # adding the networks, the carriers_df, the carriers_dict, and the
-        # phenotype columns to a object that will be used in the analysis
+        # creating a specific output path that has the gene name
+        gene_output = os.path.join(output, gene.name)
+        # creating an object that holds useful information
         data_container = DataHolder(
             gene.name,
             gene.chr,
-            networks_list,
             carriers_dict,
-            carriers_df,
-            carriers_df.columns[1:],
+            phenotype_prevalances,
+            list(carriers_dict.keys()),
             ibd_program,
             phecode_desc,
         )
+        # adding the networks, the carriers_df, the carriers_dict, and
+        # the phenotype columns to a object that will be used in the analysis
+        for network in network_generator:
 
-        # This is the main function that will run the analysis of the networks
-        analysis.analyze(data_container, output)
+            # This is the main function that will run the analysis of the networks
+            analysis.analyze(data_container, network, gene_output)
 
     logger.info("analysis_finished")
     logger.info(f"Program Duration: {datetime.now() - start_time}")

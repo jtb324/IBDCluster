@@ -45,6 +45,6 @@ class FileInfo:
                 self.cM_indx = 9
             case _:
                 logger.critical(
-                    "ibd_program {program_name} not supported. Please use either 'hap-IBD' or 'iLASH'."
+                    "ibd_program {program_name} not supported. Please use either 'hap-IBD' or 'iLASH' (all lowercase)."
                 )
                 raise NotImplementedError

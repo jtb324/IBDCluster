@@ -2,7 +2,7 @@ from pathlib import Path
 import typer
 import os
 
-VERSION = "1.0.1"
+VERSION = "1.0.3"
 
 
 class IncorrectFileType(Exception):
@@ -89,4 +89,4 @@ def check_env_path(env_path: str) -> str:
 def display_version(value: bool):
     if value:
         typer.echo(f"IBDCluster - v{VERSION}")
-        raise typer.Exit()
+        raise typer.Exit(code=1)

@@ -76,43 +76,10 @@ def generate_carrier_dict(carriers_matrix: pd.DataFrame) -> dict[str, list[str]]
     return return_dict
 
 
-def generate_carrier_hash(
-    carrier_df: pd.DataFrame,
-) -> tuple[dict[int, str], dict[str, int]]:
-    """Function that will create a mapping for the grids to their index in the carriers_df
-
-    Parameters
-    ----------
-    carrier_df : pd.DataFrame
-        dataframe where the first column is the list of grids and then the other columns
-        of 0's or 1's of individuals who carry a phecode.
-
-    Return
-    ------
-    tuple[dict[int, str], dict[str, int]]
-        returns a dictionary where the key is an integer of the index for the grid
-        and the value is the grid id
-    """
-    grid_list = []
-
-    for grid in carrier_df.grids.values:
-
-        grid_list.extend([grid + ".1", grid + ".2"])
-
-    grids_hash = list(zip(grid_list, range(grid_list)))
-
-    int_id_dict = {hash_int: grid_id for grid_id, hash_int in grids_hash}
-
-    grid_id_dict = {grid_id: hash_int for grid_id, hash_int in grids_hash}
-
-    return int_id_dict, grid_id_dict
-
-
 def find_clusters(
     ibd_program: str,
     gene: Genes,
     cm_threshold: int,
-    carriers: dict[float, list[str]],
     ibd_file: str,
 ) -> Generator[models.Network, None, None]:
     """Main function that will handle the clustering into networks
@@ -149,19 +116,17 @@ def find_clusters(
     # adding the correct index for the ibd program
     logger.debug(f"adding the cM index based on the ibd program: {ibd_program}")
 
-    indices.set_cM_index(ibd_program)
+    indices.set_cM_indx(ibd_program)
 
     logger.info(f"finding clusters for the gene: {gene.name}")
 
-    file: str = indices.find_file("".join(["chr", gene.chr]), ibd_file)
-
-    cluster_model: models.Cluster = models.Cluster(file, ibd_program, indices)
+    cluster_model: models.Cluster = models.Cluster(ibd_file, ibd_program, indices)
 
     # loading in all the dataframe for the genetic locus
-    cluster_model.load_file(gene.start, gene.end, indices.str_indx, indices.end_indx)
+    cluster_model.load_file(gene.start, gene.end)
 
     # filtering the dataframe to >= specific centimorgan threshold
-    cluster_model.filter_cm_threshold(cm_threshold, indices.program_indices.cM_indx)
+    cluster_model.filter_cm_threshold(cm_threshold, indices.cM_indx)
 
     all_grids: list[str] = cluster_model.find_all_grids(indices)
 
