@@ -14,20 +14,16 @@ class FileInfo(Protocol):
     FileInfo object"""
 
     id1_indx: int
-    ind1_with_phase: int
+    id1_phase_indx: int
     id2_indx: int
-    ind2_with_phase: int
+    id2_phase_indx: int
     chr_indx: int
     str_indx: int
     end_indx: int
+    cM_indx: None | int
 
     def set_program_indices(self, program_name: str) -> None:
         """Method that will set the proper ibd_program indices"""
-        ...
-
-    @staticmethod
-    def find_file(chr_num: str, file_list: list[str]) -> str:
-        """Method that will find the proper ibd files"""
         ...
 
 
@@ -149,7 +145,7 @@ class Cluster:
         default_factory=set
     )  # This attribute will be used to keep track of the individuals that are in any network
 
-    def load_file(self, start: int, end: int) -> None:
+    def load_file(self, start: int, end: int, cM_threshold: int) -> None:
         """Method filters the ibd file based on location and loads this into memory as a dataframe
         attribute of the class
 
@@ -160,6 +156,10 @@ class Cluster:
 
         end : int
             integer that desribes the end position of the gene of interest
+
+        cM_threshold : int
+            integer that gives the cM threshold for smallest ibd
+            segment to allow
         """
         logger.debug(
             f"Gathering shared ibd segments that overlap the gene region from {start} to {end} using the file {self.ibd_file}"
@@ -181,17 +181,20 @@ class Cluster:
 
             filtered_chunk: pd.DataFrame = chunk[
                 (
-                    (chunk[self.indices.str_indx] <= int(start))
-                    & (chunk[self.indices.end_indx] >= int(start))
+                    (
+                        (chunk[self.indices.str_indx] <= int(start))
+                        & (chunk[self.indices.end_indx] >= int(start))
+                    )
+                    | (
+                        (chunk[self.indices.str_indx] >= int(start))
+                        & (chunk[self.indices.end_indx] <= int(end))
+                    )
+                    | (
+                        (chunk[self.indices.str_indx] <= int(end))
+                        & (chunk[self.indices.end_indx] >= int(end))
+                    )
                 )
-                | (
-                    (chunk[self.indices.str_indx] >= int(start))
-                    & (chunk[self.indices.end_indx] <= int(end))
-                )
-                | (
-                    (chunk[self.indices.str_indx] <= int(end))
-                    & (chunk[self.indices.end_indx] >= int(end))
-                )
+                & (chunk[self.indices.cM_indx] >= cM_threshold)
             ]
 
             if not filtered_chunk.empty:
@@ -199,30 +202,26 @@ class Cluster:
 
         logger.info(f"identified {self.ibd_df.shape[0]} pairs within the gene region")
 
-    def filter_cm_threshold(self, cM_threshold: int, len_index: int) -> None:
-        """Method that will filter the self.ibd_df to only individuals larger than the specified threshold. This should be run after the load_file method.
+    # def filter_cm_threshold(self, cM_threshold: int, len_index: int) -> None:
+    #     """Method that will filter the self.ibd_df to only individuals larger than the specified threshold. This should be run after the load_file method.
 
-        Parameters
+    #     Parameters
 
-        cM_threshold : int
-            threshold to filter the file lengths on
+    #     cM_threshold : int
+    #         threshold to filter the file lengths on
 
-        len_index : index
-            column index for the hapibd or ilash file to find the
-            lengths of each segment for
-        """
-        logger.info(
-            f"Filtering the dataframe of shared segments to greater than or equal to {cM_threshold}cM"
-        )
+    #     len_index : index
+    #         column index for the hapibd or ilash file to find the
+    #         lengths of each segment for
+    #     """
+    #     logger.info(
+    #         f"Filtering the dataframe of shared segments to greater than or equal to {cM_threshold}cM"
+    #     )
 
-        self.ibd_df = self.ibd_df[self.ibd_df[len_index] >= cM_threshold]
-
-    def map_grids() -> None:
-        """method that will convert the grids to there mapped integer id"""
-        ...
+    #     self.ibd_df = self.ibd_df[self.ibd_df[len_index] >= cM_threshold]
 
     # def map_indices
-    def find_all_grids(self, indices) -> list[str]:
+    def find_all_grids(self, indices: FileInfo) -> list[str]:
         """Method that will take the dataframe that is filtered for the location and the haplotype and return
         a list of all unique individuals in that dataframe
 
@@ -260,11 +259,11 @@ class Cluster:
                 )
             )
 
-        # This else statment will be used if we were to try to run ilash because the grids in it does not have to be formatted
+        # This else statment will be used if we were to try to run ilash because the grids in it do not have to be formatted
         else:
             raise NotImplementedError
 
-        logger.debug(f"Found {len(grids)} unique individual that will be clustered")
+        logger.info(f"Found {len(grids)} unique individual that will be clustered")
 
         return grids
 
@@ -298,6 +297,7 @@ class Cluster:
 
 
         """
+
         # filtering the dataframe with the new individuals
         second_filter: pd.DataFrame = network.filter_for_seed(
             self.ibd_df, new_individuals, indices, exclusion
@@ -328,7 +328,7 @@ class Cluster:
                 inds_in_network,
             )
 
-    def construct_network(self, ind: str, network_obj: Network) -> None:
+    def construct_network(self, ind: str, network_obj: Network) -> None | str:
         """Method that will go through the dataframe and will identify networks.
 
         Parameters
@@ -338,16 +338,17 @@ class Cluster:
 
         Returns
         -------
-        Dict[int: Dict]
-            returns a dictionary with the following structure:
-            {network_id: {pairs: List[Pair_objects], in_network: List[str], haplotypes_list: List[str]}}. Other data information will be added to this file
+        str
+            Returns either 'None' when a network is successfully found or it returns a string message if the individual is already in a network
         """
 
         # iterate over each iid in the original dataframe
         # creating a progress bar
         # if this iid has already been associated with a network then we need to skip it. If not then we can get the network connected to it
-        if ind not in self.inds_in_network:
 
+        if ind not in self.inds_in_network:
+            # if network_obj.network_id == 107:
+            #     logger.warning(f"individual: {ind}")
             # filtering the network object for the
             # connections to the first seed
             filtered_df = network_obj.filter_for_seed(self.ibd_df, [ind], self.indices)
@@ -378,8 +379,10 @@ class Cluster:
                 self.inds_in_network,
             )
 
-            logger.debug(
+            logger.info(
                 f"number of iids in network {self.network_id}: {len(network_obj.iids)}"
             )
 
             self.network_id += 1
+        else:
+            return "duplicate found"

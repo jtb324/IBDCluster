@@ -118,23 +118,25 @@ def find_clusters(
 
     indices.set_cM_indx(ibd_program)
 
+    logger.debug(f"gene named tuple: {gene}")
     logger.info(f"finding clusters for the gene: {gene.name}")
 
     cluster_model: models.Cluster = models.Cluster(ibd_file, ibd_program, indices)
 
     # loading in all the dataframe for the genetic locus
-    cluster_model.load_file(gene.start, gene.end)
+    cluster_model.load_file(gene.start, gene.end, cm_threshold)
 
-    # filtering the dataframe to >= specific centimorgan threshold
-    cluster_model.filter_cm_threshold(cm_threshold, indices.cM_indx)
+    logger.info(f"finished loading in the file for the dataframe")
+    # # filtering the dataframe to >= specific centimorgan threshold
+    # cluster_model.filter_cm_threshold(cm_threshold, indices.cM_indx)
 
     all_grids: list[str] = cluster_model.find_all_grids(indices)
 
     for ind in tqdm(all_grids, desc="pairs in clusters: "):
 
         network_obj = models.Network(gene.name, gene.chr, cluster_model.network_id)
-
-        cluster_model.construct_network(ind, network_obj)
+        # function will return error string if the individual is already in a network
+        err = cluster_model.construct_network(ind, network_obj)
 
         # if the program is being run in debug mode then it
         # will only this loop how ever many times the user
@@ -144,6 +146,7 @@ def find_clusters(
             if cluster_model.network_id == int(os.environ.get("debug_iterations")):
                 break
 
+        if err:
+            continue
+
         yield network_obj
-    # # accessing the network list attribute from the cluster model so that you can list the networks
-    # return cluster_model.network_list

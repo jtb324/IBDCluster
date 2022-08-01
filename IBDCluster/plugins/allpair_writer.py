@@ -30,27 +30,27 @@ class AllpairWriter:
 
     name: str = "PairWriter plugin"
 
-    @staticmethod
-    def _form_header(phenotype_list: list[str]) -> str:
-        """Method that will form the phenotype section of the header string"""
+    # @staticmethod
+    # def _form_header(phenotype_list: list[str]) -> str:
+    #     """Method that will form the phenotype section of the header string"""
 
-        # Appending the word Pair_1/Pair_2 to the column label and then joining them
-        # into a string
-        logger.debug(
-            "Creating a string for all the phecode statuses to the allpairs.txt file"
-        )
-        header_list = []
+    #     # Appending the word Pair_1/Pair_2 to the column label and then joining them
+    #     # into a string
+    #     logger.debug(
+    #         "Creating a string for all the phecode statuses to the allpairs.txt file"
+    #     )
+    #     header_list = []
 
-        for phecode in phenotype_list:
+    #     for phecode in phenotype_list:
 
-            header_list.extend(
-                [
-                    "".join([str(phecode), "_Pair_1_status"]),
-                    "".join([str(phecode), "_Pair_2_status"]),
-                ]
-            )
+    #         header_list.extend(
+    #             [
+    #                 "".join([str(phecode), "_Pair_1_status"]),
+    #                 "".join([str(phecode), "_Pair_2_status"]),
+    #             ]
+    #         )
 
-        return "\t".join(header_list)
+    #     return "\t".join(header_list)
 
     def analyze(self, **kwargs) -> None:
         """
@@ -62,8 +62,9 @@ class AllpairWriter:
 
         # upacking the pairs for each network
         pairs = network.pairs
-
+        logger.info(f"Network id: {network.network_id}, number of pairs: {len(pairs)}")
         for pair in pairs:
+            logger.info(f"pair: {pair}")
             # creating a string that has all the information
             output_str = f"{data.ibd_program}\t{network.network_id}\t{pair.form_id_str()}\t{pair.chromosome}\t{data.gene_name}\t{pair.form_segment_info_str()}\n"
 
@@ -71,7 +72,6 @@ class AllpairWriter:
                 output_str,
                 output_path,
                 data.gene_name,
-                data.phenotype_cols,
             )
 
     def _write(
@@ -79,7 +79,6 @@ class AllpairWriter:
         output_str: str,
         output_path: str,
         gene_name: str,
-        phenotype_list: list[str],
     ) -> None:
         """Method to write the output to an allpairs.txt file
         Parameters
@@ -98,9 +97,6 @@ class AllpairWriter:
 
         gene_name : str
             name of the gene that is being used as a locus
-
-        phenotype_list : list[str]
-            list of phecodes to form each column
         """
         # making sure that the output path exists
         pathlib.Path(output_path).mkdir(parents=True, exist_ok=True)
@@ -110,7 +106,6 @@ class AllpairWriter:
             output_path, "".join(["IBD_", gene_name, "_allpairs.txt"])
         )
 
-        logger.info(f"Writing the allpairs.txt file to: {output_file_name}")
         # opening the file and then writting the information from each
         # pair to that file. A file will be created for each gene
         with open(
@@ -119,12 +114,12 @@ class AllpairWriter:
             encoding="utf-8",
         ) as output_file:
 
-            if os.path.getsize(output_file_name):
+            if os.path.getsize(output_file_name) == 0:
                 output_file.write(
-                    f"program\tnetwork_id\tpair_1\tpair_2\tphase_1\tphase_2\tchromosome\tgene_name\t{self._form_header(phenotype_list)}\tstart\tend\tlength\n"
+                    f"program\tnetwork_id\tpair_1\tpair_2\tphase_1\tphase_2\tchromosome\tgene_name\tstart\tend\tlength\n"
                 )
 
-            logger.debug(output_str)
+            logger.info(f"allpair_output_str: {output_str}")
             output_file.write(output_str)
 
 

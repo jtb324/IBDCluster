@@ -11,6 +11,7 @@ import pandas as pd
 import typer
 import analysis
 import callbacks
+import shutil
 import cluster
 import log
 from datetime import datetime
@@ -145,7 +146,7 @@ def main(
     # getting the programs start time
     start_time = datetime.now()
 
-    # create the directory that the IBDCluster.log will be in
+    # Now we can recreate the directory that the IBDCluster.log will be in
     pathlib.Path(output).mkdir(parents=True, exist_ok=True)
 
     # setting a path to the json file
@@ -184,7 +185,7 @@ def main(
     # forming a dictionary where the keys are phecodes and the
     # values are a list of indices in the carriers df that carry
     # the phecode
-    carriers_dict = cluster.generate_carrier_dict(carriers_df)
+    carriers_dict = cluster.generate_carrier_dict(carriers_df.iloc[:, 1:])
     # loading the genes information into a generator object
     genes_generator = cluster.load_gene_info(gene_info_file)
 
@@ -210,6 +211,19 @@ def main(
         )
         # creating a specific output path that has the gene name
         gene_output = os.path.join(output, gene.name)
+
+        # deleting the output directory incase there was already a
+        # output there
+        shutil.rmtree(gene_output, ignore_errors=True)
+        # writing log messages for the networks and the allpairs.txt files
+        logger.debug(
+            f"Information written to a networks.txt at: {os.path.join( gene_output, ''.join([ibd_program, '_', gene.name, '_networks.txt']))}"
+        )
+
+        logger.info(
+            f"Writing the allpairs.txt file to: {os.path.join(gene_output, ''.join(['IBD_', gene.name, '_allpairs.txt']))}"
+        )
+
         # creating an object that holds useful information
         data_container = DataHolder(
             gene.name,

@@ -105,6 +105,9 @@ class Pvalues:
 
         # iterating over each phenotype
         for phenotype, phenotype_freq in phenotype_percentages.items():
+            logger.warning(
+                f"phenotype: {phenotype} and phenotype frequency: {phenotype_freq}"
+            )
             # getting the list of iids in our population that carry the phenotype
             # POTENTIAL BUG: POTENTIALLY the program could fail here. It may be good ot add some error catching
             carriers = carriers_list[phenotype]
@@ -116,6 +119,10 @@ class Pvalues:
             num_carriers_in_network: int = len(carriers_in_network)
             # "ind_in_network", "percentage", "IIDs", "pvalue", "network_len"
             # we want to keep this value incase it could be added back to the program
+            logger.warning(
+                f"num_carriers: {num_carriers_in_network} and network.iids: {len(network.iids)}"
+            )
+            logger.warning(f"network obj: {network}")
             _percentage_in_network: float = num_carriers_in_network / len(network.iids)
 
             _network_size = len(network.iids)
