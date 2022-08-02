@@ -66,7 +66,7 @@ class Pvalues:
 
         return pvalue
 
-    def _determine_pvalues(
+    def _gather_network_information(
         self,
         carriers_list: dict[str, list[str]],
         network: Network,
@@ -93,10 +93,9 @@ class Pvalues:
             returns a tuple where the first element is the string of all pvalues for all
             phecodes and the second values it a string of the minimum phecode and pvalue
         """
-        # dictionary that will contain the phecodes as keys
-        # and the pvalues as floats
-        pvalue_dictionary: dict[str, float] = {}
-
+        # setting null values for the output string and the cur_min_phecode string.
+        # Also setting a value of 1 for the cur_min_pvalue because this will be the
+        # largest pvalue possible
         output_str = ""
 
         cur_min_pvalue = 1
@@ -105,27 +104,18 @@ class Pvalues:
 
         # iterating over each phenotype
         for phenotype, phenotype_freq in phenotype_percentages.items():
-            logger.warning(
-                f"phenotype: {phenotype} and phenotype frequency: {phenotype_freq}"
-            )
+
             # getting the list of iids in our population that carry the phenotype
             # POTENTIAL BUG: POTENTIALLY the program could fail here. It may be good ot add some error catching
             carriers = carriers_list[phenotype]
-            # getting a list of iids in the network that are a carrier
-            carriers_in_network: list[str] = [
-                iid for iid in network.iids if iid in carriers
-            ]
 
-            num_carriers_in_network: int = len(carriers_in_network)
+            # determine the number of carriers in the network
+            num_carriers_in_network: int = len(network.iids.intersection(set(carriers)))
             # "ind_in_network", "percentage", "IIDs", "pvalue", "network_len"
             # we want to keep this value incase it could be added back to the program
-            logger.warning(
-                f"num_carriers: {num_carriers_in_network} and network.iids: {len(network.iids)}"
-            )
-            logger.warning(f"network obj: {network}")
-            _percentage_in_network: float = num_carriers_in_network / len(network.iids)
+            # _percentage_in_network: float = num_carriers_in_network / len(network.iids)
 
-            _network_size = len(network.iids)
+            # _network_size = len(network.iids)
 
             # calling the sub function that determines the pvalue
             pvalue: float = self._determine_pvalue(
@@ -140,17 +130,17 @@ class Pvalues:
 
             output_str += phenotype_str
 
-            # logging the string in debug mode. This logs the individual phenotype string not the total output for size
-            logger.debug(
-                f"network_id {network.network_id}: phenotype_str - {output_str}"
-            )
-
             # Now we will see if the phecode is lower then the cur_min_pvalue. If it is then
             # we will change the cur_min_pvalue and we will update the cur_min_phecode
             if pvalue < cur_min_pvalue and pvalue != 0:
                 cur_min_pvalue = pvalue
 
                 cur_min_phecode = phenotype
+
+            # logging the string in debug mode. This logs the individual phenotype string not the total output for size
+            logger.debug(
+                f"network_id {network.network_id}: phenotype_str - {output_str}"
+            )
         # if a minimum phecode is identified then we need to create a string, otherwise we
         # use N/A's
         if cur_min_phecode:
@@ -198,7 +188,7 @@ class Pvalues:
         network: Network = kwargs["network"]
 
         # Determining the pvalua and the tuple
-        pvalue_str, min_pvalue_str = self._determine_pvalues(
+        pvalue_str, min_pvalue_str = self.__gather_network_information(
             data.affected_inds,
             network,
             data.phenotype_prevalence,
