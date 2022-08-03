@@ -104,7 +104,7 @@ class Pvalues:
 
         # iterating over each phenotype
         for phenotype, phenotype_freq in phenotype_percentages.items():
-
+            logger.debug(f"Phenotype: {phenotype}: type: {type(phenotype)}")
             # getting the list of iids in our population that carry the phenotype
             # POTENTIAL BUG: POTENTIALLY the program could fail here. It may be good ot add some error catching
             carriers = carriers_list[phenotype]
@@ -188,7 +188,7 @@ class Pvalues:
         network: Network = kwargs["network"]
 
         # Determining the pvalua and the tuple
-        pvalue_str, min_pvalue_str = self.__gather_network_information(
+        pvalue_str, min_pvalue_str = self._gather_network_information(
             data.affected_inds,
             network,
             data.phenotype_prevalence,

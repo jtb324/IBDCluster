@@ -49,9 +49,10 @@ def _identify_carriers_indx(
     return_dict : dict[str, list[str]]
         dictionary where the phecodes will be the keys and the values will be a list of indices indicating which grids are carriers
     """
-    return_dict[carriers_series.name] = list(
-        carriers_series[carriers_series == 1].values.tolist()
-    )
+
+    return_dict[carriers_series.name] = carriers_series[
+        carriers_series == 1
+    ].index.tolist()
 
 
 def generate_carrier_dict(carriers_matrix: pd.DataFrame) -> dict[str, list[str]]:
@@ -69,9 +70,11 @@ def generate_carrier_dict(carriers_matrix: pd.DataFrame) -> dict[str, list[str]]
     """
     return_dict = {}
 
+    new_indx_df = carriers_matrix.set_index("grids")
+
     # iterating over each phenotype which starts with the
     # second column
-    carriers_matrix.T.apply(lambda x: _identify_carriers_indx(x, return_dict), axis=1)
+    new_indx_df.apply(lambda x: _identify_carriers_indx(x, return_dict), axis=0)
 
     return return_dict
 

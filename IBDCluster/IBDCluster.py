@@ -95,7 +95,7 @@ def main(
         ...,
         "--gene-file",
         "-g",
-        help="Filepath to a text file that has information about the genes it should have four columns: Gene name, chromosome, gene start, and gene end. The file is expected to not have a header",
+        help="Filepath to a text file that has information about the genes it should have four columns: Gene name, chromosome, gene start, and gene end (In this order). The file is expected to not have a header. The gene position should also correspond to the build used for the ibd data (GrCH37, etc...)",
         callback=callbacks.check_gene_file,
     ),
     carriers: str = typer.Option(
@@ -185,7 +185,8 @@ def main(
     # forming a dictionary where the keys are phecodes and the
     # values are a list of indices in the carriers df that carry
     # the phecode
-    carriers_dict = cluster.generate_carrier_dict(carriers_df.iloc[:, 1:])
+    carriers_dict = cluster.generate_carrier_dict(carriers_df)
+
     # loading the genes information into a generator object
     genes_generator = cluster.load_gene_info(gene_info_file)
 
