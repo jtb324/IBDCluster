@@ -14,6 +14,16 @@ class IncorrectFileType(Exception):
         super().__init__(message)
 
 
+class IncorrectGeneFileFormat(Exception):
+    """Error that will be raised if there are formatting errors in
+    the gene info file."""
+
+    def __init__(self, incorrect_value: str, message: str) -> None:
+        self.incorrect_value: str = incorrect_value
+        self.message: str = message
+        super().__init__(message)
+
+
 def check_gene_file(gene_filepath: str) -> str:
     """Function that will check to make sure the gene info file exist or else it will raise an error.
 
@@ -36,6 +46,16 @@ def check_gene_file(gene_filepath: str) -> str:
             gene_filepath[-4:],
             "The filetype provided for the gene info file is incorrect. Please provided a tab delimited text file",
         )
+    # next section will check and make sure that the gene information is in the right format
+    with open(gene_filepath, "r", encoding="utf-8") as gene_file:
+
+        line = gene_file.readline(gene_file).split("\t")
+
+        if line[0].isnumeric():
+            raise IncorrectGeneFileFormat(
+                line[0],
+                f"Expected the first value of the Gene Info file to be a gene name. Instead it was able to be converted to a number. Did you switch the chromosome number with the gene name? Value found in file {line[0]}",
+            )
 
     return gene_filepath
 
