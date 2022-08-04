@@ -40,7 +40,7 @@ def check_gene_file(gene_filepath: str) -> str:
     file_path = Path(gene_filepath)
 
     if not file_path.exists():
-        raise FileNotFoundError
+        raise FileNotFoundError(f"The file at {file_path} was not found")
     if gene_filepath[-4:] != ".txt":
         raise IncorrectFileType(
             gene_filepath[-4:],
@@ -49,7 +49,7 @@ def check_gene_file(gene_filepath: str) -> str:
     # next section will check and make sure that the gene information is in the right format
     with open(gene_filepath, "r", encoding="utf-8") as gene_file:
 
-        line = gene_file.readline(gene_file).split("\t")
+        line = gene_file.readline().split("\t")
 
         if line[0].isnumeric():
             raise IncorrectGeneFileFormat(
