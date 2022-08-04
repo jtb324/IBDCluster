@@ -9,4 +9,4 @@ help:
 
 clean:
 	@echo "Cleaning up output files from test environment"
-	@rm -r tests/TEST_GENE/ tests/*.log tests/percent_carriers_in_population.txt
+	@rm -r tests/TEST_GENE/ tests/*.log 

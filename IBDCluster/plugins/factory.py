@@ -1,4 +1,4 @@
-from typing import Protocol, Dict, Callable, Any
+from typing import Protocol, Callable, Any
 
 
 class PluginNotFound(Exception):
@@ -16,17 +16,14 @@ class PluginNotFound(Exception):
 class AnalysisObj(Protocol):
     """Basic representation of an Analysis object"""
 
-    def analyze(self, **kwargs) -> Dict[str, Any]:
+    def analyze(self, **kwargs) -> Any:
         """
         Method that will analyze the inputs according to the purpose
         of the plugin
         """
 
-    def write(self, **kwargs) -> None:
-        """Method that will write to a file for each Plugin"""
 
-
-analyze_obj_creation_funcs: Dict[str, Callable[..., AnalysisObj]] = {}
+analyze_obj_creation_funcs: dict[str, Callable[..., AnalysisObj]] = {}
 
 
 def register(plugin_name: str, creation_func: Callable[..., AnalysisObj]) -> None:
@@ -39,7 +36,7 @@ def unregister(plugin_name: str) -> None:
     analyze_obj_creation_funcs.pop(plugin_name, None)
 
 
-def create(arguments: Dict[str, Any]) -> AnalysisObj:
+def create(arguments: dict[str, Any]) -> AnalysisObj:
 
     args_copy = arguments.copy()
 

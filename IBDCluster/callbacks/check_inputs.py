@@ -2,7 +2,7 @@ from pathlib import Path
 import typer
 import os
 
-VERSION = "1.0.1"
+VERSION = "1.1.0"
 
 
 class IncorrectFileType(Exception):
@@ -14,43 +14,14 @@ class IncorrectFileType(Exception):
         super().__init__(message)
 
 
-class UnSupportedIBDProgram(Exception):
-    """Error that will be raised if the user doesn't provide a supported ibd program"""
+class IncorrectGeneFileFormat(Exception):
+    """Error that will be raised if there are formatting errors in
+    the gene info file."""
 
-    def __init__(self, program: str, message: str) -> None:
-        self.program: str = program
+    def __init__(self, incorrect_value: str, message: str) -> None:
+        self.incorrect_value: str = incorrect_value
         self.message: str = message
         super().__init__(message)
-
-
-class UnsupportedLogLevel(Exception):
-    """Error that will be raised if the user provides an incorrect loglevel"""
-
-    def __init__(self, loglevel: str) -> None:
-        self.message: str = f"The provided loglevel, {loglevel} is not supportted. Supported values are verbose, debug, warning (Case Insensitive)"
-        super().__init__(self.message)
-
-
-def check_ibd_program(program: str) -> str:
-    """Callback function that will check if the ibd program provided is hapibd or ilash
-
-    Parameters
-
-    program : str
-        string that has the value either 'hapibd' or 'ilash'
-
-    Returns
-
-    str
-        returns the program if an error is not raise
-    """
-    if program.lower() not in ["hapibd", "ilash"]:
-        raise UnSupportedIBDProgram(
-            program,
-            f"The provided ibd program {program} is not supported. Supported values are 'hapibd' and 'ilash'.",
-        )
-
-    return program.lower()
 
 
 def check_gene_file(gene_filepath: str) -> str:
@@ -69,33 +40,24 @@ def check_gene_file(gene_filepath: str) -> str:
     file_path = Path(gene_filepath)
 
     if not file_path.exists():
-        raise FileNotFoundError
+        raise FileNotFoundError(f"The file at {file_path} was not found")
     if gene_filepath[-4:] != ".txt":
         raise IncorrectFileType(
             gene_filepath[-4:],
             "The filetype provided for the gene info file is incorrect. Please provided a tab delimited text file",
         )
+    # next section will check and make sure that the gene information is in the right format
+    with open(gene_filepath, "r", encoding="utf-8") as gene_file:
+
+        line = gene_file.readline().split("\t")
+
+        if line[0].isnumeric():
+            raise IncorrectGeneFileFormat(
+                line[0],
+                f"Expected the first value of the Gene Info file to be a gene name. Instead it was able to be converted to a number. Did you switch the chromosome number with the gene name? Value found in file {line[0]}",
+            )
 
     return gene_filepath
-
-
-def check_loglevel(loglevel: str) -> str:
-    """Function that will check to make sure the loglevel is either info, warning, or debug
-
-    Parameters
-
-    loglevel : str
-        parameter passed by the user to indicate what level of logging they want
-
-    Returns
-
-    str
-        returns the lower case log level"""
-
-    if loglevel.lower() not in ["verbose", "debug", "warning"]:
-        raise UnsupportedLogLevel(loglevel)
-
-    return loglevel.lower()
 
 
 def check_json_path(json_path: str) -> str:
@@ -145,6 +107,7 @@ def check_env_path(env_path: str) -> str:
 
 
 def display_version(value: bool):
+    """callback function that displays the version number of the program and then terminates the program"""
     if value:
         typer.echo(f"IBDCluster - v{VERSION}")
-        raise typer.Exit()
+        raise typer.Exit(code=1)

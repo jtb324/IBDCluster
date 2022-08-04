@@ -1,43 +1,49 @@
 #!/usr/bin/env python
 """
-This module is the main script for the IBDCluster program. It contains the main cli and records inputs and creates the typer app.
+This module is the main script for the IBDCluster program.
+It contains the main cli and records inputs and creates
+the typer app.
 """
 import os
-from typing import Dict, List, Optional
 import pathlib
-from dotenv import load_dotenv
-import pandas as pd
-import typer
+import shutil
+from datetime import datetime
+from enum import Enum
+from typing import Dict, Optional
+
 import analysis
 import callbacks
 import cluster
 import log
-from datetime import datetime
-from models import DataHolder, Network
+import pandas as pd
+import typer
+from dotenv import load_dotenv
+from models import DataHolder
+
+
+class IbdProgram(str, Enum):
+    """Enum used to define the options for the ibd_program flag in the cli"""
+
+    HAPIBD = "hapibd"
+    ILASH = "ilash"
+
+
+class LogLevel(str, Enum):
+    """Enum used to define the options for the log level in the cli"""
+
+    WARNING = "warning"
+    VERBOSE = "verbose"
+    DEBUG = "debug"
 
 
 app = typer.Typer(
     add_completion=False,
-    help="Tool that identifies ibd sharing for specific loci for individuals within biobanks",
 )
 
 
-def record_inputs(logger, **kwargs) -> None:
-    """function to record the user arguments that were passed to the
-    program. Takes a logger and then a dictionary of the user
-    arguments"""
-
-    logger.setLevel(20)
-
-    for parameter, value in kwargs.items():
-        logger.info(f"{parameter}: {value}")
-
-    # getting the correct log level to reset the logger
-    logger.setLevel(log.get_loglevel(kwargs["loglevel"]))
-
-
 def load_phecode_descriptions(phecode_desc_file: str) -> Dict[str, Dict[str, str]]:
-    """Function that will load the phecode_description file and then turn that into a dictionary
+    """Function that will load the phecode_description file
+    and then turn that into a dictionary
 
     Parameters
     ----------
@@ -63,15 +69,21 @@ def load_phecode_descriptions(phecode_desc_file: str) -> Dict[str, Dict[str, str
 
 @app.command()
 def main(
-    ibd_program: str = typer.Option(
-        "hapibd",
+    ibd_program: IbdProgram = typer.Option(
+        IbdProgram.HAPIBD.value,
         "--ibd",
         "-i",
-        help="IBD detection software that the output came from. The program expects these values to be hapibd or ilash",
-        callback=callbacks.check_ibd_program,
+        help="IBD detection software that the output came from. The program expects these values to be hapibd or ilash. The program also expects these values to be lowercase",
+        case_sensitive=True,
     ),
     output: str = typer.Option(
         "./", "--output", "-o", help="directory to write the output files into."
+    ),
+    ibd_file: str = typer.Option(
+        ...,
+        "--ibd-file",
+        "-f",
+        help="path to either the hap-IBD or iLASH file that have the pairwise IBD sharing for each chromosome. This file should correspond to the chromosomes that are in the gene_info_file",
     ),
     env_path: str = typer.Option(
         "",
@@ -91,7 +103,7 @@ def main(
         ...,
         "--gene-file",
         "-g",
-        help="Filepath to a text file that has information about the genes it should have four columns: Gene name, chromosome, gene start, and gene end. The file is expected to not have a header",
+        help="Filepath to a text file that has information about the genes it should have four columns: Gene name, chromosome, gene start, and gene end (In this order). The file is expected to not have a header. The gene position should also correspond to the build used for the ibd data (GrCH37, etc...)",
         callback=callbacks.check_gene_file,
     ),
     carriers: str = typer.Option(
@@ -111,12 +123,12 @@ def main(
         "--phecode-desc",
         help="File that has the descriptions for each phecode. Expects two columns: 'phecode' and 'phenotype', that are tab separated.",
     ),
-    loglevel: str = typer.Option(
-        "warning",
+    loglevel: LogLevel = typer.Option(
+        LogLevel.WARNING.value,
         "--loglevel",
         "-l",
         help="This argument sets the logging level for the program. Accepts values 'debug', 'warning', and 'verbose'.",
-        callback=callbacks.check_loglevel,
+        case_sensitive=True,
     ),
     log_to_console: bool = typer.Option(
         False,
@@ -124,45 +136,52 @@ def main(
         help="Optional flag to log to only the console or also a file",
         is_flag=True,
     ),
+    log_filename: str = typer.Option(
+        "IBDCluster.log", "--log-filename", help="Name for the log output file."
+    ),
     debug_iterations: int = typer.Option(
         3,
         "--debug-iterations",
-        help="This argument will specify how many iterations the program should go through durign the clustering step before it moves on. This argument should only be used if the loglevel is set to debug. If you wish to run in debug for all of the program then set this argument to a high number. This practice is not recommend because the log file will get quite large. The default value is 3",
+        help="This argument will specify how many iterations the program should go through durign the clustering step before it moves on. This argument should only be used if the loglevel is set to debug. If you wish to run in debug mode for a whole data set then set this argument to a high number. This practice is not recommended because the log file will get extremely large (Potentially TB's).",
     ),
-    version: bool = typer.Option(
+    version: bool = typer.Option(  # pylint: disable=unused-argument
         False,
         "--version",
+        help="version number of the IBDCluster program",
         callback=callbacks.display_version,
         is_eager=True,
         is_flag=True,
     ),
 ) -> None:
-    """Main function for the program that has all the parameters that the user can use with type"""
-
+    """C.L.I. tool to identify networks of individuals who share IBD segments overlapping a locus of interest and identify enrichment of phenotypes within biobanks"""
     # getting the programs start time
     start_time = datetime.now()
 
-    # create the directory that the IBDCluster.log will be in
+    # Now we can recreate the directory that the IBDCluster.log will be in
     pathlib.Path(output).mkdir(parents=True, exist_ok=True)
 
-    # loading the
+    # setting a path to the json file
     os.environ.setdefault("json_path", json_path)
 
     # loading the .env file
     load_dotenv(env_path)
 
-    # adding the loglevel to the environment so that we can access it
-    os.environ.setdefault("program_loglevel", str(log.get_loglevel(loglevel)))
-
     # creating the logger and then configuring it
     logger = log.create_logger()
 
-    log.configure(logger, output, loglevel=loglevel, to_console=log_to_console)
+    log.configure(
+        logger,
+        output,
+        filename=log_filename,
+        loglevel=loglevel,
+        to_console=log_to_console,
+    )
 
     # recording all the user inputs
-    record_inputs(
+    log.record_inputs(
         logger,
-        ibd_program_used=ibd_program,
+        ibd_program_used=ibd_program.value,
+        ibd_filepath=ibd_file,
         output_path=output,
         environment_file=env_path,
         json_file=json_path,
@@ -170,14 +189,27 @@ def main(
         carrier_matrix=carriers,
         centimorgan_threshold=cm_threshold,
         loglevel=loglevel,
+        log_filename=log_filename,
     )
+
+    # adding the loglevel to the environment so that we can access it
+    os.environ.setdefault("program_loglevel", str(log.get_loglevel(loglevel)))
+
+    # adding the debug_iterations to the environment so that we can access it
+    os.environ.setdefault("debug_iterations", str(debug_iterations))
 
     # need to first determine list of carriers for each phenotype
     carriers_df: pd.DataFrame = pd.read_csv(carriers, sep="\t")
+    # forming a dictionary where the keys are phecodes and the
+    # values are a list of indices in the carriers df that carry
+    # the phecode
+    carriers_dict = cluster.generate_carrier_dict(carriers_df)
 
-    carriers_dict = cluster.generate_carrier_list(carriers_df)
-
+    # loading the genes information into a generator object
     genes_generator = cluster.load_gene_info(gene_info_file)
+
+    # This section will handle preparing the phenocode
+    # descriptions and the phenotype prevalances
 
     # loading in the phecode_descriptions
     if phecode_descriptions:
@@ -185,31 +217,55 @@ def main(
     else:
         phecode_desc = {}
 
+    # Now we will find the phecode percentages which will be used later
+    phenotype_prevalances = cluster.get_phenotype_prevalances(
+        carriers_dict, carriers_df.shape[0]
+    )
+
     # We can then determine the different clusters for each gene
     for gene in genes_generator:
 
-        networks_list: List[Network] = cluster.find_clusters(
-            ibd_program, gene, cm_threshold, carriers_dict
+        network_generator = cluster.find_clusters(
+            ibd_program.value, gene, cm_threshold, ibd_file
+        )
+        # creating a specific output path that has the gene name
+        gene_output = os.path.join(output, gene.name)
+
+        # deleting the output directory incase there was already a
+        # output there
+        shutil.rmtree(gene_output, ignore_errors=True)
+        # writing log messages for the networks and the allpairs.txt files
+        logger.debug(
+            "Information written to a networks.txt at: %s.",
+            os.path.join(
+                gene_output, "".join([ibd_program, "_", gene.name, "_networks.txt"])
+            ),
         )
 
-        # adding the networks, the carriers_df, the carriers_dict, and the
-        # phenotype columns to a object that will be used in the analysis
+        logger.info(
+            "Writing the allpairs.txt file to: %s",
+            os.path.join(gene_output, "".join(["IBD_", gene.name, "_allpairs.txt"])),
+        )
+
+        # creating an object that holds useful information
         data_container = DataHolder(
             gene.name,
             gene.chr,
-            networks_list,
             carriers_dict,
-            carriers_df,
-            carriers_df.columns[1:],
+            phenotype_prevalances,
+            list(carriers_dict.keys()),
             ibd_program,
             phecode_desc,
         )
+        # adding the networks, the carriers_df, the carriers_dict, and
+        # the phenotype columns to a object that will be used in the analysis
+        for network in network_generator:
 
-        # This is the main function that will run the analysis of the networks
-        analysis.analyze(data_container, output)
+            # This is the main function that will run the analysis of the networks
+            analysis.analyze(data_container, network, gene_output)
 
     logger.info("analysis_finished")
-    logger.info(f"Program Duration: {datetime.now() - start_time}")
+    logger.info("Program Duration: %s", datetime.now() - start_time)
 
 
 if __name__ == "__main__":
