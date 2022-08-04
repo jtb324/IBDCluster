@@ -1,32 +1,39 @@
 #!/usr/bin/env python
 """
-This module is the main script for the IBDCluster program. It contains the main cli and records inputs and creates the typer app.
+This module is the main script for the IBDCluster program.
+It contains the main cli and records inputs and creates
+the typer app.
 """
 import os
+import pathlib
+import shutil
+from datetime import datetime
 from enum import Enum
 from typing import Dict, Optional
-import pathlib
-from dotenv import load_dotenv
-import pandas as pd
-import typer
+
 import analysis
 import callbacks
-import shutil
 import cluster
 import log
-from datetime import datetime
+import pandas as pd
+import typer
+from dotenv import load_dotenv
 from models import DataHolder
 
 
 class IbdProgram(str, Enum):
-    hapibd = "hapibd"
-    ilash = "ilash"
+    """Enum used to define the options for the ibd_program flag in the cli"""
+
+    HAPIBD = "hapibd"
+    ILASH = "ilash"
 
 
 class LogLevel(str, Enum):
-    warning = "warning"
-    verbose = "verbose"
-    debug = "debug"
+    """Enum used to define the options for the log level in the cli"""
+
+    WARNING = "warning"
+    VERBOSE = "verbose"
+    DEBUG = "debug"
 
 
 app = typer.Typer(
@@ -35,7 +42,8 @@ app = typer.Typer(
 
 
 def load_phecode_descriptions(phecode_desc_file: str) -> Dict[str, Dict[str, str]]:
-    """Function that will load the phecode_description file and then turn that into a dictionary
+    """Function that will load the phecode_description file
+    and then turn that into a dictionary
 
     Parameters
     ----------
@@ -62,7 +70,7 @@ def load_phecode_descriptions(phecode_desc_file: str) -> Dict[str, Dict[str, str
 @app.command()
 def main(
     ibd_program: IbdProgram = typer.Option(
-        IbdProgram.hapibd.value,
+        IbdProgram.HAPIBD.value,
         "--ibd",
         "-i",
         help="IBD detection software that the output came from. The program expects these values to be hapibd or ilash. The program also expects these values to be lowercase",
@@ -116,7 +124,7 @@ def main(
         help="File that has the descriptions for each phecode. Expects two columns: 'phecode' and 'phenotype', that are tab separated.",
     ),
     loglevel: LogLevel = typer.Option(
-        LogLevel.warning.value,
+        LogLevel.WARNING.value,
         "--loglevel",
         "-l",
         help="This argument sets the logging level for the program. Accepts values 'debug', 'warning', and 'verbose'.",
@@ -128,12 +136,15 @@ def main(
         help="Optional flag to log to only the console or also a file",
         is_flag=True,
     ),
+    log_filename: str = typer.Option(
+        "IBDCluster.log", "--log-filename", help="Name for the log output file."
+    ),
     debug_iterations: int = typer.Option(
         3,
         "--debug-iterations",
         help="This argument will specify how many iterations the program should go through durign the clustering step before it moves on. This argument should only be used if the loglevel is set to debug. If you wish to run in debug mode for a whole data set then set this argument to a high number. This practice is not recommended because the log file will get extremely large (Potentially TB's).",
     ),
-    version: bool = typer.Option(
+    version: bool = typer.Option(  # pylint: disable=unused-argument
         False,
         "--version",
         help="version number of the IBDCluster program",
@@ -158,7 +169,13 @@ def main(
     # creating the logger and then configuring it
     logger = log.create_logger()
 
-    log.configure(logger, output, loglevel=loglevel, to_console=log_to_console)
+    log.configure(
+        logger,
+        output,
+        filename=log_filename,
+        loglevel=loglevel,
+        to_console=log_to_console,
+    )
 
     # recording all the user inputs
     log.record_inputs(
@@ -172,6 +189,7 @@ def main(
         carrier_matrix=carriers,
         centimorgan_threshold=cm_threshold,
         loglevel=loglevel,
+        log_filename=log_filename,
     )
 
     # adding the loglevel to the environment so that we can access it
@@ -218,11 +236,15 @@ def main(
         shutil.rmtree(gene_output, ignore_errors=True)
         # writing log messages for the networks and the allpairs.txt files
         logger.debug(
-            f"Information written to a networks.txt at: {os.path.join( gene_output, ''.join([ibd_program, '_', gene.name, '_networks.txt']))}"
+            "Information written to a networks.txt at: %s.",
+            os.path.join(
+                gene_output, "".join([ibd_program, "_", gene.name, "_networks.txt"])
+            ),
         )
 
         logger.info(
-            f"Writing the allpairs.txt file to: {os.path.join(gene_output, ''.join(['IBD_', gene.name, '_allpairs.txt']))}"
+            "Writing the allpairs.txt file to: %s",
+            os.path.join(gene_output, "".join(["IBD_", gene.name, "_allpairs.txt"])),
         )
 
         # creating an object that holds useful information
@@ -243,7 +265,7 @@ def main(
             analysis.analyze(data_container, network, gene_output)
 
     logger.info("analysis_finished")
-    logger.info(f"Program Duration: {datetime.now() - start_time}")
+    logger.info("Program Duration: %s", datetime.now() - start_time)
 
 
 if __name__ == "__main__":
