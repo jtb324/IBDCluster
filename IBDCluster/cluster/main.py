@@ -18,12 +18,13 @@ logger = log.get_logger(__name__)
 
 def load_gene_info(filepath: str) -> Generator[Genes, None, None]:
     """Function that will load in the information for each gene. This function will return a generator
-
+    Parameters
+    ----------
     filepath : str
         filepath to a file that has the information for the genes of interest
 
     Returns
-
+    -------
     Generator
         returns a generator of namedtuples that has the gene information
     """
@@ -36,8 +37,12 @@ def load_gene_info(filepath: str) -> Generator[Genes, None, None]:
 
         for line in gene_input:
             split_line: list[str] = line.split()
-
+            # unpacking the row into the Genes namedtuple
             gene_tuple: Genes = Genes(*split_line)
+
+            logger.info(
+                f"Finding networks for Gene:\nGene name: {gene_tuple.name}\nChromosome: {gene_tuple.chr}\nGene Start: {gene_tuple.start}\nGene End: {gene_tuple.end}"
+            )
 
             yield gene_tuple
 
@@ -128,7 +133,6 @@ def find_clusters(
 
     indices.set_cM_indx(ibd_program)
 
-    logger.debug(f"gene named tuple: {gene}")
     logger.info(f"finding clusters for the gene: {gene.name}")
 
     cluster_model: models.Cluster = models.Cluster(ibd_file, ibd_program, indices)

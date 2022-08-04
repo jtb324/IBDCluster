@@ -1,5 +1,7 @@
+"""
+This module has a dataclass that contains the ibd information for each pair and it has two methods that help to form the output string so that the data doesn't have to be directly accessed in the operation by outside classes.
+"""
 from dataclasses import dataclass
-import pandas as pd
 
 
 @dataclass

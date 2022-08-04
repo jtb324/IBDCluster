@@ -1,10 +1,14 @@
-from dataclasses import dataclass, field
-from typing import List, Protocol
-import log
+"""
+Plugin that iterates over the pairs for each network and will write that information to an allpairs.txt file 
+"""
 import os
-from plugins import factory_register
 import pathlib
+from dataclasses import dataclass, field
+from typing import Protocol
+
+import log
 from models import DataHolder
+from plugins import factory_register
 
 logger = log.get_logger(__name__)
 
@@ -30,28 +34,6 @@ class AllpairWriter:
 
     name: str = "PairWriter plugin"
 
-    # @staticmethod
-    # def _form_header(phenotype_list: list[str]) -> str:
-    #     """Method that will form the phenotype section of the header string"""
-
-    #     # Appending the word Pair_1/Pair_2 to the column label and then joining them
-    #     # into a string
-    #     logger.debug(
-    #         "Creating a string for all the phecode statuses to the allpairs.txt file"
-    #     )
-    #     header_list = []
-
-    #     for phecode in phenotype_list:
-
-    #         header_list.extend(
-    #             [
-    #                 "".join([str(phecode), "_Pair_1_status"]),
-    #                 "".join([str(phecode), "_Pair_2_status"]),
-    #             ]
-    #         )
-
-    #     return "\t".join(header_list)
-
     def analyze(self, **kwargs) -> None:
         """
         Main function that will create a dictionary of strings that will be used when writting the file
@@ -62,9 +44,9 @@ class AllpairWriter:
 
         # upacking the pairs for each network
         pairs = network.pairs
-        logger.info(f"Network id: {network.network_id}, number of pairs: {len(pairs)}")
+        logger.debug(f"Network id: {network.network_id}, number of pairs: {len(pairs)}")
         for pair in pairs:
-            logger.info(f"pair: {pair}")
+
             # creating a string that has all the information
             output_str = f"{data.ibd_program}\t{network.network_id}\t{pair.form_id_str()}\t{pair.chromosome}\t{data.gene_name}\t{pair.form_segment_info_str()}\n"
 
@@ -116,10 +98,10 @@ class AllpairWriter:
 
             if os.path.getsize(output_file_name) == 0:
                 output_file.write(
-                    f"program\tnetwork_id\tpair_1\tpair_2\tphase_1\tphase_2\tchromosome\tgene_name\tstart\tend\tlength\n"
+                    "program\tnetwork_id\tpair_1\tpair_2\tphase_1\tphase_2\tchromosome\tgene_name\tstart\tend\tlength\n"
                 )
 
-            logger.info(f"allpair_output_str: {output_str}")
+            logger.debug(f"allpair_output_str: {output_str}")
             output_file.write(output_str)
 
 

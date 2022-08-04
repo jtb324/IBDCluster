@@ -346,8 +346,7 @@ class Cluster:
         # if this iid has already been associated with a network then we need to skip it. If not then we can get the network connected to it
 
         if ind not in self.inds_in_network:
-            # if network_obj.network_id == 107:
-            #     logger.warning(f"individual: {ind}")
+
             # filtering the network object for the
             # connections to the first seed
             filtered_df = network_obj.filter_for_seed(self.ibd_df, [ind], self.indices)
@@ -380,7 +379,7 @@ class Cluster:
                 self.inds_in_network,
             )
 
-            logger.info(
+            logger.debug(
                 f"number of iids in network {self.network_id}: {len(network_obj.iids)}"
             )
 

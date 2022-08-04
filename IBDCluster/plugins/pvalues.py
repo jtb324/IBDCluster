@@ -1,32 +1,19 @@
+from dataclasses import dataclass
 from typing import Protocol
-from models import Network
-from dataclasses import dataclass, field
-from numpy import float64
-from scipy.stats import binomtest
-from plugins import factory_register
+
 import log
+from models import Network
+from numpy import float64
+from plugins import factory_register
+from scipy.stats import binomtest
 
 logger = log.get_logger(__name__)
 
 
 @dataclass
-class Network(Protocol):
-    """
-    General Interface to define what the Network object should
-    look like
-    """
-
-    gene_name: str
-    gene_chr: str
-    network_id: int
-    pairs: list = field(default_factory=list)
-    iids: set[str] = field(default_factory=set)
-    haplotypes: set[str] = field(default_factory=set)
-    pvalues: None | str = None
-
-
-@dataclass
 class DataHolder(Protocol):
+    """Protocol defining what attributes the DataHolder Interface needs to have"""
+
     affected_inds: dict[float, list[str]]
     phenotype_prevalence: dict[str, float]
     phenotype_description: dict[str, str] = None
@@ -104,7 +91,6 @@ class Pvalues:
 
         # iterating over each phenotype
         for phenotype, phenotype_freq in phenotype_percentages.items():
-            logger.debug(f"Phenotype: {phenotype}: type: {type(phenotype)}")
             # getting the list of iids in our population that carry the phenotype
             # POTENTIAL BUG: POTENTIALLY the program could fail here. It may be good ot add some error catching
             carriers = carriers_list[phenotype]
@@ -172,13 +158,15 @@ class Pvalues:
         str
             returns a string that has the phecode description
         """
+        if min_phecode == "N/A":
+            desc_dict = phecode_description.get(min_phecode, {})
+        else:
+            desc_dict = phecode_description.get(str(float(min_phecode)), {})
 
-        logger.debug(f"min phecode: {min_phecode}")
-        # getting the inner dictionary if the key exists, otherwise getting
-        # an empty dictionary
-        desc_dict = phecode_description.get(min_phecode, {})
         # getting the phenotype string if key exists,
         # otherwise returns an empty string
+        logger.debug(f"description_str = {desc_dict.get('phenotype', 'N/A')}")
+
         return desc_dict.get("phenotype", "N/A")
 
     def analyze(self, **kwargs) -> None:
@@ -195,7 +183,7 @@ class Pvalues:
         )
 
         min_phecode_description = self._get_descriptions(
-            data.phenotype_description, min_pvalue_str.split("\t")[0]
+            data.phenotype_description, min_pvalue_str.split("\t")[1]
         )
 
         network.pvalues = "\t".join(

@@ -93,38 +93,6 @@ class NetworkWriter:
         else:
             return str(min_pvalue), min_phecode
 
-    @staticmethod
-    def get_descriptions(
-        phecode_desc: dict[str, dict[str, str]], min_phecode: str
-    ) -> str:
-        """Method to get the description for the minimum phecode
-
-        Parameters
-        ----------
-        phecode_desc : dict[str, dict[str, str]]
-            dictionary with descriptions of each phecode
-
-        min_phecode : str
-            minimum phecode string
-
-        Returns
-        -------
-        str
-            returns a string that has the phecode description
-        """
-        logger.debug(f"phecode description: {bool(phecode_desc)}")
-        if phecode_desc:
-            logger.debug(f"min phecode: {min_phecode}")
-            logger.debug(f"min_phecode typer: {type(min_phecode)}")
-            # getting the inner dictionary if the key exists, otherwise getting
-            # an empty dictionary
-            desc_dict = phecode_desc.get(min_phecode, {})
-            # getting the phenotype string if key exists,
-            # otherwise returns an empty string
-            return desc_dict.get("phenotype", "N/A")
-
-        return "N/A"
-
     def analyze(self, **kwargs) -> None:
         """main function of the plugin. It needs to determine the pvalue"""
 
