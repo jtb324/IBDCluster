@@ -1,3 +1,7 @@
+"""
+File with functions to determine the prevalence of the phenotype 
+within the provided population
+"""
 import log
 
 logger = log.get_logger(__name__)
@@ -7,7 +11,8 @@ def get_phenotype_prevalances(
     phenotype_carriers: dict[float, list[str]], individual_count: int
 ) -> dict[str, float]:
     """
-    Function that will determine the percentages of each phenotype and then add it to the dataholder object for other analyses.
+    Function that will determine the percentages of each phenotype
+    and then add it to the dataholder object for other analyses.
 
     Parameters
     ----------

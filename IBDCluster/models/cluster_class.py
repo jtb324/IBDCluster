@@ -1,10 +1,15 @@
+"""
+Contains the Network and Cluster class that are used during the 
+clustering and network creation steps in the cluster/main.py file
+"""
 from dataclasses import dataclass, field
-import pandas as pd
 from typing import Protocol
+
 import log
 import models
-from .pairs import Pairs
+import pandas as pd
 
+from .pairs import Pairs
 
 logger = log.get_logger(__name__)
 
@@ -24,7 +29,6 @@ class FileInfo(Protocol):
 
     def set_program_indices(self, program_name: str) -> None:
         """Method that will set the proper ibd_program indices"""
-        ...
 
 
 @dataclass
@@ -69,11 +73,25 @@ class Network:
 
     @staticmethod
     def _determine_pairs(ibd_row: pd.Series, indices: FileInfo) -> Pairs:
-        """Method that will take each row of the dataframe and convert it into a pair object"""
+        """
+        Method that will take each row of the dataframe and convert it into a pair object
 
-        carrier_cols = [col for col in ibd_row.keys() if "status" in str(col)]
+        Parameters
+        ----------
+        ibd_row : pd.Series
+            pandas series that has all the information in each row
+            of the ibd file
 
-        affected_values: pd.Series = ibd_row[carrier_cols]
+        indices : FileInfo
+            object that has the indices to pull out the correct
+            information from the ibd_row for each ibd program
+
+        Returns
+        -------
+        Pairs
+            Returns a pairs object that has all that information as
+            attributes
+        """
 
         return Pairs(
             ibd_row[indices.id1_indx],
@@ -202,25 +220,6 @@ class Cluster:
 
         logger.info(f"identified {self.ibd_df.shape[0]} pairs within the gene region")
 
-    # def filter_cm_threshold(self, cM_threshold: int, len_index: int) -> None:
-    #     """Method that will filter the self.ibd_df to only individuals larger than the specified threshold. This should be run after the load_file method.
-
-    #     Parameters
-
-    #     cM_threshold : int
-    #         threshold to filter the file lengths on
-
-    #     len_index : index
-    #         column index for the hapibd or ilash file to find the
-    #         lengths of each segment for
-    #     """
-    #     logger.info(
-    #         f"Filtering the dataframe of shared segments to greater than or equal to {cM_threshold}cM"
-    #     )
-
-    #     self.ibd_df = self.ibd_df[self.ibd_df[len_index] >= cM_threshold]
-
-    # def map_indices
     def find_all_grids(self, indices: FileInfo) -> list[str]:
         """Method that will take the dataframe that is filtered for the location and the haplotype and return
         a list of all unique individuals in that dataframe
@@ -359,8 +358,8 @@ class Cluster:
             self.inds_in_network.update(
                 network_obj.gather_grids(
                     filtered_df,
-                    self.indices.ind1_with_phase,
-                    self.indices.ind2_with_phase,
+                    self.indices.ind1_with_phase,  # pylint: disable=no-member
+                    self.indices.ind2_with_phase,  # pylint: disable=no-member
                 )
             )
 
@@ -368,7 +367,9 @@ class Cluster:
             # individuals in the self.individuals_in_network set that are not the
             # seeding individual
             logger.debug(
-                f"Finding secondary connections to {ind} in network {self.network_id}"
+                "Finding secondary connections to %s in network %d",
+                ind,
+                self.network_id,
             )
 
             self._find_secondary_connections(

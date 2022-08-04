@@ -1,10 +1,15 @@
-from typing import Generator
+"""
+Module that is responsible for running the clustering and 
+initializing the network and cluster models
+"""
+import os
 from collections import namedtuple
-import models
+from typing import Generator
+
 import log
+import models
 import pandas as pd
 from tqdm import tqdm
-import os
 
 Genes = namedtuple("Genes", ["name", "chr", "start", "end"])
 # getting the logger object
@@ -25,8 +30,10 @@ def load_gene_info(filepath: str) -> Generator[Genes, None, None]:
 
     with open(filepath, "r", encoding="utf-8") as gene_input:
         logger.debug(
-            f"Loaded in the gene information from the file, {filepath}, into a generator"
+            "Loaded in the gene information from the file, %s, into a generator",
+            filepath,
         )
+
         for line in gene_input:
             split_line: list[str] = line.split()
 
@@ -129,7 +136,7 @@ def find_clusters(
     # loading in all the dataframe for the genetic locus
     cluster_model.load_file(gene.start, gene.end, cm_threshold)
 
-    logger.info(f"finished loading in the file for the dataframe")
+    logger.info("finished loading in the file for the dataframe")
     # # filtering the dataframe to >= specific centimorgan threshold
     # cluster_model.filter_cm_threshold(cm_threshold, indices.cM_indx)
 
