@@ -44,6 +44,7 @@ class AllpairWriter:
 
         # upacking the pairs for each network
         pairs = network.pairs
+
         logger.debug(f"Network id: {network.network_id}, number of pairs: {len(pairs)}")
         for pair in pairs:
 

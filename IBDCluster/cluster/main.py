@@ -96,6 +96,7 @@ def find_clusters(
     gene: Genes,
     cm_threshold: int,
     ibd_file: str,
+    connections_threshold: int,
 ) -> Generator[models.Network, None, None]:
     """Main function that will handle the clustering into networks
 
@@ -111,11 +112,12 @@ def find_clusters(
     cm_threshold : int
         This is the minimum threshold to filter the ibd segments to
 
-    carriers : dict[float, list[str]]
-        dictionary that has the phecodes as keys and list of grid IDs that are affected by the phecode as values
-
     ibd_file : str
         filepath to the ibd file from hap-IBD or iLASH
+
+    connections_threshold : int
+        integer value of the minimum number of connections an individual needs to have to be used
+        in the analysis. Individuals who don't meet this threshold will not be considered for the clustering
 
     Returns
     -------
@@ -142,9 +144,13 @@ def find_clusters(
 
     logger.info("finished loading in the file for the dataframe")
     # # filtering the dataframe to >= specific centimorgan threshold
-    # cluster_model.filter_cm_threshold(cm_threshold, indices.cM_indx)
 
-    all_grids: list[str] = cluster_model.find_all_grids(indices)
+    cluster_model.create_unique_ids(indices)
+
+    # filtering for individuals who have fewer connections than we want
+    cluster_model.filter_connections(connections_threshold)
+
+    all_grids = cluster_model.get_ids()
 
     for ind in tqdm(all_grids, desc="pairs in clusters: "):
 
@@ -152,6 +158,10 @@ def find_clusters(
         # function will return error string if the individual is already in a network
         err = cluster_model.construct_network(ind, network_obj)
 
+        if len(network_obj.haplotypes) == 0:
+            logger.info(
+                f"This is the individual for the network that has no haplotypes {ind} and this is the network id {network_obj.network_id}"
+            )
         # if the program is being run in debug mode then it
         # will only this loop how ever many times the user
         # wants. This gives enough information to see if
