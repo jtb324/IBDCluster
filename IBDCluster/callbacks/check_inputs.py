@@ -1,8 +1,9 @@
 from pathlib import Path
 import typer
 import os
+import toml
 
-VERSION = "1.1.0"
+__version__ = "1.1.0"
 
 
 class IncorrectFileType(Exception):
@@ -109,5 +110,13 @@ def check_env_path(env_path: str) -> str:
 def display_version(value: bool):
     """callback function that displays the version number of the program and then terminates the program"""
     if value:
-        typer.echo(f"IBDCluster - v{VERSION}")
+        # typer.echo(f"{__file__}")
+
+        toml_filepath = "/".join(
+            os.path.realpath(__file__).split("/")[:-3] + ["pyproject.toml"]
+        )
+
+        version = toml.load(toml_filepath)["tool"]["poetry"]["version"]
+
+        typer.echo(f"IBDCluster - v{version}")
         raise typer.Exit(code=1)
