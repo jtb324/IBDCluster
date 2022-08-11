@@ -1,8 +1,10 @@
-## IBDCluster:
+## Welcome!
 
-You can use the [editor on GitHub](https://github.com/jtb324/IBDCluster/edit/gh-pages/index.md) to maintain and preview the content for your website in Markdown files.
+### Motivation
+----------------
+This project was created to utilize Identity-by-Descent within BioBanks. Shared ibd segments overlapping a specific segment of the genome, can be clustered into networks. This networks can then be tested to see if there is any phenotype enrichment within the network.
 
-Whenever you commit to this repository, GitHub Pages will run [Jekyll](https://jekyllrb.com/) to rebuild the pages in your site, from the content in your Markdown files.
+
 
 ### Markdown
 
