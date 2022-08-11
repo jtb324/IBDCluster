@@ -216,3 +216,7 @@ classDiagram
     }
 
 ```
+
+## Work in Progress:
+---
+Documentation is being created here: [documentation!](https://jtb324.github.io/IBDCluster/) 
