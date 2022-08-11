@@ -1,4 +1,4 @@
-## Welcome to GitHub Pages
+# IBDCluster
 
 You can use the [editor on GitHub](https://github.com/jtb324/IBDCluster/edit/gh-pages/index.md) to maintain and preview the content for your website in Markdown files.
 
