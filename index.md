@@ -1,8 +1,8 @@
 
 
-### Motivation
+<!-- ### Motivation
 ----------------
-This project was created to utilize Identity-by-Descent within BioBanks. Shared ibd segments overlapping a specific segment of the genome, can be clustered into networks. This networks can then be tested to see if there is any phenotype enrichment within the network.
+This project was created to utilize Identity-by-Descent within BioBanks. Shared ibd segments overlapping a specific segment of the genome, can be clustered into networks. This networks can then be tested to see if there is any phenotype enrichment within the network. -->
 
 
 
