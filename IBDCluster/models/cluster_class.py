@@ -2,6 +2,7 @@
 Contains the Network and Cluster class that are used during the 
 clustering and network creation steps in the cluster/main.py file
 """
+import collections
 from dataclasses import dataclass, field
 from typing import Protocol
 
@@ -157,7 +158,7 @@ class Cluster:
     ibd_program: str
     indices: models.FileInfo
     count: int = 0  # this is a counter that is used in testing to speed up the process
-    ibd_df: None | pd.DataFrame = field(default_factory=pd.DataFrame)
+    ibd_df: pd.DataFrame = field(default_factory=pd.DataFrame)
     network_id: str = 1  # this is a id that the cluster object will use when it updates each network in the find networks function. This will be increased by 1 for each network
     inds_in_network: set[str] = field(
         default_factory=set
@@ -220,20 +221,81 @@ class Cluster:
 
         logger.info(f"identified {self.ibd_df.shape[0]} pairs within the gene region")
 
-    def find_all_grids(self, indices: FileInfo) -> list[str]:
-        """Method that will take the dataframe that is filtered for the location and the haplotype and return
-        a list of all unique individuals in that dataframe
+    def filter_connections(self, connection_threshold: int) -> None:
+        """Function that will filter out individuals that have fewer
+        connections than the threshold.
 
         Parameters
         ----------
-        indices : FileInfo
-            object that has all the indices for the file of interest
+        connection_threshold : int
+            number of connections that an individual is required to have to
+            be considered for clustering.
+        """
+        logger.debug(
+            f"filtering out individuals who have fewer than {connection_threshold} connections"
+        )
+        # pull out all of the iids that are in pairs. This list should include
+        # duplicates
+        pairs = self.ibd_df.ind_1.values.tolist() + self.ibd_df.ind_2.values.tolist()
+        # use the collections. Counter to form a dictionary type object where keys
+        # are the grids and the values are how many times that grid shows up
+        counts = collections.Counter(pairs)
+        # iterating over each item to get the iiids that have fewer connections
+        # than the threshold
+
+        for key, value in counts.items():
+            if value < connection_threshold:
+                self.inds_in_network.add(key)
+
+        logger.info(
+            f"{len(self.inds_in_network)} individuals that have fewer connections than the threshold of {connection_threshold}"
+        )
+        logger.debug(
+            f"Individuals that failed to meet the connection threshold: {self.inds_in_network}"
+        )
+
+        # Filter out these individuals from the original dataframe that way
+        # we don't include them in the networks
+        self.ibd_df = self.ibd_df[
+            ~(self.ibd_df.ind_1.isin(self.inds_in_network))
+            & ~(self.ibd_df.ind_2.isin(self.inds_in_network))
+        ]
+
+    def get_ids(self) -> list[str]:
+        """Method that will return the list of individuals iids with the
+        phase information
 
         Returns
         -------
         list[str]
             returns a list of unique individuals in the dataframe
         """
+        grids = list(
+            set(
+                self.ibd_df["ind_1"].values.tolist()
+                + self.ibd_df["ind_2"].values.tolist()
+            )
+        )
+
+        logger.info(
+            f"{len(grids)} unique haplotypes identified that will be clustered into networks"
+        )
+
+        return grids
+
+    def create_unique_ids(self, indices: FileInfo) -> None:
+        """Method that will take the dataframe that is and create a
+        unique id that combines the phase information
+
+        Parameters
+        ----------
+        indices : FileInfo
+            object that has all the indices for the file of interest
+        """
+        logger.debug(
+            "creating new unique ids that incorporate the haplotype phasing information"
+        )
+
         if self.ibd_program.lower() == "hapibd":
             self.ibd_df["ind_1"] = (
                 self.ibd_df[indices.id1_indx]
@@ -251,20 +313,9 @@ class Cluster:
             indices.ind1_with_phase = "ind_1"
             indices.ind2_with_phase = "ind_2"
 
-            grids: list[str] = list(
-                set(
-                    self.ibd_df["ind_1"].values.tolist()
-                    + self.ibd_df["ind_2"].values.tolist()
-                )
-            )
-
-        # This else statment will be used if we were to try to run ilash because the grids in it do not have to be formatted
+        # This else statment will be used if we were to try to run ilash or any other ibd program because I haven't implemented the method yet
         else:
             raise NotImplementedError
-
-        logger.info(f"Found {len(grids)} unique individual that will be clustered")
-
-        return grids
 
     def _find_secondary_connections(
         self,
