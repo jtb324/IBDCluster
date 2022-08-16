@@ -4,5 +4,8 @@ title: Pip Installation
 parent: Installation
 grand_parent: Documentation
 ---
-# Using Pip to install IBDCluster:
+# Using Pip to install IBDCluster: 
+Coming soon
+{: .label .label-yellow }
 ___
+This installation method is not yet implemented but is planned to be part of a future release

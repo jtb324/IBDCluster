@@ -264,6 +264,7 @@ PLATFORMS
 DEPENDENCIES
   github-pages
   just-the-docs
+  kramdown
 
 BUNDLED WITH
    2.3.20

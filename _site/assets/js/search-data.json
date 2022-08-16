@@ -7,58 +7,76 @@
   },"1": {
     "doc": "Github Installation",
     "title": "Using Github to install IBDCluster:",
-    "content": ". This installation method assumes that you are familiar with Git and Github, the commandline, and python’s Anaconda package manager and that these programs are install/can be install on whatever computing environment you are using. If you wish to read the documentation for each of these then they will be listed below: . | Git: Git Website . | Github: Github Website . | Commandline Interface: This is probably overkill but here is a very indepth CLI tutorial . | Anaconda Anaconda Website . | . Optional Installation Dependency: You can also use poetry to install the program. Poetry is a python package manager (another alternative to Pip and Conda and all the other package manages) that has good dependency resolution to create a reproducible environment. You can read more about the project here Poetry documentation and the steps to install it are described here Poetry Installation. Poetry is the current recommended way to install the program but it relies on you having the necessary dependencies to install the Poetry program into whatever system you are using. People trying to run this on a personal machine (probably unlikely) should have no difficultly installing poetry but those running IBDCluster on a server (Which considering its made for BioBank data will be most people) may run into permission errors. If this is the case then just skip to the section titled “Creating a Conda Virtual Environment” and start the installation there. ",
+    "content": ". This installation method assumes that you are familiar with Git and Github, the commandline, and python’s Anaconda package manager and that these programs are install/can be install on whatever computing environment you are using. You will have to use all of these tools so you will need to be familiar enough with each one to run the example commands. If you wish to read the documentation for each of these then they will be listed below: . | Git: Git Website . | Github: Github Website . | Commandline Interface: This is probably overkill but here is a very indepth CLI tutorial . | Anaconda Anaconda Website . | . Optional Installation Dependency: . You can also use poetry to install the program. Poetry is a python package manager (another alternative to Pip and Conda and all the other package manages) that has good dependency resolution to create a reproducible environment. You can read more about the project here Poetry documentation and the steps to install it are described here Poetry Installation. Poetry is the current recommended way to install the program but it relies on you having the necessary dependencies to install the Poetry program into whatever system you are using. People trying to run this on a personal machine (probably unlikely) should have no difficultly installing poetry but those running IBDCluster on a server (Which considering its made for BioBank data will be most people) may run into permission errors. If you are running into permission errors than the documentation will indicate where your installation instructions are different. ",
     "url": "/documentation/github.html#using-github-to-install-ibdcluster",
     "relUrl": "/documentation/github.html#using-github-to-install-ibdcluster"
   },"2": {
+    "doc": "Github Installation",
+    "title": "Steps to installing IBDCluster:",
+    "content": "The installation process can be broken into 4 steps. These are listed below and will be explained in further detail: . | clone the Github repository to your local environment. | create and activate a conda virtual environment. | install all the dependencies using Conda or Poetry. | Add the program to you PATH so that you can call the program | . ",
+    "url": "/documentation/github.html#steps-to-installing-ibdcluster",
+    "relUrl": "/documentation/github.html#steps-to-installing-ibdcluster"
+  },"3": {
+    "doc": "Github Installation",
+    "title": "Step 1: Clone the Github repository:",
+    "content": "You can clone the Github repository into your local environment using the command shown below: . git clone https://github.com/jtb324/IBDCluster.git . You should now have a directory called IBDCluster. You can check if this exists using the command: . ls IBDCluster/ . If you see a directory file tree then the program cloned correctly. If you receive an error saying that the directory does not exist, then you will have to debug the error to move onto step 2. ",
+    "url": "/documentation/github.html#step-1-clone-the-github-repository",
+    "relUrl": "/documentation/github.html#step-1-clone-the-github-repository"
+  },"4": {
+    "doc": "Github Installation",
+    "title": "Step 2: create and activate a conda virtual environment:",
+    "content": "To create a conda virtual environment you just need to run the command below, replacing the name with whatever name you want to give the environment. conda create -n &lt;environment-name&gt; python=3.10 . IBDCluster requires the python version to be &gt;= 3.10 because it uses features that were introduced in that release. If you try to run it in python=3.9 it will give many errors. If you are not using poetry to install dependencies then you can skip step 2 and just move onto step 3. ",
+    "url": "/documentation/github.html#step-2-create-and-activate-a-conda-virtual-environment",
+    "relUrl": "/documentation/github.html#step-2-create-and-activate-a-conda-virtual-environment"
+  },"5": {
     "doc": "Github Installation",
     "title": "Github Installation",
     "content": " ",
     "url": "/documentation/github.html",
     "relUrl": "/documentation/github.html"
-  },"3": {
+  },"6": {
     "doc": "Documentation",
     "title": "Documentation",
     "content": "The links below have information about how to install the program and how to run the program . ",
     "url": "/documentation/",
     "relUrl": "/documentation/"
-  },"4": {
+  },"7": {
     "doc": "Home",
     "title": "Hello World!",
     "content": " ",
     "url": "/#hello-world",
     "relUrl": "/#hello-world"
-  },"5": {
+  },"8": {
     "doc": "Home",
     "title": "Home",
     "content": " ",
     "url": "/",
     "relUrl": "/"
-  },"6": {
+  },"9": {
     "doc": "Inputs",
     "title": "Inputs",
     "content": "When using IBDCluster the user is expected to provide several input files. These are the . ",
     "url": "/documentation/inputs.html",
     "relUrl": "/documentation/inputs.html"
-  },"7": {
+  },"10": {
     "doc": "Installation",
     "title": "Installing IBDCluster:",
     "content": "This program can be installed through several different options which are listed below. Click on the links to find out more information. ",
     "url": "/documentation/installation.html#installing-ibdcluster",
     "relUrl": "/documentation/installation.html#installing-ibdcluster"
-  },"8": {
+  },"11": {
     "doc": "Installation",
     "title": "Installation",
     "content": " ",
     "url": "/documentation/installation.html",
     "relUrl": "/documentation/installation.html"
-  },"9": {
+  },"12": {
     "doc": "Pip Installation",
     "title": "Using Pip to install IBDCluster:",
-    "content": ". ",
+    "content": "Coming soon . This installation method is not yet implemented but is planned to be part of a future release . ",
     "url": "/documentation/pip.html#using-pip-to-install-ibdcluster",
     "relUrl": "/documentation/pip.html#using-pip-to-install-ibdcluster"
-  },"10": {
+  },"13": {
     "doc": "Pip Installation",
     "title": "Pip Installation",
     "content": " ",

@@ -15,3 +15,11 @@ aux_links:
   "IBDCluster on Github":
     - "https://github.com/jtb324/IBDCluster"
 
+callouts:
+  warning:
+    color: red
+  alternative:
+    color: blue
+
+plugin:
+ - kramdown
