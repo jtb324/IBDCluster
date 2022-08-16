@@ -1,8 +1,17 @@
 title: IBDCluster
+# tagline: A CLI tool to identify networks of Identity by Descent Sharing in Biobanks
 subtitle: "Version 1.1.0"
-affiliation: Vanderbilt Genetics Institute
-remote_theme: "mmistakes/minimal-mistakes@4.24.0"
-minimal_mistakes_skin: "dark"
+# affiliation: Vanderbilt Genetics Institute
+remote_theme: pmarsceill/just-the-docs
+color_scheme: dark
+# timezone: America/Chicago
+# lang: en
+search_enabled: true
+# Makes Aux links open in a new tab. Default is false
+aux_links_new_tab: true
 
-plugins:
-  - jekyll-include-cache
+# Aux links for the upper right navigation
+aux_links:
+  "IBDCluster on Github":
+    - "https://github.com/jtb324/IBDCluster"
+

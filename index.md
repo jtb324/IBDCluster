@@ -1,7 +1,6 @@
 ---
-title: "Welcome"
+layout: default
+title: Home
+nav_order: 1
 ---
-
-
-
-This is the web documentation for the IBDCluster software
+# Hello World!
