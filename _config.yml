@@ -1,6 +1,8 @@
 title: IBDCluster
+subtitle: "Version 1.1.0"
 affiliation: Vanderbilt Genetics Institute
 remote_theme: "mmistakes/minimal-mistakes@4.24.0"
+minimal_mistakes_skin: "dark"
 
 plugins:
   - jekyll-include-cache
