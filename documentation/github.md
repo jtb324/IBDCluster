@@ -18,8 +18,8 @@ This installation method assumes that you are familiar with Git and Github, the 
 
 * **Anaconda** [Anaconda Website](https://www.anaconda.com/)
 
+{: .optional }
 ***Optional Installation Dependency:*** <br> 
-
 You can also use poetry to install the program. Poetry is a python package manager (another alternative to Pip and Conda and all the other package manages) that has good dependency resolution to create a reproducible environment. You can read more about the project here [Poetry documentation](https://python-poetry.org/) and the steps to install it are described here [Poetry Installation](https://python-poetry.org/docs/#installation). Poetry is the current recommended way to install the program but it relies on you having the necessary dependencies to install the Poetry program into whatever system you are using. People trying to run this on a personal machine (probably unlikely) should have no difficultly installing poetry but those running IBDCluster on a server (Which considering its made for BioBank data will be most people) may run into permission errors. If you are running into permission errors than the documentation will indicate where your installation instructions are different.
 
 ## Steps to installing IBDCluster:
@@ -57,3 +57,9 @@ IBDCluster requires the python version to be >= 3.10 because it uses features th
 {: .alternative }
 If you are not using poetry to install dependencies then you can skip step 2 and just move onto step 3.
 
+## Step 3: install all the dependencies using Conda or Poetry:
+---
+
+
+## Step 4: Add the program to you PATH so that you can call the program:
+---

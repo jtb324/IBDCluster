@@ -20,6 +20,8 @@ callouts:
     color: red
   alternative:
     color: blue
+  optional:
+    color: grey-lt
 
 plugin:
  - kramdown

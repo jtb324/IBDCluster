@@ -3,6 +3,7 @@ layout: page
 title: Installation
 parent: Documentation
 has_children: true
+nav_order: 1
 ---
 # Installing IBDCluster:
 
