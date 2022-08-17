@@ -2,6 +2,10 @@
 
 # IBDCluster v1.0.1:
 
+## Documentation:
+___
+This readme is a more technical description of the project, providing information about the class structures and relationships. More practical documentation about how to install and use the program can be found here: [IBDCluster documentation (still a work in progress)](https://jtb324.github.io/IBDCluster/) 
+
 ## Purpose of the project: 
 ___
 This project is a cli tool that clusters shared ibd segments within biobanks around a gene of interest. These network are then analyzed to determine how many individuals within a network are affected by a phenotype of interest.
@@ -219,4 +223,3 @@ classDiagram
 
 ## Work in Progress:
 ---
-Documentation is being created here: [documentation!](https://jtb324.github.io/IBDCluster/) 
