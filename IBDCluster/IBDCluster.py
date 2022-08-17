@@ -117,6 +117,11 @@ def main(
         "--cM",
         help="Centimorgan threshold to filter the ibd segments",
     ),
+    connection_threshold: int = typer.Option(
+        0,
+        "--connections",
+        help="Threshold to filter out individuals who have fewer connections than the threshold. This parameter can be used if you are noticing that there are big networks of individuals (like 1000s of people connected)",
+    ),
     phecode_descriptions: Optional[str] = typer.Option(
         None,
         "-d",
@@ -188,6 +193,7 @@ def main(
         gene_info_file=gene_info_file,
         carrier_matrix=carriers,
         centimorgan_threshold=cm_threshold,
+        connections_threshold=connection_threshold,
         loglevel=loglevel,
         log_filename=log_filename,
     )
@@ -226,7 +232,7 @@ def main(
     for gene in genes_generator:
 
         network_generator = cluster.find_clusters(
-            ibd_program.value, gene, cm_threshold, ibd_file
+            ibd_program.value, gene, cm_threshold, ibd_file, connection_threshold
         )
         # creating a specific output path that has the gene name
         gene_output = os.path.join(output, gene.name)
