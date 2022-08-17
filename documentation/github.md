@@ -3,6 +3,7 @@ layout: page
 title: Github Installation
 parent: Installation
 grand_parent: Documentation
+nav_order: 1
 ---
 # Using Github to install IBDCluster:
 ---

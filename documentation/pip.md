@@ -3,6 +3,7 @@ layout: page
 title: Pip Installation 
 parent: Installation
 grand_parent: Documentation
+nav_order: 2
 ---
 # Using Pip to install IBDCluster: 
 Coming soon
