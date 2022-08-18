@@ -1,6 +1,6 @@
 ---
 layout: page 
-title: Api Design
+title: API Design
 parent: Customization
 grand_parent: Documentation
 nav_order: 1
