@@ -23,9 +23,6 @@ class DataHolder:
 
 @dataclass
 class Pairs:
-    """Object that has the data for each pair and contains a method
-    to format the output string for the allpairs.txt file using this data"""
-
     pair_1: str
     phase_1: str
     pair_2: str
@@ -45,8 +42,6 @@ class Pairs:
 
 @dataclass
 class Network:
-    """This class is going to be responsible for the clustering of each network"""
-
     gene_name: str
     gene_chr: str
     network_id: int
@@ -57,7 +52,7 @@ class Network:
     pvalues: None | str = None
 ```
 
-The api will supply three values: "data", "network", "output" which are represented by the DataHolder model, the Network model, and the gene output path respectively. These attributes and methods of each model are described below.
+The api will supply three values: "data", "network", "output" which are represented by the DataHolder model, the Network model, and the gene output path respectively. You can access each of these values through the kwargs. These attributes and methods of each model are described below.
 
 ## DataHolder: 
 ---

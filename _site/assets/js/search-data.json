@@ -1,36 +1,36 @@
 {"0": {
-    "doc": "Api Design",
+    "doc": "API Design",
     "title": "API Design:",
-    "content": ". The api is designed so that the user can access the following models as well as the output path for the program: . @dataclass class DataHolder: gene_name: str chromosome: int affected_inds: dict[str, list[str]] phenotype_prevalence: dict[str, float] phenotype_cols: list[str] ibd_program: str phenotype_description: None | dict[str, str] = None @dataclass class Pairs: \"\"\"Object that has the data for each pair and contains a method to format the output string for the allpairs.txt file using this data\"\"\" pair_1: str phase_1: str pair_2: str phase_2: str chromosome: int segment_start: int segment_end: int length: float def form_id_str(self) -&gt; str: \"\"\"Method that will return the pair ids and phases in a formated string\"\"\" return f\"{self.pair_1}\\t{self.pair_2}\\t{self.phase_1}\\t{self.phase_2}\" def form_segment_info_str(self) -&gt; str: \"\"\"Method that will return a string with all of the segment info\"\"\" return f\"{self.segment_start}\\t{self.segment_end}\\t{self.length}\\n\" @dataclass class Network: \"\"\"This class is going to be responsible for the clustering of each network\"\"\" gene_name: str gene_chr: str network_id: int pairs: list[Pairs] = field(default_factory=list) iids: set[str] = field(default_factory=set) haplotypes: set[str] = field(default_factory=set) connections: dict[str, int] = field(default_factory=dict) pvalues: None | str = None . The api will supply three values: “data”, “network”, “output” which are represented by the DataHolder model, the Network model, and the gene output path respectively. These attributes and methods of each model are described below. ",
+    "content": ". The api is designed so that the user can access the following models as well as the output path for the program: . @dataclass class DataHolder: gene_name: str chromosome: int affected_inds: dict[str, list[str]] phenotype_prevalence: dict[str, float] phenotype_cols: list[str] ibd_program: str phenotype_description: None | dict[str, str] = None @dataclass class Pairs: pair_1: str phase_1: str pair_2: str phase_2: str chromosome: int segment_start: int segment_end: int length: float def form_id_str(self) -&gt; str: \"\"\"Method that will return the pair ids and phases in a formated string\"\"\" return f\"{self.pair_1}\\t{self.pair_2}\\t{self.phase_1}\\t{self.phase_2}\" def form_segment_info_str(self) -&gt; str: \"\"\"Method that will return a string with all of the segment info\"\"\" return f\"{self.segment_start}\\t{self.segment_end}\\t{self.length}\\n\" @dataclass class Network: gene_name: str gene_chr: str network_id: int pairs: list[Pairs] = field(default_factory=list) iids: set[str] = field(default_factory=set) haplotypes: set[str] = field(default_factory=set) connections: dict[str, int] = field(default_factory=dict) pvalues: None | str = None . The api will supply three values: “data”, “network”, “output” which are represented by the DataHolder model, the Network model, and the gene output path respectively. You can access each of these values through the kwargs. These attributes and methods of each model are described below. ",
     "url": "/documentation/api_design.html#api-design",
     "relUrl": "/documentation/api_design.html#api-design"
   },"1": {
-    "doc": "Api Design",
+    "doc": "API Design",
     "title": "DataHolder:",
     "content": ". The attributes for the DataHolder model are described below: . | gene_name - string that contains the gene name that was passed to the program in the gene_info file . | chromosome - integer number for the chromosome of interest . | affected_inds - dictionary where the keys are a string for each PheCode and the values are a list of IDs that are affected by the phenotype. | phenotype_prevalence - dictionary where the keys are a PheCode string and the values are the percentages of individuals that are affected by the phenotype in the population you provided. | phenotype_cols - list of PheCode strings in the provided PheCode matrix. | ibd_program - this is a string that gives the name of the ibd program being used. | phenotype_description - This attribute is either none if the user didn’t provide a file that has descriptions of each PheCode or it is a dictionary where the keys are PheCode strings and the values are the description of each PheCode. | . ",
     "url": "/documentation/api_design.html#dataholder",
     "relUrl": "/documentation/api_design.html#dataholder"
   },"2": {
-    "doc": "Api Design",
+    "doc": "API Design",
     "title": "Pairs:",
     "content": ". The attributes for the Pairs model are described below: . | pair_1 - string that contains the ID of the first person in the pair that shares an IBD segment. | phase_1 - string that contains ID and the phase number of pair_1’s haplotype which contains the shared IBD segment. This values is the pair ID concatenated with the phase value. Ex: ID1 becomes ID1.1 for the first haplotype (Different ibd detection programs use different numbers to represent haplotypes. The example above is based on hap-IBD). | pair_2 - string that contains the ID of the second person in the pair that shares an IBD segment. | phase_2 - string that contains the ID and the phase number of pair_2’s haplotype which contains the shared IBD segment. This values is the pair ID concatenated with the phase value. Ex: ID2 becomes ID2.2 for the second haplotype (Different ibd detection programs use different numbers to represent haplotypes. The example above is based on hap-IBD). | chromosome - integer number of the chromosome that the shared segment is on. | segment_start - integer that has the start base position of the shared segment. | segment_end - integer that has the end base position of the shared segment. | length - float value that has the total length of the segments in centimorgans. | . The methods for the Pairs model are described below: . | form_id_str - method that creates a string with tab separated values that has the pair_1 ID string, the pair_2 ID string, the phase_1 string, and the phase_2 string, respectively. | form_segment_info_str - method that creates a string with tab separated values that has the segment start position, the segment end position, and the length of the segment, respectively. | . ",
     "url": "/documentation/api_design.html#pairs",
     "relUrl": "/documentation/api_design.html#pairs"
   },"3": {
-    "doc": "Api Design",
+    "doc": "API Design",
     "title": "Network:",
     "content": ". The attributes for the Network model are described below: . | gene_name - string that contains the gene name that was passed to the program in the gene_info file. | gene_chr - integer that has the chromosome number that the gene is on. | network_id - integer that has the id for the network in the analysis. | pairs - list of Pair objects that have information about the ibd segment that each id pair shares. | iids - a set that has all the unique iid strings that are in the network. | haplotypes - a set that has all the unique haplotypes in the network. The unique haplotypes are just the ID with the phase information appended to it. Ex: ID1 becomes ID1.1. This attribute allows us to differentiate between which haplotype is in the network. | connections - a dictionary where the keys are the individual grid strings and the values are the number of other individuals that the ID is connected to. | pvalues - This value is either None or it is a string of tab separated values where the first three values are the most significant p-value, the corresponding PheCode, and then the corresponding PheCode description respectively. The rest of the string are tab separated values for the p-value of each PheCode and how many individuals in the network are affected by the Phenotype. The default value for this attribute is None and the pvalue.py plugin actually adds the string to this attribute. The user could substitute there own statistically plugin if they wished and use this attribute, it just needs to meet the plugin requirements which are defined in the “Custom Pluging Design” section. | . ",
     "url": "/documentation/api_design.html#network",
     "relUrl": "/documentation/api_design.html#network"
   },"4": {
-    "doc": "Api Design",
+    "doc": "API Design",
     "title": "Output Path:",
     "content": ". The api also supplies the gene output path. This output path is formed by affixing the name of the gene of interest with the output path provided by the user to the CLI. The plugin needs to create the path to write information to. for example if you were running the gene rbm20, then this value would be: . /output_path_provided_by_user/rbm20/ . ",
     "url": "/documentation/api_design.html#output-path",
     "relUrl": "/documentation/api_design.html#output-path"
   },"5": {
-    "doc": "Api Design",
-    "title": "Api Design",
+    "doc": "API Design",
+    "title": "API Design",
     "content": " ",
     "url": "/documentation/api_design.html",
     "relUrl": "/documentation/api_design.html"
@@ -55,7 +55,7 @@
   },"9": {
     "doc": "Custom Pluging Design",
     "title": "Designing your own plugin:",
-    "content": ". ",
+    "content": ". When you install the program you need to add two environmental variables to your .bashrc file (or .zshrc or whatever shell you use). These two variables are the IBDCLUSTER_MAIN_PLUGINS and the IBDCLUSTER_CUSTOM_PLUGINS. The IBDCLUSTER_MAIN_PLUGINS has filepath to the directory with the stock plugins and then the IBDCLUSTER_CUSTOM_PLUGINS has the filepath to the directory with the users custom plugins. These two directories can not have the same name or the program will not work. ",
     "url": "/documentation/design_your_own_plugin.html#designing-your-own-plugin",
     "relUrl": "/documentation/design_your_own_plugin.html#designing-your-own-plugin"
   },"10": {
