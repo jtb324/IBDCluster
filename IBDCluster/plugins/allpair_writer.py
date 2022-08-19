@@ -8,7 +8,7 @@ from typing import Protocol
 
 import log
 from models import DataHolder
-from plugins import factory_register
+from factory import factory_register
 
 logger = log.get_logger(__name__)
 

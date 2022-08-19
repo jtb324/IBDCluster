@@ -147,7 +147,7 @@ def main(
     debug_iterations: int = typer.Option(
         3,
         "--debug-iterations",
-        help="This argument will specify how many iterations the program should go through durign the clustering step before it moves on. This argument should only be used if the loglevel is set to debug. If you wish to run in debug mode for a whole data set then set this argument to a high number. This practice is not recommended because the log file will get extremely large (Potentially TB's).",
+        help="This argument will specify how many iterations the program should go through durign the clustering step before it moves on. This argument should only be used if the loglevel is set to debug. If you wish to run in debug mode for a whole data set then set this argument to a high number. This practice is not recommended because the log file will get extremely large (Potentially TB's), so use with caution.",
     ),
     version: bool = typer.Option(  # pylint: disable=unused-argument
         False,

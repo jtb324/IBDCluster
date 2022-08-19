@@ -160,7 +160,7 @@ def find_clusters(
 
         if len(network_obj.haplotypes) == 0:
             logger.info(
-                f"This is the individual for the network that has no haplotypes {ind} and this is the network id {network_obj.network_id}"
+                f"There were no haplotypes found for network {network_obj.network_id} when individual, {ind}, were used as a seed"
             )
         # if the program is being run in debug mode then it
         # will only this loop how ever many times the user

@@ -1,10 +1,11 @@
-from typing import Protocol
+import os
+import pathlib
 from dataclasses import dataclass, field
+from typing import Protocol
+
 import log
 import pandas as pd
-import os
-from plugins import factory_register
-import pathlib
+from factory import factory_register
 
 logger = log.get_logger(__name__)
 

@@ -4,7 +4,7 @@ from typing import Protocol
 import log
 from models import Network
 from numpy import float64
-from plugins import factory_register
+from factory import factory_register
 from scipy.stats import binomtest
 
 logger = log.get_logger(__name__)

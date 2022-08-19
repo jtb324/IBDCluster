@@ -7,7 +7,7 @@ import json
 import os
 
 import log
-import plugins
+import factory
 from models import DataHolder, Network
 
 logger = log.get_logger(__name__)
@@ -38,9 +38,9 @@ def analyze(data_container: DataHolder, network_obj: Network, output: str) -> No
 
         config = json.load(json_config)
 
-        plugins.load_plugins(config["plugins"])
+        factory.load_plugins(config["plugins"])
 
-        analysis_plugins = [plugins.factory_create(item) for item in config["modules"]]
+        analysis_plugins = [factory.factory_create(item) for item in config["modules"]]
 
         logger.debug(
             f"Using plugins: {', '.join([obj.name for obj in analysis_plugins])}"
