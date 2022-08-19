@@ -7,6 +7,7 @@ the typer app.
 import os
 import pathlib
 import shutil
+import sys
 from datetime import datetime
 from enum import Enum
 from typing import Dict, Optional
@@ -161,6 +162,12 @@ def main(
     """C.L.I. tool to identify networks of individuals who share IBD segments overlapping a locus of interest and identify enrichment of phenotypes within biobanks"""
     # getting the programs start time
     start_time = datetime.now()
+
+    # we are going to have the program append the $PLUGIN path to the interpreters search path
+    sys.path.append(os.getenv("IBDCLUSTER_MAIN_PLUGINS"))
+
+    if os.getenv("IBDCLUSTER_CUSTOM_PLUGINS"):
+        sys.path.append(os.getenv("IBDCLUSTER_CUSTOM_PLUGINS"))
 
     # Now we can recreate the directory that the IBDCluster.log will be in
     pathlib.Path(output).mkdir(parents=True, exist_ok=True)
