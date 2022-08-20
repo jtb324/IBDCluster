@@ -150,41 +150,71 @@
     "relUrl": "/examples/"
   },"25": {
     "doc": "Inputs",
+    "title": "Inputs:",
+    "content": ". IBDCluster has a number of inputs, some of which are required and some that are optional. These are listed below: . | ibd file: This input file is the result of running hap-IBD to determine pairwise IBD sharing between individuals in a BioBank. This file has to be formed before because IBDCluster does not determine pairwise ibd sharing. The table below shows the format of the file (The file doesn’t have a header line but I have added one to the table for ease of explaining the file). | . | Pair 1 ID | Pair 1 Phase | Pair 2 ID | Pair 2 Phase | Chromosome | Segment Start Pos | Segment End Pos | Segment Length (cM) | . | ID1 | Phase 1 | ID2 | Phase 2 | Chromosome # | Segment start base position | Segment end base position | Segment length | . There should be a total of eight columns that are all tab separated. The file should have information about each individual in the pair and the haplotype phase for each variant, the chromosome that the segment is on, the location of the segment, and the length of the segment. All of this information will be used by the program so it is mandatory. This file will be supplied through the –ibd-file or -f flag. It is a required file. | .env file: This input file is just a environment file that has two variables “HAPIBD_PATH” and “JSON_PATH”. The HAPIBD_PATH variable has the directory where the ibd files are. The suffix of the file has to be .env. This file will be supplied through the –env or the -e argument. This file is required by the program but the flag has a default value so you may not have to supply it to the program unless you are using a custom .env file. | . | config.json: This input file is a json file that has information about the plugins that are going to be used in the analysis. The default config.json for the stock plugins are shown below. | . { \"plugins\":[\"plugins.pvalues\", \"plugins.network_writer\", \"plugins.allpair_writer\"], \"modules\": [ { \"name\":\"pvalues\" }, { \"name\": \"network_writer\" }, { \"name\": \"allpair_writer\" } ] } . The json files should have the keys “plugins” and “modules”. The value for the “plugins” key is a list of strings that have the module path of the plugin. To break this down each plugin is located in the plugins module in the IBDCluster plugin, therefore the first part of the module path in the default config.json is “plugins”. The name of the plugin .py file is the second part of the module path. For example there is a default plugin pvalues.py within the plugin directory, therefore the module path is “plugins.pvalues”. This structure of the plugins directory is explained in more detail within the section called “Stock Plugins”. The value for the “modules” key is a list of key, value pairs where the key is “name” and the value is the name of the plugin which can be found in the initialize function in the plugin .py file (This is also described in more detail in the “Stock Plugins” section). This file will be supplied through the optional –json-config or the -j flag. There is a default config file that IBDCluster reads from but you can provide your own config file if you wish to turn on or off a plugin or if you wish to use a custom plugin (This process will be described in the “Custom Plugin Design” section). | Gene Information File: This input file is a tab separated text file that has information about the gene region of interest such as the gene name, the chromosome the gene is on, the start base position of the gene, and the end base position of the gene. This information can usually be found at the GnomAD genome browser. An example of this file for the gene rbm20 is shown below (Once again I’ve added a header line for readability. The file should not have a header line or else IBDCluster will give an error that will not be straightforward to debug). | . | gene name | chromosome | gene start position | gene end position | . | RBM20 | 10 | 112404115 | 112599227 | . Note on what information can be proivded in the file: So far we only discussed how to provide information about a gene through the Gene Information File. There is no reason though that IDBCluster can only be used to cluster around a gene. If you were interested in a variant instead of a gene then you could just replace the information in the file as shown below for the variant chr10:110812304 (using build Hg38) . | gene name | chromosome | gene start position | gene end position | . | 10:110812304 | 10 | 110812284 | 110812284 | . The program does not necessarily use the gene name for anything but record keeper so you could use the variant name or another id, and then in this example we just made the start and end position the variant location. The program will see this as valid input. IBDCluster can also be used on just any section of interest in the gene name. You just need to provide a “name” for the gene name, and then you need to provide the start and end position of the segment of interest. Warning about the genome position: Make sure that the base position in the file corresponds to the same build of the human genome as what you used in the IBD detection software. If the builds are different then you will get inaccurate results. ",
+    "url": "/documentation/inputs.html#inputs",
+    "relUrl": "/documentation/inputs.html#inputs"
+  },"26": {
+    "doc": "Inputs",
     "title": "Inputs",
-    "content": "When using IBDCluster the user is expected to provide several input files. These are the . ",
+    "content": " ",
     "url": "/documentation/inputs.html",
     "relUrl": "/documentation/inputs.html"
-  },"26": {
+  },"27": {
     "doc": "Installation",
     "title": "Installing IBDCluster:",
     "content": "This program can be installed through several different options which are listed below. Click on the links to find out more information. ",
     "url": "/documentation/installation.html#installing-ibdcluster",
     "relUrl": "/documentation/installation.html#installing-ibdcluster"
-  },"27": {
+  },"28": {
     "doc": "Installation",
     "title": "Installation",
     "content": " ",
     "url": "/documentation/installation.html",
     "relUrl": "/documentation/installation.html"
-  },"28": {
+  },"29": {
+    "doc": "Outputs",
+    "title": "Output Files:",
+    "content": ". ",
+    "url": "/documentation/outputs.html#output-files",
+    "relUrl": "/documentation/outputs.html#output-files"
+  },"30": {
+    "doc": "Outputs",
+    "title": "Outputs",
+    "content": " ",
+    "url": "/documentation/outputs.html",
+    "relUrl": "/documentation/outputs.html"
+  },"31": {
     "doc": "Pip Installation",
     "title": "Using Pip to install IBDCluster:",
     "content": "Coming soon . This installation method is not yet implemented but is planned to be part of a future release . ",
     "url": "/documentation/pip.html#using-pip-to-install-ibdcluster",
     "relUrl": "/documentation/pip.html#using-pip-to-install-ibdcluster"
-  },"29": {
+  },"32": {
     "doc": "Pip Installation",
     "title": "Pip Installation",
     "content": " ",
     "url": "/documentation/pip.html",
     "relUrl": "/documentation/pip.html"
-  },"30": {
+  },"33": {
     "doc": "Stock Plugins",
     "title": "Stock plugins:",
-    "content": ". ",
+    "content": ". IBDCluster comes with three stock plugins. Each of these plugins access the api described by the “api_design” section of the documentation. These plugins are responsible for the calculation of the different pvalues for each phenotype, writing out the information for each network to a file, and writing out the information for each of the pairs to the file. All of these plugins are found within the plugin directory within the ibd source code directory. This directory can be found within where you installed the program. Once inside the install directory if you just run the following two commands then you should see the plugins subdirectory: . cd IBDCluster/ . ls . This directory is designed as a python module so it has an __init__.py file so that the python interpreter can import the code. The other three files in these directory are the plugins. ",
     "url": "/documentation/stock_plugins.html#stock-plugins",
     "relUrl": "/documentation/stock_plugins.html#stock-plugins"
-  },"31": {
+  },"34": {
+    "doc": "Stock Plugins",
+    "title": "Overview of the Plugin design:",
+    "content": ". Basic structure of the plugin class: . The stock plugins use an object oriented design meaning each plugin is a class that has a method that gets called by the IBDCluster program. An example of the basic required plugin file structure is shown below and we’ll discuss each part. from dataclasses import dataclass from factory import factory_register @dataclass class Plugin_Class: \"\"\"Example of the base requirements for a plugin class\"\"\" name: str = \"\" def analyze(self, **kwargs) -&gt; None: \"\"\"the analysis method is what gets called by the IBDCluster program\"\"\" def initialize() -&gt; None: factory_register(\"pvalues\", Pvalues) . Imports: The example plugin here imports dataclass and a method called factory_register. If you are unfamiliar with dataclasses you can read about it here, (Documentation link here), but they are basically just newer abstractions of the standard python class (with a bit of subjective pros/cons). You can use a normal class structure, you just need to create a __init__ function with the name attribute. The plugin also imports the factory_register function. We’re not going to describe this plugin in detail because it just abstracts away some of the core functionality of the IBDCluster program. This function comes from a program module called factory (This module is not a standard python library so please don’t try to find it). This function is required to have your module properly loaded into the program. Class Structure: The plugin class only has one required attribute and this the plugin’s name. This name is used in a logging statement by the program (Therefore the program will give you an error if this is not there). The plugin also has to have one method named “analyze” which only takes key word arguments. This method also doesn’t return anything. The three keyword arguments that the program passes to this method, will be “data”, “network”, “output”. These arguments are what the plugins access. Initialize function: Each plugin file also has a function called initialize. This function doesn’t take any inputs and returns nothing. The purpose of this function is to called the factory_register function. It passes the name of the plugin as the first argument and the plugin Class as the second argument. Warning: The name argument that is passed to the factory_register has to correspond to the name in the methods section of the config.json file. If it is not the same then the program will give an error when trying to load in the plugin. Note on Plugin order: The order of these plugins matters (To some degree) and that will be described below. ",
+    "url": "/documentation/stock_plugins.html#overview-of-the-plugin-design",
+    "relUrl": "/documentation/stock_plugins.html#overview-of-the-plugin-design"
+  },"35": {
+    "doc": "Stock Plugins",
+    "title": "Overview of each Plugin:",
+    "content": ". pvalues.py: . This plugin is responsible for determining the enrichment p-values from the binomial test for each phenotype for each network. To determine the p-values, the program relies on the binomtest function from the scipy.stats library. The plugin also determines the minimum p-value found for each network as well as the phenotype that the p-value represents. The plugins creates a string with all of this information. A example string of what will be formed for two phenotypes is shown below: . f\"{minimum pvalue}/t{correspond phenotype}\\t{phenotype description}\\t{number of people affected by phenotype A}\\t{phenotype A p-value}\\t{number of people affected by phenotype B}\\t{phenotype B p-value}\" . This string will be saved in the network.pvalues attribute of the network models. network_writer.py: . Function that writes all of the information to the networks.txt output file. The description of this output file can be found in the “outputs” section of the documentation. allpair_writer.py: . Function that writes all of the information to the allpairs.txt output file. The description of this output file can be found in the “outputs” section of the documentation. ",
+    "url": "/documentation/stock_plugins.html#overview-of-each-plugin",
+    "relUrl": "/documentation/stock_plugins.html#overview-of-each-plugin"
+  },"36": {
     "doc": "Stock Plugins",
     "title": "Stock Plugins",
     "content": " ",
