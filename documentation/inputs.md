@@ -70,6 +70,8 @@ The program does not necessarily use the gene name for anything but record keepe
 
 IBDCluster can also be used on just any section of interest in the gene name. You just need to provide a "name" for the gene name, and then you need to provide the start and end position of the segment of interest.
 
+This file will be supplied through the --gene-file or -g flag. It is required by IBDCluster. 
+
 {: .warning }
 ***Warning about the genome position:***<br>
 Make sure that the base position in the file corresponds to the same build of the human genome as what you used in the IBD detection software. If the builds are different then you will get inaccurate results.
