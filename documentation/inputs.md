@@ -6,7 +6,7 @@ nav_order: 2
 ---
 # Inputs:
 ---
-IBDCluster has a number of inputs, some of which are required and some that are optional. These are listed below:
+IBDCluster has a number of inputs, some of which are required and some that are optional. These are listed below. The required input files will be colored yellow while the optional ones will be grey:
 
 ---
 
@@ -22,11 +22,11 @@ This file will be supplied through the --ibd-file or -f flag. It is a required f
 
 ---
 
-* <span style="color: #F0FF00">**.env file**:</span> This input file is just a environment file that has two variables "HAPIBD_PATH" and "JSON_PATH". The HAPIBD_PATH variable has the directory where the ibd files are. The suffix of the file has to be .env. This file will be supplied through the --env or the -e argument. This file is required by the program but the flag has a default value so you may not have to supply it to the program unless you are using a custom .env file.
+* <span style="color: #A0A0A0">**.env file**:</span> This input file is just a environment file that has two variables "HAPIBD_PATH" and "JSON_PATH". The HAPIBD_PATH variable has the directory where the ibd files are. The suffix of the file has to be .env. This file will be supplied through the --env or the -e argument. This file is required by the program but the the program comes with a default file within the install directory  so you do not have to supply an argument unless you are using a custom .env file.
 
 ---
 
-* <span style="color: #F0FF00">**config.json**:</span> This input file is a json file that has information about the plugins that are going to be used in the analysis. The default config.json for the stock plugins are shown below. 
+* <span style="color: #A0A0A0">**config.json**:</span> This input file is a json file that has information about the plugins that are going to be used in the analysis. The default config.json for the stock plugins are shown below. 
 
 ```json
 {
@@ -77,3 +77,16 @@ This file will be supplied through the --gene-file or -g flag. It is required by
 Make sure that the base position in the file corresponds to the same build of the human genome as what you used in the IBD detection software. If the builds are different then you will get inaccurate results.
 
 ---
+
+* <span style="color: #F0FF00">**carrier file**:</span> This input file is a tab separated text file that indicates which individuals are affected by the phenotypes of interest. The first column is expected to be titled "grids". Every other column after this should be either a 0 or 1 for each phenotype of interest. Currently this program only supports binary phenotypes. An example of this format is shown below.
+
+| grids | Phenotype A | Phenotype B |
+|:------|:------------|:------------|
+| grid 1|      1      |      0      |
+| grid 2|      0      |      1      |
+| grid 3|      0      |      0      |
+
+This required input file will be supplied to the --carriers or -c flag. 
+
+{: .optional}
+Some people may be familiar with a PheCode matrix, and thats all this file really is. You're not restricted to only using PheCodes though. Any phenotype will work for this program as long as you can use binary phenotyping to determine cases and controls.
