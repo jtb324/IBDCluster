@@ -41,7 +41,7 @@ class DataHolder(Protocol):
 
 @dataclass
 class NetworkWriter:
-    """Class that is responsible for creating the _networks.txt file from the information provided"""
+    """Class that is responsible for creating the *_networks.txt file from the information provided"""
 
     name: str = "NetworkWriter plugin"
 
@@ -95,7 +95,7 @@ class NetworkWriter:
             return str(min_pvalue), min_phecode
 
     def analyze(self, **kwargs) -> None:
-        """main function of the plugin. It needs to determine the pvalue"""
+        """main function of the plugin."""
 
         data: DataHolder = kwargs["data"]
         network: Network = kwargs["network"]

@@ -74,7 +74,7 @@ def main(
         IbdProgram.HAPIBD.value,
         "--ibd",
         "-i",
-        help="IBD detection software that the output came from. The program expects these values to be hapibd or ilash. The program also expects these values to be lowercase",
+        help="IBD detection software that the output came from. The program expects these values to be either hapibd or ilash. The program also expects these values to be lowercase",
         case_sensitive=True,
     ),
     output: str = typer.Option(
