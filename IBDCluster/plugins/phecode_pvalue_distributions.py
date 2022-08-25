@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from typing import Dict, Any
-from plugins import factory_register
+from factory import factory_register
 
 
 @dataclass

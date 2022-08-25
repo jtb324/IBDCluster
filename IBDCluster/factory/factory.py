@@ -46,4 +46,4 @@ def create(arguments: dict[str, Any]) -> AnalysisObj:
         creation_func = analyze_obj_creation_funcs[plugin_type]
         return creation_func(**args_copy)
     except KeyError:
-        raise PluginNotFound(plugin_type)
+        raise PluginNotFound(plugin_type)  # pylint: disable=raise-missing-from

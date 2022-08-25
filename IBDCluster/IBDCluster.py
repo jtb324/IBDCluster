@@ -7,6 +7,7 @@ the typer app.
 import os
 import pathlib
 import shutil
+import sys
 from datetime import datetime
 from enum import Enum
 from typing import Dict, Optional
@@ -73,7 +74,7 @@ def main(
         IbdProgram.HAPIBD.value,
         "--ibd",
         "-i",
-        help="IBD detection software that the output came from. The program expects these values to be hapibd or ilash. The program also expects these values to be lowercase",
+        help="IBD detection software that the output came from. The program expects these values to be either hapibd or ilash. The program also expects these values to be lowercase",
         case_sensitive=True,
     ),
     output: str = typer.Option(
@@ -147,7 +148,7 @@ def main(
     debug_iterations: int = typer.Option(
         3,
         "--debug-iterations",
-        help="This argument will specify how many iterations the program should go through durign the clustering step before it moves on. This argument should only be used if the loglevel is set to debug. If you wish to run in debug mode for a whole data set then set this argument to a high number. This practice is not recommended because the log file will get extremely large (Potentially TB's).",
+        help="This argument will specify how many iterations the program should go through durign the clustering step before it moves on. This argument should only be used if the loglevel is set to debug. If you wish to run in debug mode for a whole data set then set this argument to a high number. This practice is not recommended because the log file will get extremely large (Potentially TB's), so use with caution.",
     ),
     version: bool = typer.Option(  # pylint: disable=unused-argument
         False,
@@ -161,6 +162,12 @@ def main(
     """C.L.I. tool to identify networks of individuals who share IBD segments overlapping a locus of interest and identify enrichment of phenotypes within biobanks"""
     # getting the programs start time
     start_time = datetime.now()
+
+    # we are going to have the program append the $PLUGIN path to the interpreters search path
+    sys.path.append(os.getenv("IBDCLUSTER_MAIN_PLUGINS"))
+
+    if os.getenv("IBDCLUSTER_CUSTOM_PLUGINS"):
+        sys.path.append(os.getenv("IBDCLUSTER_CUSTOM_PLUGINS"))
 
     # Now we can recreate the directory that the IBDCluster.log will be in
     pathlib.Path(output).mkdir(parents=True, exist_ok=True)

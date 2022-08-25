@@ -16,7 +16,7 @@ logger = log.get_logger(__name__)
 
 # class protocol that makes sure that the indices object has these methods
 class FileInfo(Protocol):
-    """Protocol that enforces these two methods for the
+    """Protocol that enforces the set_program_indices method for the
     FileInfo object"""
 
     id1_indx: int
@@ -50,7 +50,7 @@ class Network:
         ibd_df: pd.DataFrame,
         ind_seed: list[str],
         indices: FileInfo,
-        exclusion: set[str] = None,
+        exclusion: set[str] | None = None,
     ) -> pd.DataFrame:
         """Method to filter the ibd_df for the first individual. This gets the first level new_connections"""
         filtered_df: pd.DataFrame = ibd_df[
@@ -436,4 +436,4 @@ class Cluster:
 
             self.network_id += 1
         else:
-            return "duplicate found"
+            return "Individual already in network"

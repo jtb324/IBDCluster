@@ -1,10 +1,11 @@
-from typing import Protocol
+import os
+import pathlib
 from dataclasses import dataclass, field
+from typing import Protocol
+
 import log
 import pandas as pd
-import os
-from plugins import factory_register
-import pathlib
+from factory import factory_register
 
 logger = log.get_logger(__name__)
 
@@ -40,7 +41,7 @@ class DataHolder(Protocol):
 
 @dataclass
 class NetworkWriter:
-    """Class that is responsible for creating the _networks.txt file from the information provided"""
+    """Class that is responsible for creating the *_networks.txt file from the information provided"""
 
     name: str = "NetworkWriter plugin"
 
@@ -94,7 +95,7 @@ class NetworkWriter:
             return str(min_pvalue), min_phecode
 
     def analyze(self, **kwargs) -> None:
-        """main function of the plugin. It needs to determine the pvalue"""
+        """main function of the plugin."""
 
         data: DataHolder = kwargs["data"]
         network: Network = kwargs["network"]
