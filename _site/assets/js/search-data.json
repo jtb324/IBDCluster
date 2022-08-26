@@ -36,191 +36,185 @@
     "relUrl": "/documentation/api_design.html"
   },"6": {
     "doc": "Changelog",
-    "title": "Changelog - [1.1.0] - 2022-08-25:",
-    "content": ". | . ",
-    "url": "/changelog.html#changelog---110---2022-08-25",
-    "relUrl": "/changelog.html#changelog---110---2022-08-25"
-  },"7": {
-    "doc": "Changelog",
     "title": "Changelog",
-    "content": ". | ChangeLog 8-25-22 ",
+    "content": ". | ChangeLog 8-25-22 | . ",
     "url": "/changelog.html",
     "relUrl": "/changelog.html"
-  },"8": {
+  },"7": {
     "doc": "Customization",
     "title": "Customizing the IBDCluster network analysis:",
     "content": ". This program was built so that individuals can bring in custom analysis scripts using plugins. This allows flexibility for what enrichment test the user wishes to use as well as what information they would like to keep to output files. Three defaults plugins are provided and are used: pvalues.py, network_writer.py, allpair_writer.py. These plugins will be discussed in more detail later. The following sections will discuss the api design, the stock plugins, and how the user can design their own plugin. ",
     "url": "/documentation/customization.html#customizing-the-ibdcluster-network-analysis",
     "relUrl": "/documentation/customization.html#customizing-the-ibdcluster-network-analysis"
-  },"9": {
+  },"8": {
     "doc": "Customization",
     "title": "Customization",
     "content": " ",
     "url": "/documentation/customization.html",
     "relUrl": "/documentation/customization.html"
-  },"10": {
+  },"9": {
     "doc": "Custom Pluging Design",
     "title": "Designing your own plugin:",
     "content": ". When you install the program you need to add two environmental variables to your .bashrc file (or .zshrc or whatever shell you use). These two variables are the IBDCLUSTER_MAIN_PLUGINS and the IBDCLUSTER_CUSTOM_PLUGINS. The IBDCLUSTER_MAIN_PLUGINS has filepath to the directory with the stock plugins and then the IBDCLUSTER_CUSTOM_PLUGINS has the filepath to the directory with the users custom plugins. These two directories can not have the same name or the program will not work. ",
     "url": "/documentation/design_your_own_plugin.html#designing-your-own-plugin",
     "relUrl": "/documentation/design_your_own_plugin.html#designing-your-own-plugin"
-  },"11": {
+  },"10": {
     "doc": "Custom Pluging Design",
     "title": "Custom Pluging Design",
     "content": " ",
     "url": "/documentation/design_your_own_plugin.html",
     "relUrl": "/documentation/design_your_own_plugin.html"
-  },"12": {
+  },"11": {
     "doc": "Docker Installation",
     "title": "Docker Installation",
     "content": "Coming soon . ",
     "url": "/documentation/docker.html",
     "relUrl": "/documentation/docker.html"
-  },"13": {
+  },"12": {
     "doc": "Github Installation",
     "title": "Using Github to install IBDCluster:",
     "content": ". This installation method assumes that you are familiar with Git and Github, the commandline, and python’s Anaconda package manager and that these programs are install/can be install on whatever computing environment you are using. You will have to use all of these tools so you will need to be familiar enough with each one to run the example commands. If you wish to read the documentation for each of these then they will be listed below: . | Git: Git Website . | Github: Github Website . | Commandline Interface: This is probably overkill but here is a very indepth CLI tutorial . | Anaconda Anaconda Website . | . Optional Installation Dependency: You can also use poetry to install the program. Poetry is a python package manager (another alternative to Pip and Conda and all the other package manages) that has good dependency resolution to create a reproducible environment. You can read more about the project here Poetry documentation and the steps to install it are described here Poetry Installation. Poetry is the current recommended way to install the program but it relies on you having the necessary dependencies to install the Poetry program into whatever system you are using. People trying to run this on a personal machine (probably unlikely) should have no difficultly installing poetry but those running IBDCluster on a server (Which considering its made for BioBank data will be most people) may run into permission errors. If you are running into permission errors than the documentation will indicate where your installation instructions are different. ",
     "url": "/documentation/github.html#using-github-to-install-ibdcluster",
     "relUrl": "/documentation/github.html#using-github-to-install-ibdcluster"
-  },"14": {
+  },"13": {
     "doc": "Github Installation",
     "title": "Steps to installing IBDCluster:",
     "content": "The installation process can be broken into 4 steps. These are listed below and will be explained in further detail: . | clone the Github repository to your local environment. | create and activate a conda virtual environment. | install all the dependencies using Conda or Poetry. | Add the program to you PATH so that you can call the program | . ",
     "url": "/documentation/github.html#steps-to-installing-ibdcluster",
     "relUrl": "/documentation/github.html#steps-to-installing-ibdcluster"
-  },"15": {
+  },"14": {
     "doc": "Github Installation",
     "title": "Step 1: Clone the Github repository:",
     "content": "You can clone the Github repository into your local environment using the command shown below: . git clone https://github.com/jtb324/IBDCluster.git . You should now have a directory called IBDCluster. You can check if this exists using the command: . ls IBDCluster/ . If you see a directory file tree then the program cloned correctly. If you receive an error saying that the directory does not exist, then you will have to debug the error to move onto step 2. ",
     "url": "/documentation/github.html#step-1-clone-the-github-repository",
     "relUrl": "/documentation/github.html#step-1-clone-the-github-repository"
-  },"16": {
+  },"15": {
     "doc": "Github Installation",
     "title": "Step 2: create and activate a conda virtual environment:",
     "content": "To create a conda virtual environment you just need to run the command below, replacing the name with whatever name you want to give the environment. conda create -n &lt;environment-name&gt; python=3.10 . IBDCluster requires the python version to be &gt;= 3.10 because it uses features that were introduced in that release. If you try to run it in python=3.9 it will give many errors. If you are not using poetry to install dependencies then you can skip step 2 and just move onto step 3. ",
     "url": "/documentation/github.html#step-2-create-and-activate-a-conda-virtual-environment",
     "relUrl": "/documentation/github.html#step-2-create-and-activate-a-conda-virtual-environment"
-  },"17": {
+  },"16": {
     "doc": "Github Installation",
     "title": "Step 3: install all the dependencies using Conda or Poetry:",
     "content": ". ",
     "url": "/documentation/github.html#step-3-install-all-the-dependencies-using-conda-or-poetry",
     "relUrl": "/documentation/github.html#step-3-install-all-the-dependencies-using-conda-or-poetry"
-  },"18": {
+  },"17": {
     "doc": "Github Installation",
     "title": "Step 4: Add the program to you PATH so that you can call the program:",
     "content": ". ",
     "url": "/documentation/github.html#step-4-add-the-program-to-you-path-so-that-you-can-call-the-program",
     "relUrl": "/documentation/github.html#step-4-add-the-program-to-you-path-so-that-you-can-call-the-program"
-  },"19": {
+  },"18": {
     "doc": "Github Installation",
     "title": "Github Installation",
     "content": " ",
     "url": "/documentation/github.html",
     "relUrl": "/documentation/github.html"
-  },"20": {
+  },"19": {
     "doc": "Home",
     "title": "Welcome to the IBDCluster Documentation!",
     "content": ". IBDCluster is a CLI python program designed to utilize IBD sharing within BioBanks to cluster individuals and then perform phenotypic enrichment tests for each cluster. This project is maintained by the Below Laboratory in the Vanderbilt Genetics Department. ",
     "url": "/#welcome-to-the-ibdcluster-documentation",
     "relUrl": "/#welcome-to-the-ibdcluster-documentation"
-  },"21": {
+  },"20": {
     "doc": "Home",
     "title": "Goal behind this website documentation:",
     "content": ". This website serves as one of the documentation sources for the IBDCluster project. This documentation is not meant to be technically documentation, meaning it will not necessary explain all of the models used, nor the relationship between class, etc. Instead it is meant to be geared to people who wish to install and run the program. If you wish to contribute to the software or understand the more technical design of the project then wed would encourage you to view the github README which has more technical details. ",
     "url": "/#goal-behind-this-website-documentation",
     "relUrl": "/#goal-behind-this-website-documentation"
-  },"22": {
+  },"21": {
     "doc": "Home",
     "title": "Contact:",
     "content": ". If you have any questions about IBDCluster, you can either post an issue on the Github issues page or you can contact us at the email address, insert email here. ",
     "url": "/#contact",
     "relUrl": "/#contact"
-  },"23": {
+  },"22": {
     "doc": "Home",
     "title": "Home",
     "content": " ",
     "url": "/",
     "relUrl": "/"
-  },"24": {
+  },"23": {
     "doc": "Documentation",
     "title": "Documentation",
     "content": "The links below have information about how to install the program and how to run the program . ",
     "url": "/documentation/",
     "relUrl": "/documentation/"
-  },"25": {
+  },"24": {
     "doc": "Example Scripts",
     "title": "Example Scripts",
     "content": "The links below give examples of how to use the program. ",
     "url": "/examples/",
     "relUrl": "/examples/"
-  },"26": {
+  },"25": {
     "doc": "Inputs",
     "title": "Inputs:",
     "content": ". IBDCluster has a number of inputs, some of which are required and some that are optional. These are listed below. The required input files will be colored yellow while the optional ones will be grey: . | ibd file: This input file is the result of running hap-IBD to determine pairwise IBD sharing between individuals in a BioBank. This file has to be formed before because IBDCluster does not determine pairwise ibd sharing. The table below shows the format of the file (The file doesn’t have a header line but I have added one to the table for ease of explaining the file). | . | Pair 1 ID | Pair 1 Phase | Pair 2 ID | Pair 2 Phase | Chromosome | Segment Start Pos | Segment End Pos | Segment Length (cM) | . | ID1 | Phase 1 | ID2 | Phase 2 | Chromosome # | Segment start base position | Segment end base position | Segment length | . There should be a total of eight columns that are all tab separated. The file should have information about each individual in the pair and the haplotype phase for each variant, the chromosome that the segment is on, the location of the segment, and the length of the segment. All of this information will be used by the program so it is mandatory. This file will be supplied through the –ibd-file or -f flag. It is a required file. | .env file: This input file is just a environment file that has two variables “HAPIBD_PATH” and “JSON_PATH”. The HAPIBD_PATH variable has the directory where the ibd files are. The suffix of the file has to be .env. This file will be supplied through the –env or the -e argument. This file is required by the program but the the program comes with a default file within the install directory so you do not have to supply an argument unless you are using a custom .env file. | . | config.json: This input file is a json file that has information about the plugins that are going to be used in the analysis. The default config.json for the stock plugins are shown below. | . { \"plugins\":[\"plugins.pvalues\", \"plugins.network_writer\", \"plugins.allpair_writer\"], \"modules\": [ { \"name\":\"pvalues\" }, { \"name\": \"network_writer\" }, { \"name\": \"allpair_writer\" } ] } . The json files should have the keys “plugins” and “modules”. The value for the “plugins” key is a list of strings that have the module path of the plugin. To break this down each plugin is located in the plugins module in the IBDCluster plugin, therefore the first part of the module path in the default config.json is “plugins”. The name of the plugin .py file is the second part of the module path. For example there is a default plugin pvalues.py within the plugin directory, therefore the module path is “plugins.pvalues”. This structure of the plugins directory is explained in more detail within the section called “Stock Plugins”. The value for the “modules” key is a list of key, value pairs where the key is “name” and the value is the name of the plugin which can be found in the initialize function in the plugin .py file (This is also described in more detail in the “Stock Plugins” section). This file will be supplied through the optional –json-config or the -j flag. There is a default config file that IBDCluster reads from but you can provide your own config file if you wish to turn on or off a plugin or if you wish to use a custom plugin (This process will be described in the “Custom Plugin Design” section). | Gene Information File: This input file is a tab separated text file that has information about the gene region of interest such as the gene name, the chromosome the gene is on, the start base position of the gene, and the end base position of the gene. This information can usually be found at the GnomAD genome browser. An example of this file for the gene rbm20 is shown below (Once again I’ve added a header line for readability. The file should not have a header line or else IBDCluster will give an error that will not be straightforward to debug). | . | gene name | chromosome | gene start position | gene end position | . | RBM20 | 10 | 112404115 | 112599227 | . Note on what information can be proivded in the file: So far we only discussed how to provide information about a gene through the Gene Information File. There is no reason though that IDBCluster can only be used to cluster around a gene. If you were interested in a variant instead of a gene then you could just replace the information in the file as shown below for the variant chr10:110812304 (using build Hg38) . | gene name | chromosome | gene start position | gene end position | . | 10:110812304 | 10 | 110812284 | 110812284 | . The program does not necessarily use the gene name for anything but record keeper so you could use the variant name or another id, and then in this example we just made the start and end position the variant location. The program will see this as valid input. IBDCluster can also be used on just any section of interest in the gene name. You just need to provide a “name” for the gene name, and then you need to provide the start and end position of the segment of interest. This file will be supplied through the –gene-file or -g flag. It is required by IBDCluster. Warning about the genome position: Make sure that the base position in the file corresponds to the same build of the human genome as what you used in the IBD detection software. If the builds are different then you will get inaccurate results. | carrier file: This input file is a tab separated text file that indicates which individuals are affected by the phenotypes of interest. The first column is expected to be titled “grids”. Every other column after this should be either a 0 or 1 for each phenotype of interest. Currently this program only supports binary phenotypes. An example of this format is shown below. | . | grids | Phenotype A | Phenotype B | . | grid 1 | 1 | 0 | . | grid 2 | 0 | 1 | . | grid 3 | 0 | 0 | . This required input file will be supplied to the –carriers or -c flag. Some people may be familiar with a PheCode matrix, and thats all this file really is. You’re not restricted to only using PheCodes though. Any phenotype will work for this program as long as you can use binary phenotyping to determine cases and controls. ",
     "url": "/documentation/inputs.html#inputs",
     "relUrl": "/documentation/inputs.html#inputs"
-  },"27": {
+  },"26": {
     "doc": "Inputs",
     "title": "Inputs",
     "content": " ",
     "url": "/documentation/inputs.html",
     "relUrl": "/documentation/inputs.html"
-  },"28": {
+  },"27": {
     "doc": "Installation",
     "title": "Installing IBDCluster:",
     "content": "This program can be installed through several different options which are listed below. Click on the links to find out more information. ",
     "url": "/documentation/installation.html#installing-ibdcluster",
     "relUrl": "/documentation/installation.html#installing-ibdcluster"
-  },"29": {
+  },"28": {
     "doc": "Installation",
     "title": "Installation",
     "content": " ",
     "url": "/documentation/installation.html",
     "relUrl": "/documentation/installation.html"
-  },"30": {
+  },"29": {
     "doc": "Outputs",
     "title": "Output Files:",
     "content": ". ",
     "url": "/documentation/outputs.html#output-files",
     "relUrl": "/documentation/outputs.html#output-files"
-  },"31": {
+  },"30": {
     "doc": "Outputs",
     "title": "Outputs",
     "content": " ",
     "url": "/documentation/outputs.html",
     "relUrl": "/documentation/outputs.html"
-  },"32": {
+  },"31": {
     "doc": "Pip Installation",
     "title": "Using Pip to install IBDCluster:",
     "content": "Coming soon . This installation method is not yet implemented but is planned to be part of a future release . ",
     "url": "/documentation/pip.html#using-pip-to-install-ibdcluster",
     "relUrl": "/documentation/pip.html#using-pip-to-install-ibdcluster"
-  },"33": {
+  },"32": {
     "doc": "Pip Installation",
     "title": "Pip Installation",
     "content": " ",
     "url": "/documentation/pip.html",
     "relUrl": "/documentation/pip.html"
-  },"34": {
+  },"33": {
     "doc": "Stock Plugins",
     "title": "Stock plugins:",
     "content": ". IBDCluster comes with three stock plugins. Each of these plugins access the api described by the “api_design” section of the documentation. These plugins are responsible for the calculation of the different pvalues for each phenotype, writing out the information for each network to a file, and writing out the information for each of the pairs to the file. All of these plugins are found within the plugin directory within the ibd source code directory. This directory can be found within where you installed the program. Once inside the install directory if you just run the following two commands then you should see the plugins subdirectory: . cd IBDCluster/ . ls . This directory is designed as a python module so it has an __init__.py file so that the python interpreter can import the code. The other three files in these directory are the plugins. ",
     "url": "/documentation/stock_plugins.html#stock-plugins",
     "relUrl": "/documentation/stock_plugins.html#stock-plugins"
-  },"35": {
+  },"34": {
     "doc": "Stock Plugins",
     "title": "Overview of the Plugin design:",
     "content": ". Basic structure of the plugin class: . The stock plugins use an object oriented design meaning each plugin is a class that has a method that gets called by the IBDCluster program. An example of the basic required plugin file structure is shown below and we’ll discuss each part. from dataclasses import dataclass from factory import factory_register @dataclass class Plugin_Class: \"\"\"Example of the base requirements for a plugin class\"\"\" name: str = \"\" def analyze(self, **kwargs) -&gt; None: \"\"\"the analysis method is what gets called by the IBDCluster program\"\"\" def initialize() -&gt; None: factory_register(\"pvalues\", Pvalues) . Imports: The example plugin here imports dataclass and a method called factory_register. If you are unfamiliar with dataclasses you can read about it here, (Documentation link here), but they are basically just newer abstractions of the standard python class (with a bit of subjective pros/cons). You can use a normal class structure, you just need to create a __init__ function with the name attribute. The plugin also imports the factory_register function. We’re not going to describe this plugin in detail because it just abstracts away some of the core functionality of the IBDCluster program. This function comes from a program module called factory (This module is not a standard python library so please don’t try to find it). This function is required to have your module properly loaded into the program. Class Structure: The plugin class only has one required attribute and this the plugin’s name. This name is used in a logging statement by the program (Therefore the program will give you an error if this is not there). The plugin also has to have one method named “analyze” which only takes key word arguments. This method also doesn’t return anything. The three keyword arguments that the program passes to this method, will be “data”, “network”, “output”. These arguments are what the plugins access. Initialize function: Each plugin file also has a function called initialize. This function doesn’t take any inputs and returns nothing. The purpose of this function is to called the factory_register function. It passes the name of the plugin as the first argument and the plugin Class as the second argument. Warning: The name argument that is passed to the factory_register has to correspond to the name in the methods section of the config.json file. If it is not the same then the program will give an error when trying to load in the plugin. Note on Plugin order: The order of these plugins matters (To some degree) and that will be described below. ",
     "url": "/documentation/stock_plugins.html#overview-of-the-plugin-design",
     "relUrl": "/documentation/stock_plugins.html#overview-of-the-plugin-design"
-  },"36": {
+  },"35": {
     "doc": "Stock Plugins",
     "title": "Overview of each Plugin:",
     "content": ". pvalues.py: . This plugin is responsible for determining the enrichment p-values from the binomial test for each phenotype for each network. To determine the p-values, the program relies on the binomtest function from the scipy.stats library. The plugin also determines the minimum p-value found for each network as well as the phenotype that the p-value represents. The plugins creates a string with all of this information. A example string of what will be formed for two phenotypes is shown below: . f\"{minimum pvalue}/t{correspond phenotype}\\t{phenotype description}\\t{number of people affected by phenotype A}\\t{phenotype A p-value}\\t{number of people affected by phenotype B}\\t{phenotype B p-value}\" . This string will be saved in the network.pvalues attribute of the network models. network_writer.py: . Function that writes all of the information to the networks.txt output file. The description of this output file can be found in the “outputs” section of the documentation. allpair_writer.py: . Function that writes all of the information to the allpairs.txt output file. The description of this output file can be found in the “outputs” section of the documentation. ",
     "url": "/documentation/stock_plugins.html#overview-of-each-plugin",
     "relUrl": "/documentation/stock_plugins.html#overview-of-each-plugin"
-  },"37": {
+  },"36": {
     "doc": "Stock Plugins",
     "title": "Stock Plugins",
     "content": " ",

@@ -6,9 +6,7 @@ title:  "ChangeLog 8-25-22"
 # Changelog - [1.1.0] - 2022-08-25:
 ---
 
-##[1.1.0] - 2022-08-25: 
-
-- **Breaking:** Created a way for the user to create a custom plugins directory.
+## **Breaking:** Created a way for the user to create a custom plugins directory.
 
 In previous iterations of the IBDCluster program, plugins were kept within the plugins directory found within the IBDCluster install directory. Users could add new plugins to this directory and then appropriately adjust the config.json file. The issue with this format is that users have to kep track of where this install directory is whenever they want to add new plugins. Now users can specify a custom directory anywhere they want and place the new plugins into this directory. The convenience of this approach is that the user can also use the stock plugins by just including those in the config.json. The user will have to change a few things to make the program work. These things are listed below. Since this is a breaking change the version is going to be updated to 1.2.0
 
