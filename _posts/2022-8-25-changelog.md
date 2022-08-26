@@ -1,6 +1,6 @@
 ---
 layout: post
-title:  "ChangeLog 8-25-22"
+title:  "Changelog 8-25-22"
 ---
 
 # Changelog - [1.1.0] - 2022-08-25:
