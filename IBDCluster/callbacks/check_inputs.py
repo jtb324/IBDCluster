@@ -3,7 +3,7 @@ import typer
 import os
 import toml
 
-__version__ = "1.1.0"
+__version__ = "1.2.1"
 
 
 class IncorrectFileType(Exception):

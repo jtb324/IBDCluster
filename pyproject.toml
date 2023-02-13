@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "IBDCluster"
-version = "1.2.0"
+version = "1.2.1"
 description = "A tool to help analyze ibd sharing across a locus of interest and test for phenotypic enrichment."
 authors = ["jtb324 <james.baker@vanderbilt.edu>"]
 
