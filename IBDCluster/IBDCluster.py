@@ -129,6 +129,12 @@ def main(
         "--phecode-desc",
         help="File that has the descriptions for each phecode. Expects two columns: 'phecode' and 'phenotype', that are tab separated.",
     ),
+    sliding_window: bool = typer.Option(
+        False,
+        "--sliding-window",
+        help="Optional flag that allows the user to run a 1MB sliding window along the region of interest if they want to. this method is recommended for large loci of interest",
+        is_flag=True,
+    ),
     loglevel: LogLevel = typer.Option(
         LogLevel.WARNING.value,
         "--loglevel",
@@ -148,7 +154,7 @@ def main(
     debug_iterations: int = typer.Option(
         3,
         "--debug-iterations",
-        help="This argument will specify how many iterations the program should go through durign the clustering step before it moves on. This argument should only be used if the loglevel is set to debug. If you wish to run in debug mode for a whole data set then set this argument to a high number. This practice is not recommended because the log file will get extremely large (Potentially TB's), so use with caution.",
+        help="This argument will specify how many iterations the program should go through during the clustering step before it moves on. This argument should only be used if the loglevel is set to debug. If you wish to run in debug mode for a whole data set then set this argument to a high number. This practice is not recommended because the log file will get extremely large (Potentially TB's), so use with caution.",
     ),
     version: bool = typer.Option(  # pylint: disable=unused-argument
         False,
@@ -201,6 +207,7 @@ def main(
         carrier_matrix=carriers,
         centimorgan_threshold=cm_threshold,
         connections_threshold=connection_threshold,
+        sliding_window_enabled=sliding_window,
         loglevel=loglevel,
         log_filename=log_filename,
     )
@@ -219,7 +226,9 @@ def main(
     carriers_dict = cluster.generate_carrier_dict(carriers_df)
 
     # loading the genes information into a generator object
-    genes_generator = cluster.load_gene_info(gene_info_file)
+    genes_generator = cluster.load_gene_info(
+        gene_info_file, sliding_window
+    )  # pylint: disable="assignment-from-no-return"
 
     # This section will handle preparing the phenocode
     # descriptions and the phenotype prevalances
@@ -235,8 +244,8 @@ def main(
         carriers_dict, carriers_df.shape[0]
     )
 
-    # We can then determine the different clusters for each gene
-    for gene in genes_generator:
+    # We can then determine the different clusters for each gene. The genes_generator will always be an iterable so we can ignore that error
+    for gene in genes_generator:  # pylint: disable="not-an-iterable"
 
         network_generator = cluster.find_clusters(
             ibd_program.value, gene, cm_threshold, ibd_file, connection_threshold
