@@ -226,6 +226,7 @@ def main(
     carriers_dict = cluster.generate_carrier_dict(carriers_df)
 
     # loading the genes information into a generator object
+    # pylint: disable-next="assignment-from-no-return"
     genes_generator = cluster.load_gene_info(
         gene_info_file, sliding_window
     )  # pylint: disable="assignment-from-no-return"

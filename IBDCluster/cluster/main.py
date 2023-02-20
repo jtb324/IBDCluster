@@ -51,10 +51,14 @@ def load_gene_info(filepath: str, sliding_window: bool) -> Iterator[Genes]:
                 input_list = gene_input.readline().strip().split()
                 loci_start = int(input_list[2])
                 loci_end = int(input_list[3])
+                # we are going to create an iterator that has the entire region
                 window_iterator = chain(range(loci_start, loci_end, 1000), [loci_end])
+                # we are going to pull the first value out of the iterator
                 first_pos = next(window_iterator)
                 for pos in window_iterator:
-                    gene_tuple = Genes(input_list[0], input_list[1], first_pos, pos)
+                    # we need to build a name for each window region
+                    name = f"{input_list[0]}_{first_pos}-{pos}"
+                    gene_tuple = Genes(name, input_list[1], first_pos, pos)
                     first_pos = pos
                     yield gene_tuple
 
