@@ -1,6 +1,6 @@
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
-# IBDCluster v1.0.1:
+# IBDCluster v1.2.1:
 
 ## Documentation:
 ___
