@@ -4,7 +4,8 @@ initializing the network and cluster models
 """
 import os
 from collections import namedtuple
-from typing import Generator
+from typing import Iterator, Generator
+from itertools import chain
 
 import log
 import models
@@ -16,16 +17,24 @@ Genes = namedtuple("Genes", ["name", "chr", "start", "end"])
 logger = log.get_logger(__name__)
 
 
-def load_gene_info(filepath: str) -> Generator[Genes, None, None]:
-    """Function that will load in the information for each gene. This function will return a generator
+def load_gene_info(filepath: str, sliding_window: bool) -> Iterator[Genes]:
+    """Function that will load in the information for each gene. The function can also
+    can create a list of sliding windows for the target region. This will be done for
+    1 MB at a time. This function will return a generator
+
     Parameters
     ----------
     filepath : str
         filepath to a file that has the information for the genes of interest
 
+    sliding_window : bool
+        boolean value indicating if the user wishes to use a sliding window
+        approach for clustering. If they do then it will break everything down
+        into 1 MB regions
+
     Returns
     -------
-    Generator
+    iterator
         returns a generator of namedtuples that has the gene information
     """
 
@@ -35,16 +44,35 @@ def load_gene_info(filepath: str) -> Generator[Genes, None, None]:
             filepath,
         )
 
-        for line in gene_input:
-            split_line: list[str] = line.split()
-            # unpacking the row into the Genes namedtuple
-            gene_tuple: Genes = Genes(*split_line)
+        match sliding_window:
+            # if the sliding window option is true then we expect there to only e one line in the file.
+            # We can read in the whole line and strip the line
+            case True:
+                input_list = gene_input.readline().strip().split()
+                loci_start = int(input_list[2])
+                loci_end = int(input_list[3])
+                # we are going to create an iterator that has the entire region
+                window_iterator = chain(range(loci_start, loci_end, 1000), [loci_end])
+                # we are going to pull the first value out of the iterator
+                first_pos = next(window_iterator)
+                for pos in window_iterator:
+                    # we need to build a name for each window region
+                    name = f"{input_list[0]}_{first_pos}-{pos}"
+                    gene_tuple = Genes(name, input_list[1], first_pos, pos)
+                    first_pos = pos
+                    yield gene_tuple
 
-            logger.info(
-                f"Finding networks for Gene:\nGene name: {gene_tuple.name}\nChromosome: {gene_tuple.chr}\nGene Start: {gene_tuple.start}\nGene End: {gene_tuple.end}"
-            )
+            case False:
+                for line in gene_input:
+                    split_line = line.split()
+                    # unpacking the row into the Genes namedtuple
+                    gene_tuple = Genes(*split_line)
 
-            yield gene_tuple
+                    logger.info(
+                        f"Finding networks for Gene:\nGene name: {gene_tuple.name}\nChromosome: {gene_tuple.chr}\nGene Start: {gene_tuple.start}\nGene End: {gene_tuple.end}"
+                    )
+
+                    yield gene_tuple
 
 
 def _identify_carriers_indx(
