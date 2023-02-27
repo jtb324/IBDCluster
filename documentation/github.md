@@ -59,7 +59,31 @@ If you are not using poetry to install dependencies then you can skip step 2 and
 
 ## Step 3: install all the dependencies using Conda or Poetry:
 ---
+*If not using Poetry:*
+If you are not using Poetry than you can directly clone the conda environment.yml file using the following command:
+
+```bash
+conda env create -f environment.yml
+```
+
+This will create a conda environment called "IBDCluster". This environment will have the necessary dependencies to run IBDCluster. The user can activate the environment by calling:
+
+```bash
+conda activate IBDCluster
+```
+
+*If using Poetry*:
+If using poetry then you can just run the following command to install all of the dependencies.
+
+```bash
+poetry install 
+```
 
 
 ## Step 4: Add the program to you PATH so that you can call the program:
 ---
+{: .optional }
+This step is optional and is so that the user doesn't have to type the full file path to IBDCluster.py each time.
+
+
+Once you install all of the 
