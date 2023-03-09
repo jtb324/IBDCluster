@@ -100,12 +100,14 @@ def main(
         help="path to the json config file",
         callback=callbacks.check_json_path,
     ),
-    gene_info_file: str = typer.Option(
+    gene_position: str = typer.Option(
         ...,
-        "--gene-file",
-        "-g",
-        help="Filepath to a text file that has information about the genes it should have four columns: Gene name, chromosome, gene start, and gene end (In this order). The file is expected to not have a header. The gene position should also correspond to the build used for the ibd data (GrCH37, etc...)",
-        callback=callbacks.check_gene_file,
+        "--gene-position",
+        help="This will be the chromosome position in basepairs for the region. Example would be 10:12341234-12341234. The chromsome number comes first and then the start and end position of the region of interest. Te chromosome position does not need to be prefixed with chr.",
+        callback=callbacks.check_gene_pos_str,
+    ),
+    gene_name: str = typer.Option(
+        "test", "--gene-name", "-n", help="name of the gene or region of interest"
     ),
     carriers: str = typer.Option(
         ...,
@@ -203,7 +205,8 @@ def main(
         output_path=output,
         environment_file=env_path,
         json_file=json_path,
-        gene_info_file=gene_info_file,
+        region_of_interest=gene_position,
+        gene_name=gene_name,
         carrier_matrix=carriers,
         centimorgan_threshold=cm_threshold,
         connections_threshold=connection_threshold,
@@ -227,9 +230,9 @@ def main(
 
     # loading the genes information into a generator object
     # pylint: disable-next="assignment-from-no-return"
-    genes_generator = cluster.load_gene_info(
-        gene_info_file, sliding_window
-    )  # pylint: disable="assignment-from-no-return"
+    regions_of_interest = cluster.load_gene_info(
+        gene_position, gene_name, sliding_window
+    )
 
     # This section will handle preparing the phenocode
     # descriptions and the phenotype prevalances
@@ -246,7 +249,7 @@ def main(
     )
 
     # We can then determine the different clusters for each gene. The genes_generator will always be an iterable so we can ignore that error
-    for gene in genes_generator:  # pylint: disable="not-an-iterable"
+    for gene in regions_of_interest:
 
         network_generator = cluster.find_clusters(
             ibd_program.value, gene, cm_threshold, ibd_file, connection_threshold
