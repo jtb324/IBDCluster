@@ -103,7 +103,7 @@ def main(
     gene_position: str = typer.Option(
         ...,
         "--gene-position",
-        help="This will be the chromosome position in basepairs for the region. Example would be 10:12341234-12341234. The chromsome number comes first and then the start and end position of the region of interest. Te chromosome position does not need to be prefixed with chr.",
+        help="This will be the chromosome position in basepairs for the region. Example would be 10:12341234-12341234. The chromsome number comes first and then the start and end position of the region of interest. The chromosome position does not need to be prefixed with chr.",
         callback=callbacks.check_gene_pos_str,
     ),
     gene_name: str = typer.Option(

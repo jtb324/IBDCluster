@@ -55,7 +55,7 @@ def load_gene_info(
             f"creating a sliding window every 1MB from {start_pos} to {end_pos}"
         )
         # We cain first creawte an
-        window_iterator = chain(range(start_pos, end_pos, 1000), [end_pos])
+        window_iterator = chain(range(start_pos, end_pos, 1_000_000), [end_pos])
         # we are going to pull the first value out of the iterator
         first_pos = next(window_iterator)
 
