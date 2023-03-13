@@ -2,6 +2,7 @@ from pathlib import Path
 import typer
 import os
 import toml
+import re
 
 __version__ = "1.2.1"
 
@@ -25,40 +26,30 @@ class IncorrectGeneFileFormat(Exception):
         super().__init__(message)
 
 
-def check_gene_file(gene_filepath: str) -> str:
-    """Function that will check to make sure the gene info file exist or else it will raise an error.
+def check_gene_pos_str(gene_pos_str: str) -> str:
+    """Callback function that will make sure that the user inputs a gene_pos_str of for X:Start-End. If not then it raises a value error
 
     Parameters
-
-    gene_filepath : str
-        filepath to a text file that has information about the gene/genes of interests
+    ----------
+    gene_pos_str : str
+        string that has the region of interest defined by chromo:start_position-end_position. An example is 10:1234-1234.
 
     Returns
-
+    -------
     str
-        returns the filepath
+        returns the gene_pos_str
+
+    Raises
+    ------
+    ValueError
+        raises a value error if the user inputs a incorrectly formatted string
     """
-    file_path = Path(gene_filepath)
-
-    if not file_path.exists():
-        raise FileNotFoundError(f"The file at {file_path} was not found")
-    if gene_filepath[-4:] != ".txt":
-        raise IncorrectFileType(
-            gene_filepath[-4:],
-            "The filetype provided for the gene info file is incorrect. Please provided a tab delimited text file",
+    if len(re.split(":|-", gene_pos_str)) == 0:
+        raise ValueError(
+            f"Expected the gene position string to be formatted like chromosome:start_position-end_position. Instead it was formatted as {gene_pos_str}"
         )
-    # next section will check and make sure that the gene information is in the right format
-    with open(gene_filepath, "r", encoding="utf-8") as gene_file:
-
-        line = gene_file.readline().split("\t")
-
-        if line[0].isnumeric():
-            raise IncorrectGeneFileFormat(
-                line[0],
-                f"Expected the first value of the Gene Info file to be a gene name. Instead it was able to be converted to a number. Did you switch the chromosome number with the gene name? Value found in file {line[0]}",
-            )
-
-    return gene_filepath
+    else:
+        return gene_pos_str
 
 
 def check_json_path(json_path: str) -> str:
