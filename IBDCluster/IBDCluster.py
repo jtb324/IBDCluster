@@ -134,6 +134,16 @@ def main(
         help="Flag indicating that the user wishes to use a random walk instead of the grid search algorithm.",
         is_flag=True,
     ),
+    max_network_size: int = typer.Option(
+        30,
+        "--max-network-size",
+        help="Maximum number of individuals allowed in network before reclustering is performed. This argument should only be used when the user selects a random walk.",
+    ),
+    min_connectiveness: float = typer.Option(
+        0.5,
+        "--min-connectiveness",
+        help="minimum threshold for connectiveness within the networks. This argument should only be used when the user selects a random walk.",
+    ),
     phecode_descriptions: Optional[str] = typer.Option(
         None,
         "-d",
