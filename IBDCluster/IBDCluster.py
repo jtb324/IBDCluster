@@ -125,6 +125,15 @@ def main(
         "--connections",
         help="Threshold to filter out individuals who have fewer connections than the threshold. This parameter can be used if you are noticing that there are big networks of individuals (like 1000s of people connected)",
     ),
+    steps: int = typer.Option(
+        3, "-s", "--step", help="Number of steps used in the random walk"
+    ),
+    random_walk: bool = typer.Option(
+        False,
+        "--random-walk",
+        help="Flag indicating that the user wishes to use a random walk instead of the grid search algorithm.",
+        is_flag=True,
+    ),
     phecode_descriptions: Optional[str] = typer.Option(
         None,
         "-d",
@@ -213,6 +222,8 @@ def main(
         sliding_window_enabled=sliding_window,
         loglevel=loglevel,
         log_filename=log_filename,
+        random_walk_step_size=steps,
+        random_walk_enabled=random_walk,
     )
 
     # adding the loglevel to the environment so that we can access it
