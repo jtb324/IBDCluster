@@ -31,12 +31,17 @@ class FileInfo:
         """Method that will set the index for the cM indx
 
         Parameters
-
+        ----------
         program_name : str
             This will be either ilash or hapibd
 
         filepath : str
             string to the directory with ibd files
+
+        Raises
+        ------
+        NotImplementedError
+            raises NotImplementedError if the user provides a ibd program that is not supported
         """
         match program_name:
             case "hapibd":
