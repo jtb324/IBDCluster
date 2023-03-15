@@ -1,19 +1,11 @@
-from pathlib import Path
-import typer
 import os
-import toml
 import re
+from pathlib import Path
 
-__version__ = "1.2.1"
+import toml
+import typer
 
-
-class IncorrectFileType(Exception):
-    """Error that will be raised if the gene info file is not a text file"""
-
-    def __init__(self, suffix: str, message: str) -> None:
-        self.suffix: str = suffix
-        self.message: str = message
-        super().__init__(message)
+__version__ = "1.2.2"
 
 
 class IncorrectGeneFileFormat(Exception):
@@ -44,7 +36,6 @@ def check_gene_pos_str(gene_pos_str: str) -> str:
     ValueError
         raises a value error if the user inputs a incorrectly formatted string
     """
-
     if len(re.split(":|-", gene_pos_str)) != 3:
         raise ValueError(
             f"Expected the gene position string to be formatted like chromosome:start_position-end_position. Instead it was formatted as {gene_pos_str}"
@@ -100,7 +91,13 @@ def check_env_path(env_path: str) -> str:
 
 
 def display_version(value: bool):
-    """callback function that displays the version number of the program and then terminates the program"""
+    """Callback function that displays the version number of the program and then terminates the program
+
+    Parameters
+    ----------
+    value : bool
+        boolean value indicating if the user wants to see the version of the program or not
+    """
     if value:
         # typer.echo(f"{__file__}")
 

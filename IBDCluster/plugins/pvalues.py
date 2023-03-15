@@ -2,9 +2,9 @@ from dataclasses import dataclass
 from typing import Protocol
 
 import log
+from factory import factory_register
 from models import Network
 from numpy import float64
-from factory import factory_register
 from scipy.stats import binomtest
 
 logger = log.get_logger(__name__)

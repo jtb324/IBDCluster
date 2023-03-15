@@ -6,8 +6,8 @@ appropriate information to the modules
 import json
 import os
 
-import log
 import factory
+import log
 from models import DataHolder, Network
 
 logger = log.get_logger(__name__)

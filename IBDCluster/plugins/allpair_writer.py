@@ -7,8 +7,8 @@ from dataclasses import dataclass, field
 from typing import Protocol
 
 import log
-from models import DataHolder
 from factory import factory_register
+from models import DataHolder
 
 logger = log.get_logger(__name__)
 
