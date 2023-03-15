@@ -25,6 +25,7 @@ This file will be supplied through the --ibd-file or -f flag. It is a required f
 ---
 
 * <span style="color: #F0FF00">**Gene name**:</span> This argument is the name of the locus of interest. If the locus is a gene then it can be that name (Ex: CFTR). The user can provide any value they want to here. The gene name is used to name output files but is not used in other parts of the program. 
+
 ---
 
 * <span style="color: #F0FF00">**Gene position**:</span> This argument is the locus of interest. It is represented by X:start-end, where X is the chromosome number and start and end refer to the start and end points of the locus in base pairs. The program will exit early if this value is improperly formatted.
