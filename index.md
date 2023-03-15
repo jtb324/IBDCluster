@@ -6,7 +6,7 @@ nav_order: 1
 # Welcome to the IBDCluster Documentation!
 ---
 
-IBDCluster is a CLI python program designed to utilize IBD sharing within BioBanks to cluster individuals and then perform phenotypic enrichment tests for each cluster. This project is maintained by the Below Laboratory in the Vanderbilt Genetics Department.
+IBDCluster (v1.2.2) is a CLI python program designed to utilize IBD sharing within BioBanks to cluster individuals and then perform phenotypic enrichment tests for each cluster. This project is maintained by the Below Laboratory in the Vanderbilt Genetics Department.
 
 ## Goal behind this website documentation:
 ---
