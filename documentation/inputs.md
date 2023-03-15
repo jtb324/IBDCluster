@@ -37,7 +37,7 @@ Make sure that the base position in the file corresponds to the same build of th
 
 ---
 
-* <span style="color: #F0FF00">**carrier file**:</span> This input file is a tab separated text file that indicates which individuals are affected by the phenotypes of interest. The first column is expected to be titled "grids". Every other column after this should be either a 0 or 1 for each phenotype of interest. Currently this program only supports binary phenotypes. An example of this format is shown below.
+* <span style="color: #F0FF00">**carrier file**:</span> This input file is a tab separated text file that indicates which individuals are affected by the phenotypes of interest. The first column is expected to be titled "grids". Every other column after this should be either a 0 or 1 for each sphenotype of interest. Currently this program only supports binary phenotypes. An example of this format is shown below.
 
 | grids | Phenotype A | Phenotype B |
 |:------|:------------|:------------|
