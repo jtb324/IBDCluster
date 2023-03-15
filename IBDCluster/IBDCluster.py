@@ -103,7 +103,7 @@ def main(
     gene_position: str = typer.Option(
         ...,
         "--gene-position",
-        help="This will be the chromosome position in basepairs for the region. Example would be 10:12341234-12341234. The chromsome number comes first and then the start and end position of the region of interest. Te chromosome position does not need to be prefixed with chr.",
+        help="This will be the chromosome position in basepairs for the region. Example would be 10:12341234-12341234. The chromsome number comes first and then the start and end position of the region of interest. The chromosome position does not need to be prefixed with chr.",
         callback=callbacks.check_gene_pos_str,
     ),
     gene_name: str = typer.Option(
@@ -124,6 +124,25 @@ def main(
         0,
         "--connections",
         help="Threshold to filter out individuals who have fewer connections than the threshold. This parameter can be used if you are noticing that there are big networks of individuals (like 1000s of people connected)",
+    ),
+    steps: int = typer.Option(
+        3, "-s", "--step", help="Number of steps used in the random walk"
+    ),
+    random_walk: bool = typer.Option(
+        False,
+        "--random-walk",
+        help="Flag indicating that the user wishes to use a random walk instead of the grid search algorithm.",
+        is_flag=True,
+    ),
+    max_network_size: int = typer.Option(
+        30,
+        "--max-network-size",
+        help="Maximum number of individuals allowed in network before reclustering is performed. This argument should only be used when the user selects a random walk.",
+    ),
+    min_connectiveness: float = typer.Option(
+        0.5,
+        "--min-connectiveness",
+        help="minimum threshold for connectiveness within the networks. This argument should only be used when the user selects a random walk.",
     ),
     phecode_descriptions: Optional[str] = typer.Option(
         None,
@@ -213,6 +232,8 @@ def main(
         sliding_window_enabled=sliding_window,
         loglevel=loglevel,
         log_filename=log_filename,
+        random_walk_step_size=steps,
+        random_walk_enabled=random_walk,
     )
 
     # adding the loglevel to the environment so that we can access it

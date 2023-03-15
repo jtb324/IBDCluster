@@ -4,7 +4,7 @@ import os
 import toml
 import re
 
-__version__ = "1.2.1"
+__version__ = "1.2.2"
 
 
 class IncorrectFileType(Exception):
@@ -44,7 +44,7 @@ def check_gene_pos_str(gene_pos_str: str) -> str:
     ValueError
         raises a value error if the user inputs a incorrectly formatted string
     """
-    if len(re.split(":|-", gene_pos_str)) == 3:
+    if len(re.split(":|-", gene_pos_str)) != 3:
         raise ValueError(
             f"Expected the gene position string to be formatted like chromosome:start_position-end_position. Instead it was formatted as {gene_pos_str}"
         )
