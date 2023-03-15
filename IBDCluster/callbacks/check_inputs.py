@@ -1,21 +1,10 @@
 import os
 import re
-from pathlib import Path
 
 import toml
 import typer
 
 __version__ = "1.2.2"
-
-
-class IncorrectGeneFileFormat(Exception):
-    """Error that will be raised if there are formatting errors in
-    the gene info file."""
-
-    def __init__(self, incorrect_value: str, message: str) -> None:
-        self.incorrect_value: str = incorrect_value
-        self.message: str = message
-        super().__init__(message)
 
 
 def check_gene_pos_str(gene_pos_str: str) -> str:
