@@ -1,14 +1,28 @@
 [tool.poetry]
 name = "IBDCluster"
 version = "1.2.2"
-description = "A tool to help analyze ibd sharing across a locus of interest and test for phenotypic enrichment."
+description = "A CLI tool to help identify ibd sharing within networks across a locus of interest at biobank scale and then test for phenotypic enrichment within these networks."
 authors = ["jtb324 <james.baker@vanderbilt.edu>"]
+maintainers = ["jtb324 <james.baker@vanderbilt.edu>"]
+readme = "README.md"
+homepage = "https://jtb324.github.io/IBDCluster/"
+repository = "https://github.com/jtb324/IBDCluster"
+keywords = ["python", "clustering", "IBD", "genetics", "relatedness"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Science/Research",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Scientific/Engineering :: Bio-Informatics"
+    ]
+[tool.poetry.scripts]
+drive = "IBDCluster.IBDCluster:app"
 
 [tool.poetry.dependencies]
-python = ">=3.11"
+python = ">=3.11,<4.0.0"
 pandas = "^1.4.0"
 numpy = "^1.22.2"
-typer = "^0.4.0"
+typer = {extras = ["all"], version = "^0.7.0"}
 python-dotenv = "^0.19.2"
 scipy = "^1.8.0"
 tqdm = "^4.62.3"

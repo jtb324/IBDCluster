@@ -186,7 +186,7 @@ def main(
         is_flag=True,
     ),
 ) -> None:
-    """C.L.I. tool to identify networks of individuals who share IBD segments overlapping a locus of interest and identify enrichment of phenotypes within biobanks"""
+    """C.L.I. tool to identify networks of individuals at a biobank scale who share IBD segments overlapping a locus of interest and identify enrichment of phenotypes within each network"""
     # getting the programs start time
     start_time = datetime.now()
 

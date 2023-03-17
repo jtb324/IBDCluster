@@ -1,7 +1,19 @@
+
 .env
+# TEST FILES
 *.ipynb
+
+# IDE FILES
 .vscode
+.idea
+
+# CACHES
 *__pycache__/
 .mypy_cache
+# LOG FILES
 *.log
+# SUBMODULES
 IBDCluster/log/README.md
+
+# BUILD DIRECTORIES
+/dist/
