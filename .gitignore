@@ -2,6 +2,7 @@
 .env
 # TEST FILES
 *.ipynb
+*.txt
 
 # IDE FILES
 .vscode

@@ -2,8 +2,19 @@
 name = "drive"
 version = "1.0.0"
 description = "cli tool to identify networks of individuals who share IBD segments overlapping loci of interest"
-authors = ["jtb <james.baker@vanderbilt.edu>"]
+authors = ["James Baker <james.baker@vanderbilt.edu>", "Hung-Hsin Chen <hung-hsin.chen.1@vumc.org>"]
+maintainers = ["James Baker <james.baker@vanderbilt.edu>", "Hung-Hsin Chen <hung-hsin.chen.1@vumc.org>"]
 readme = "README.md"
+repository = "https://github.com/belowlab/drive"
+keywords = ["python", "genetics", "identity by descent", "relatedness"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Operating System :: Unix",
+    "Programming Language :: Python :: 3.6"
+]
+
+[tool.poetry.scripts]
+my_package_cli = 'drive.drive:run'
 
 [tool.poetry.dependencies]
 python = ">=3.6.1,<4.0"
