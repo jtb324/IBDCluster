@@ -93,6 +93,11 @@ def split_target_string(chromo_pos_str: str) -> Genes:
 
     integer_split_str = [int(value) for value in split_str]
 
+    if integer_split_str[1] > integer_split_str[2]:
+        raise ValueError(
+            f"expected the start position of the target string to be <= the end position. Instead the start position was {integer_split_str[1]} and the end position was {integer_split_str[2]}"
+        )
+
     return Genes(*integer_split_str)
 
 
