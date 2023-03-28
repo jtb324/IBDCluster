@@ -1,21 +1,108 @@
 ###
 
+from collections import namedtuple
 from pathlib import Path
-import sys
+from dataclasses import dataclass
+import re
 import gzip
 import igraph as ig
 import pandas as pd
 import itertools
 import typer
+from callbacks import check_input_exists
 
 app = typer.Typer(add_completion=False)
 
 
+@dataclass
+class HapIBD:
+    id1_indx: int = 0
+    hap1_indx: int = 1
+    id2_indx: int = 2
+    hap2_indx: int = 3
+    chr_indx: int = 4
+    str_indx: int = 5
+    end_indx: int = 6
+    cM_indx: int = 7
+
+    def get_haplotype_id(IID: str, hap_id: str) -> str:
+        return "{0}.{1}".format(IID, hap_id)
+
+
+@dataclass
+class Germline:
+    id1_indx: int = 0
+    hap1_indx: int = 1
+    id2_indx: int = 2
+    hap2_indx: int = 3
+    chr_indx: int = 4
+    str_indx: int = 5
+    end_indx: int = 6
+    cM_indx: int = 10
+    unit: int = 11
+
+    def get_haplotype_id(IID: str, hap_id: str) -> str:
+        return hap_id
+
+
+@dataclass
+class iLASH:
+    id1_indx: int = 0
+    hap1_indx: int = 1
+    id2_indx: int = 2
+    hap2_indx: int = 3
+    chr_indx: int = 4
+    str_indx: int = 5
+    end_indx: int = 6
+    cM_indx: int = 10
+
+    def get_haplotype_id(IID: str, hap_id: str) -> str:
+        return hap_id
+
+
+Genes = namedtuple("Genes", ["chr", "start", "end"])
+
+
+def split_target_string(chromo_pos_str: str) -> Genes:
+    """Function that will split the target string provided by the user.
+
+    Parameters
+    ----------
+    chromo_pos_str : str
+        string that has the region of interest in bbase pairs. This string
+        will look like 10:1234-1234 where the first number is the chromosome
+        number, then the start position, and then the end position of the
+        region of interest.
+
+    Returns
+    -------
+    Genes
+        returns a namedtuple that has the chromosome number, the start position, and the end position
+
+    Raises
+    ------
+    ValueError
+        raises a value error if the string was formatted any other way than chromosome:start_position-end_position
+    """
+    split_str = re.split(":|-", chromo_pos_str)
+
+    if len(split_str) != 3:
+        raise ValueError(
+            f"Expected the gene position string to be formatted like chromosome:start_position-end_position. Instead it was formatted as {chromo_pos_str}"
+        )
+
+    integer_split_str = [int(value) for value in split_str]
+
+    return Genes(*integer_split_str)
+
+
 @app.command()
 def main(
-    input: Path = typer.Option(..., "-i" "--input", help="IBD input file"),
+    input: Path = typer.Option(
+        ..., "-i" "--input", help="IBD input file", callback=check_input_exists
+    ),
     format: str = typer.Option(
-        ..., "-f", "--format", help="IBD file format, e.g. hapIBD, iLASH, RaPID"
+        ..., "-f", "--format", help="IBD file format, e.g. hapIBD, iLASH"
     ),
     target: str = typer.Option(
         ...,
@@ -79,12 +166,13 @@ def main(
             return "{0}.{1}".format(IID, hapID)
 
     ##target gene region or variant position
-    genechr = target.split(":")[0]
-    if len(target.split(":")[1].split("-")) == 2:
-        genestr = int(target.split(":")[1].split("-")[0])
-        geneend = int(target.split(":")[1].split("-")[1])
-    else:
-        genestr, geneend = int(target.split(":")[1])
+    target_gene = split_target_string(target)
+    # genechr = target.split(":")[0]
+    # if len(target.split(":")[1].split("-")) == 2:
+    #     genestr = int(target.split(":")[1].split("-")[0])
+    #     geneend = int(target.split(":")[1].split("-")[1])
+    # else:
+    #     genestr, geneend = int(target.split(":")[1])
 
     ##other setting
     mincM = minCM
@@ -110,7 +198,12 @@ def main(
             hapid1 = str(getHAPID(line[id1_indx], line[hap1_indx]))
             hapid2 = str(getHAPID(line[id2_indx], line[hap2_indx]))
             cM = float(line[cM_indx])
-            if CHR == genechr and STR <= genestr and END >= geneend and cM >= mincM:
+            if (
+                CHR == target_gene.chr
+                and STR <= target_gene.start
+                and END >= target_gene.end
+                and cM >= mincM
+            ):
                 if hapid1 != hapid2:
                     if hapid1 not in hapid_to_int:
                         hapid_to_int[hapid1] = int(idnum)
