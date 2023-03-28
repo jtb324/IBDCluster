@@ -2,7 +2,7 @@
 
 from collections import namedtuple
 from pathlib import Path
-from dataclasses import dataclass
+from enum import Enum
 import re
 import gzip
 import igraph as ig
@@ -10,54 +10,9 @@ import pandas as pd
 import itertools
 import typer
 from callbacks import check_input_exists
+from generate_indices import create_indices
 
 app = typer.Typer(add_completion=False)
-
-
-@dataclass
-class HapIBD:
-    id1_indx: int = 0
-    hap1_indx: int = 1
-    id2_indx: int = 2
-    hap2_indx: int = 3
-    chr_indx: int = 4
-    str_indx: int = 5
-    end_indx: int = 6
-    cM_indx: int = 7
-
-    def get_haplotype_id(IID: str, hap_id: str) -> str:
-        return "{0}.{1}".format(IID, hap_id)
-
-
-@dataclass
-class Germline:
-    id1_indx: int = 0
-    hap1_indx: int = 1
-    id2_indx: int = 2
-    hap2_indx: int = 3
-    chr_indx: int = 4
-    str_indx: int = 5
-    end_indx: int = 6
-    cM_indx: int = 10
-    unit: int = 11
-
-    def get_haplotype_id(IID: str, hap_id: str) -> str:
-        return hap_id
-
-
-@dataclass
-class iLASH:
-    id1_indx: int = 0
-    hap1_indx: int = 1
-    id2_indx: int = 2
-    hap2_indx: int = 3
-    chr_indx: int = 4
-    str_indx: int = 5
-    end_indx: int = 6
-    cM_indx: int = 10
-
-    def get_haplotype_id(IID: str, hap_id: str) -> str:
-        return hap_id
 
 
 Genes = namedtuple("Genes", ["chr", "start", "end"])
@@ -104,7 +59,7 @@ def split_target_string(chromo_pos_str: str) -> Genes:
 @app.command()
 def main(
     input: Path = typer.Option(
-        ..., "-i" "--input", help="IBD input file", callback=check_input_exists
+        ..., "-i", "--input", help="IBD input file", callback=check_input_exists
     ),
     format: str = typer.Option(
         ..., "-f", "--format", help="IBD file format, e.g. hapIBD, iLASH"
@@ -130,45 +85,45 @@ def main(
     # parser.add_argument('-k', '--step', type=int, required=False, help='steps for random walk, default=3', default=3)
 
     # args = parser.parse_args()
-
+    indices = create_indices(format.lower())
     ## set input format
-    id1_indx = 0
-    hap1_indx = 1
-    id2_indx = 2
-    hap2_indx = 3
-    chr_indx = 4
-    str_indx = 5
-    end_indx = 6
+    # id1_indx = 0
+    # hap1_indx = 1
+    # id2_indx = 2
+    # hap2_indx = 3
+    # chr_indx = 4
+    # str_indx = 5
+    # end_indx = 6
 
-    if format.lower() == "germline":
-        cM_indx = 10
-        unit = 11
+    # if format.lower() == "germline":
+    #     cM_indx = 10
+    #     unit = 11
 
-        def getHAPID(IID, hapID):
-            return hapID
+    #     def getHAPID(IID, hapID):
+    #         return hapID
 
-    elif format.lower() == "ilash":
-        cM_indx = 9
+    # elif format.lower() == "ilash":
+    #     cM_indx = 9
 
-        def getHAPID(IID, hapID):
-            return hapID
+    #     def getHAPID(IID, hapID):
+    #         return hapID
 
-    elif format.lower() in ["hap-ibd", "hapibd"]:
-        cM_indx = 7
+    # elif format.lower() in ["hap-ibd", "hapibd"]:
+    #     cM_indx = 7
 
-        def getHAPID(IID, hapID):
-            return "{0}.{1}".format(IID, hapID)
+    #     def getHAPID(IID, hapID):
+    #         return "{0}.{1}".format(IID, hapID)
 
-    elif format.lower() == "rapid":
-        id1_indx = 1
-        hap1_indx = 3
-        id2_indx = 2
-        hap2_indx = 4
-        chr_indx = 0
-        cM_indx = 7
+    # elif format.lower() == "rapid":
+    #     id1_indx = 1
+    #     hap1_indx = 3
+    #     id2_indx = 2
+    #     hap2_indx = 4
+    #     chr_indx = 0
+    #     cM_indx = 7
 
-        def getHAPID(IID, hapID):
-            return "{0}.{1}".format(IID, hapID)
+    #     def getHAPID(IID, hapID):
+    #         return "{0}.{1}".format(IID, hapID)
 
     ##target gene region or variant position
     target_gene = split_target_string(target)
@@ -195,14 +150,18 @@ def main(
     with gzip.open(input, "rt") as ibdfile:
         for line in ibdfile:
             line = line.strip().split()
-            CHR = line[chr_indx]
-            STR = min(int(line[str_indx]), int(line[end_indx]))
-            END = max(int(line[str_indx]), int(line[end_indx]))
-            iid1 = line[id1_indx]
-            iid2 = line[id2_indx]
-            hapid1 = str(getHAPID(line[id1_indx], line[hap1_indx]))
-            hapid2 = str(getHAPID(line[id2_indx], line[hap2_indx]))
-            cM = float(line[cM_indx])
+            CHR = line[indices.chr_indx]
+            STR = min(int(line[indices.str_indx]), int(line[indices.end_indx]))
+            END = max(int(line[indices.str_indx]), int(line[indices.end_indx]))
+            iid1 = line[indices.id1_indx]
+            iid2 = line[indices.id2_indx]
+            hapid1 = str(
+                indices.getHAPID(line[indices.id1_indx], line[indices.hap1_indx])
+            )
+            hapid2 = str(
+                indices.getHAPID(line[indices.id2_indx], line[indices.hap2_indx])
+            )
+            cM = float(line[indices.cM_indx])
             if (
                 CHR == target_gene.chr
                 and STR <= target_gene.start
