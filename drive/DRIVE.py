@@ -69,7 +69,10 @@ def main(
         ..., "-i", "--input", help="IBD input file", callback=check_input_exists
     ),
     format: FormatTypes = typer.Option(
-        ..., "-f", "--format", help="IBD file format, e.g. hapIBD, iLASH"
+        FormatTypes.HAPIBD.value,
+        "-f",
+        "--format",
+        help="IBD file format. Allowed values are hapibd, ilash, germline, rapid",
     ),
     target: str = typer.Option(
         ...,
@@ -78,22 +81,30 @@ def main(
         help="Target region or position, chr:start-end or chr:pos",
     ),
     output: Path = typer.Option(..., "-o", "--output", help="output file prefix"),
-    minCM: int = typer.Option(
+    min_cm: int = typer.Option(
         3, "-m", "--min-cm", help="minimum centimorgan threshold."
     ),
     step: int = typer.Option(3, "-k", "--step", help="steps for random walk"),
-):
+    max_check: int = typer.Option(
+        5, "--max-recheck", help="Maximum number of times to check the clustering"
+    ),
+    max_network_size: int = typer.Option(
+        30, "--max-network-size", help="maximum network size allowed"
+    ),
+    minimum_connected_thres: float = typer.Option(
+        0.5,
+        "--min-connected-threshold",
+        help="minimum connectedness ratio required for the network",
+    ),
+) -> None:
     indices = create_indices(format.lower())
 
     ##target gene region or variant position
     target_gene = split_target_string(target)
 
     ##other setting
-    mincM = minCM
-    kstep = step
     TP = 0.5
     maxN = 30
-    maxcheck = 5
 
     ibdpd = pd.DataFrame(columns=["idnum1", "idnum2", "cm"])
     ibdvs = pd.DataFrame(columns=["idnum", "hapID", "IID"])
@@ -120,7 +131,7 @@ def main(
                 CHR == target_gene.chr
                 and STR <= target_gene.start
                 and END >= target_gene.end
-                and cM >= mincM
+                and cM >= min_cm
             ):
                 if hapid1 != hapid2:
                     if hapid1 not in hapid_to_int:
@@ -144,7 +155,7 @@ def main(
     ibdpd = ibdpd.astype({"idnum1": "int", "idnum2": "int"})
     # print(ibdpd)
     ibd_g = ig.Graph.DataFrame(ibdpd, directed=False, vertices=ibdvs, use_vids=True)
-    ibd_walktrap = ig.Graph.community_walktrap(ibd_g, weights="cm", steps=kstep)
+    ibd_walktrap = ig.Graph.community_walktrap(ibd_g, weights="cm", steps=step)
     ibd_walktrap_clusters = ibd_walktrap.as_clustering()
     print(ibd_walktrap_clusters.summary())
     allclst = [i for i, v in enumerate(ibd_walktrap_clusters.sizes()) if v > 2]
@@ -196,7 +207,7 @@ def main(
             clst_info[name]["false_negative_edge"]
         )
         if (
-            check_times < maxcheck
+            check_times < max_check
             and clst_info[name]["true_positive"] < TP
             and len(clst_info[name]["member"]) > maxN
         ):
@@ -219,7 +230,7 @@ def main(
             & (ibdpd["idnum2"].isin(clst_info[i]["memberID"]))
         ]
         redo_g = ig.Graph.DataFrame(redopd, directed=False)
-        redo_walktrap = ig.Graph.community_walktrap(redo_g, weights="cm", steps=kstep)
+        redo_walktrap = ig.Graph.community_walktrap(redo_g, weights="cm", steps=step)
         redo_walktrap_clusters = redo_walktrap.as_clustering()
         if len(redo_walktrap_clusters.sizes()) == 1:
             clst_conn = pd.DataFrame(columns=["idnum", "conn", "conn.N", "TP"])
@@ -266,7 +277,7 @@ def main(
             ]
             redo_g = ig.Graph.DataFrame(redopd, directed=False)
             redo_walktrap = ig.Graph.community_walktrap(
-                redo_g, weights="cm", steps=kstep
+                redo_g, weights="cm", steps=step
             )
             redo_walktrap_clusters = redo_walktrap.as_clustering()
         print(redo_walktrap_clusters.summary())
@@ -276,7 +287,7 @@ def main(
                 "{0}.{1}".format(i, clst), clst, redo_walktrap_clusters, redo_g
             )
 
-    while check_times < maxcheck and len(recheck[check_times]) > 0:
+    while check_times < max_check and len(recheck[check_times]) > 0:
         check_times += 1
         print("recheck: {}".format(check_times))
         recheck[check_times] = []
