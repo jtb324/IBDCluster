@@ -15,6 +15,13 @@ from generate_indices import create_indices
 app = typer.Typer(add_completion=False)
 
 
+class FormatTypes(str, Enum):
+    HAPIBD = "hapibd"
+    ILASH = "ilash"
+    GERMLINE = "germline"
+    RAPID = "rapid"
+
+
 Genes = namedtuple("Genes", ["chr", "start", "end"])
 
 
@@ -61,7 +68,7 @@ def main(
     input: Path = typer.Option(
         ..., "-i", "--input", help="IBD input file", callback=check_input_exists
     ),
-    format: str = typer.Option(
+    format: FormatTypes = typer.Option(
         ..., "-f", "--format", help="IBD file format, e.g. hapIBD, iLASH"
     ),
     target: str = typer.Option(
@@ -76,63 +83,10 @@ def main(
     ),
     step: int = typer.Option(3, "-k", "--step", help="steps for random walk"),
 ):
-    # parser = argparse.ArgumentParser()
-    # parser.add_argument('-i', '--input', type=str, required=True, help='IBD input file')
-    # parser.add_argument('-f', '--format', type=str, required=True, help='IBD file format, e.g. hapIBD, iLASH, RaPID')
-    # parser.add_argument('-t', '--target', type=str, required=True, help='Target region or position, chr:start-end or chr:pos')
-    # parser.add_argument('-o', '--output', type=str, required=True, help='output file perfix')
-    # parser.add_argument('-m', '--mincm', type=float, required=False, help='minimum cM, default=3', default=3)
-    # parser.add_argument('-k', '--step', type=int, required=False, help='steps for random walk, default=3', default=3)
-
-    # args = parser.parse_args()
     indices = create_indices(format.lower())
-    ## set input format
-    # id1_indx = 0
-    # hap1_indx = 1
-    # id2_indx = 2
-    # hap2_indx = 3
-    # chr_indx = 4
-    # str_indx = 5
-    # end_indx = 6
-
-    # if format.lower() == "germline":
-    #     cM_indx = 10
-    #     unit = 11
-
-    #     def getHAPID(IID, hapID):
-    #         return hapID
-
-    # elif format.lower() == "ilash":
-    #     cM_indx = 9
-
-    #     def getHAPID(IID, hapID):
-    #         return hapID
-
-    # elif format.lower() in ["hap-ibd", "hapibd"]:
-    #     cM_indx = 7
-
-    #     def getHAPID(IID, hapID):
-    #         return "{0}.{1}".format(IID, hapID)
-
-    # elif format.lower() == "rapid":
-    #     id1_indx = 1
-    #     hap1_indx = 3
-    #     id2_indx = 2
-    #     hap2_indx = 4
-    #     chr_indx = 0
-    #     cM_indx = 7
-
-    #     def getHAPID(IID, hapID):
-    #         return "{0}.{1}".format(IID, hapID)
 
     ##target gene region or variant position
     target_gene = split_target_string(target)
-    # genechr = target.split(":")[0]
-    # if len(target.split(":")[1].split("-")) == 2:
-    #     genestr = int(target.split(":")[1].split("-")[0])
-    #     geneend = int(target.split(":")[1].split("-")[1])
-    # else:
-    #     genestr, geneend = int(target.split(":")[1])
 
     ##other setting
     mincM = minCM

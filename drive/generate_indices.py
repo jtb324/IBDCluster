@@ -8,7 +8,7 @@ class FileIndices(Protocol):
 
 
 @dataclass
-class HapIBD:
+class HapIBD(FileIndices):
     id1_indx: int = 0
     hap1_indx: int = 1
     id2_indx: int = 2
@@ -23,7 +23,7 @@ class HapIBD:
 
 
 @dataclass
-class Germline:
+class Germline(FileIndices):
     id1_indx: int = 0
     hap1_indx: int = 1
     id2_indx: int = 2
@@ -39,7 +39,7 @@ class Germline:
 
 
 @dataclass
-class iLASH:
+class iLASH(FileIndices):
     id1_indx: int = 0
     hap1_indx: int = 1
     id2_indx: int = 2
@@ -54,7 +54,7 @@ class iLASH:
 
 
 @dataclass
-class Rapid:
+class Rapid(FileIndices):
     id1_indx: int = 1
     hap1_indx: int = 3
     id2_indx: int = 2
@@ -89,15 +89,11 @@ def create_indices(ibd_file_format: str) -> FileIndices:
         Raises a value error if the user passes an ibd_file_format that is not hapibd,
         hap-ibd, germline, ilash, rapid
     """
-    if ibd_file_format == "germline":
-        return Germline
-    elif ibd_file_format == "ilash":
-        return iLASH
-    elif ibd_file_format in ["hapibd", "hap-ibd"]:
-        return HapIBD
-    elif ibd_file_format == "rapid":
-        return Rapid
-    else:
-        raise ValueError(
-            f"Unsupported ibd file format of {ibd_file_format}. Support formats are hapibd, ilash, germline, and rapid"
-        )
+    format_selector = {
+        "germline": Germline(),
+        "ilash": iLASH(),
+        "hapibd": HapIBD(),
+        "rapid": Rapid(),
+    }
+
+    return format_selector.get(ibd_file_format)
