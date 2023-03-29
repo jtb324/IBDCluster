@@ -102,10 +102,6 @@ def main(
     ##target gene region or variant position
     target_gene = split_target_string(target)
 
-    ##other setting
-    TP = 0.5
-    maxN = 30
-
     ibdpd = pd.DataFrame(columns=["idnum1", "idnum2", "cm"])
     ibdvs = pd.DataFrame(columns=["idnum", "hapID", "IID"])
     hapid_to_int = {}
