@@ -1,0 +1,3 @@
+[submodule "drive/log"]
+	path = drive/log
+	url = https://github.com/jtb324/log.git
