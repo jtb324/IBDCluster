@@ -21,6 +21,10 @@ class HapIBD(FileIndices):
     def get_haplotype_id(IID: str, hap_id: str) -> str:
         return "{0}.{1}".format(IID, hap_id)
 
+    def __str__(self):
+        """Custom string message used for debugging"""
+        return f"HapIBD: id1_index={self.id1_indx}, id2_index={self.id2_indx}, haplotype_1_index={self.hap1_indx}, haplotype_2_index={self.hap2_indx}, chromosome_index={self.chr_indx}, start_position_index={self.str_indx}, end_position_index={self.end_indx}, centimorgan_index={self.cM_indx}"
+
 
 @dataclass
 class Germline(FileIndices):
@@ -37,6 +41,10 @@ class Germline(FileIndices):
     def get_haplotype_id(IID: str, hap_id: str) -> str:
         return hap_id
 
+    def __str__(self):
+        """Custom string message used for debugging"""
+        return f"Germline: id1_index={self.id1_indx}, id2_index={self.id2_indx}, haplotype_1_index={self.hap1_indx}, haplotype_2_index={self.hap2_indx}, chromosome_index={self.chr_indx}, start_position_index={self.str_indx}, end_position_index={self.end_indx}, centimorgan_index={self.cM_indx}, unit_index={self.unit}"
+
 
 @dataclass
 class iLASH(FileIndices):
@@ -52,6 +60,10 @@ class iLASH(FileIndices):
     def get_haplotype_id(IID: str, hap_id: str) -> str:
         return hap_id
 
+    def __str__(self):
+        """Custom string message used for debugging"""
+        return f"iLASH: id1_index={self.id1_indx}, id2_index={self.id2_indx}, haplotype_1_index={self.hap1_indx}, haplotype_2_index={self.hap2_indx}, chromosome_index={self.chr_indx}, start_position_index={self.str_indx}, end_position_index={self.end_indx}, centimorgan_index={self.cM_indx}"
+
 
 @dataclass
 class Rapid(FileIndices):
@@ -64,8 +76,12 @@ class Rapid(FileIndices):
     str_indx: int = 5
     end_indx: int = 6
 
-    def getHAPID(IID, hapID) -> str:
+    def get_haplotype_id(IID, hapID) -> str:
         return "{0}.{1}".format(IID, hapID)
+
+    def __str__(self):
+        """Custom string message used for debugging"""
+        return f"Rapid: id1_index={self.id1_indx}, id2_index={self.id2_indx}, haplotype_1_index={self.hap1_indx}, haplotype_2_index={self.hap2_indx}, chromosome_index={self.chr_indx}, start_position_index={self.str_indx}, end_position_index={self.end_indx}, centimorgan_index={self.cM_indx}"
 
 
 def create_indices(ibd_file_format: str) -> FileIndices:
