@@ -2,7 +2,7 @@
 name = "drive"
 version = "1.0.0"
 description = "cli tool to identify networks of individuals who share IBD segments overlapping loci of interest"
-authors = ["James Baker <james.baker@vanderbilt.edu>", "Hung-Hsin Chen <hung-hsin.chen.1@vumc.org>"]
+authors = ["James Baker <james.baker@vanderbilt.edu>", "Hung-Hsin Chen <hung-hsin.chen.1@vumc.org>", "Jennifer E. Below <jennifer.e.below@vumc.org>"]
 maintainers = ["James Baker <james.baker@vanderbilt.edu>", "Hung-Hsin Chen <hung-hsin.chen.1@vumc.org>"]
 readme = "README.md"
 repository = "https://github.com/belowlab/drive"
@@ -10,18 +10,23 @@ keywords = ["python", "genetics", "identity by descent", "relatedness"]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Operating System :: Unix",
-    "Programming Language :: Python :: 3.6"
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+]
+
+packages = [
+    {include = "drive"}
 ]
 
 [tool.poetry.scripts]
-my_package_cli = 'drive.drive:run'
+my_package_cli = 'drive.drive:app'
 
 [tool.poetry.dependencies]
 python = ">=3.8,<4.0"
-pandas = "1.1.5"
-python-igraph = "0.9.6"
-numpy = "1.19.5"
 typer = {extras = ["all"], version = "^0.7.0"}
+pandas = "^1.5.3"
+numpy = "^1.24.2"
+igraph = "^0.10.4"
 
 
 [tool.poetry.group.dev.dependencies]
@@ -32,6 +37,7 @@ pylint = "^2.17.1"
 mypy = "^1.1.1"
 data-science-types = "^0.2.23"
 pytest = "^7.2.2"
+pydocstyle = "^6.3.0"
 
 
 [tool.commitizen]
