@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "drive"
-version = "1.0.0"
+version = "1.1.0"
 description = "cli tool to identify networks of individuals who share IBD segments overlapping loci of interest"
 authors = ["James Baker <james.baker@vanderbilt.edu>", "Hung-Hsin Chen <hung-hsin.chen.1@vumc.org>", "Jennifer E. Below <jennifer.e.below@vumc.org>"]
 maintainers = ["James Baker <james.baker@vanderbilt.edu>", "Hung-Hsin Chen <hung-hsin.chen.1@vumc.org>"]
@@ -38,6 +38,7 @@ mypy = "^1.1.1"
 data-science-types = "^0.2.23"
 pytest = "^7.2.2"
 pydocstyle = "^6.3.0"
+ipykernel = "^6.22.0"
 
 
 [tool.commitizen]
@@ -47,3 +48,16 @@ tag_format = "$version"
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.pytest.ini_options]
+markers = [
+    "integtest: marks test as integration test (deselected with '-m \"not integration\"')", 
+    "unit: marks test as unit test (deslected with '-m \"not unit\"')",
+    "kcne1: marks test as testing backwards compatibility for kcne1 results (deselected with '-m \"not knce1\"')"
+]
+
+[tool.isort]
+profile = "black"
+
+[tool.pylint.format]
+max-line-length = "88"
