@@ -179,12 +179,20 @@ class Filter:
         Returns
         -------
         DataFrame
-            returns a dataframe where we make sure that hapibd1 does != hapibd 2
+            returns a dataframe where we make sure that hapibd1 does != hapibd2
+
+        Raises
+        ------
+        KeyError
+            raises a key error if hapid1 and hapid2 are not columns in the dataframe
         """
         try:
             return data[data["hapid1"] != data["hapid2"]]
         except KeyError as e:
             self.logger.critical(
+                f"Expected the keys hapid1 and hapid2 to be in the dataframe. Instead the only keys were: {', '.join(data.columns)}"
+            )
+            raise e(
                 f"Expected the keys hapid1 and hapid2 to be in the dataframe. Instead the only keys were: {', '.join(data.columns)}"
             )
 
