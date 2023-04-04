@@ -5,7 +5,7 @@ from pathlib import Path
 from rich.progress import Progress
 import log
 from pandas import DataFrame, read_csv, concat
-from typing import Iterator, Protocol
+from typing import Iterator, Protocol, List, Dict
 
 Genes = namedtuple("Genes", ["chr", "start", "end"])
 
@@ -34,8 +34,8 @@ class Filter:
     chunk_count: int
     ibd_vs: DataFrame = field(default_factory=DataFrame)
     ibd_pd: DataFrame = field(default_factory=DataFrame)
-    hapid_map: dict[str, int] = field(default_factory=dict)
-    all_haplotypes: list[str] = field(default_factory=list)
+    hapid_map: Dict[str, int] = field(default_factory=dict)
+    all_haplotypes: List[str] = field(default_factory=list)
     haplotype_id: int = 0
     logger: logging.Logger = log.get_logger(__name__)
 
