@@ -3,6 +3,7 @@
 from collections import namedtuple
 from pathlib import Path
 from enum import Enum
+import sys
 import re
 import gzip
 import igraph as ig
@@ -11,6 +12,9 @@ import itertools
 import typer
 from callbacks import check_input_exists
 from generate_indices import create_indices
+
+from filter import Filter
+import log
 
 app = typer.Typer(add_completion=False)
 
@@ -65,10 +69,10 @@ def split_target_string(chromo_pos_str: str) -> Genes:
 
 @app.command()
 def main(
-    input: Path = typer.Option(
+    input_file: Path = typer.Option(
         ..., "-i", "--input", help="IBD input file", callback=check_input_exists
     ),
-    format: FormatTypes = typer.Option(
+    ibd_format: FormatTypes = typer.Option(
         FormatTypes.HAPIBD.value,
         "-f",
         "--format",
@@ -97,60 +101,34 @@ def main(
         help="minimum connectedness ratio required for the network",
     ),
 ) -> None:
-    indices = create_indices(format.lower())
+
+    logger = log.create_logger()
+
+    log.configure(logger, "./", "test_log.log", "verbose", True)
+
+    indices = create_indices(ibd_format.lower())
+
+    logger.debug(f"created indices object: {indices}")
 
     ##target gene region or variant position
     target_gene = split_target_string(target)
 
-    ibdpd = pd.DataFrame(columns=["idnum1", "idnum2", "cm"])
-    ibdvs = pd.DataFrame(columns=["idnum", "hapID", "IID"])
-    hapid_to_int = {}
-    allhapid = []
-    idnum = int(0)
+    logger.debug
+    (f"Identified a target region: {target_gene}")
 
-    with gzip.open(input, "rt") as ibdfile:
-        for line in ibdfile:
-            line = line.strip().split()
-            CHR = line[indices.chr_indx]
-            STR = min(int(line[indices.str_indx]), int(line[indices.end_indx]))
-            END = max(int(line[indices.str_indx]), int(line[indices.end_indx]))
-            iid1 = line[indices.id1_indx]
-            iid2 = line[indices.id2_indx]
-            hapid1 = str(
-                indices.getHAPID(line[indices.id1_indx], line[indices.hap1_indx])
-            )
-            hapid2 = str(
-                indices.getHAPID(line[indices.id2_indx], line[indices.hap2_indx])
-            )
-            cM = float(line[indices.cM_indx])
-            if (
-                CHR == target_gene.chr
-                and STR <= target_gene.start
-                and END >= target_gene.end
-                and cM >= min_cm
-            ):
-                if hapid1 != hapid2:
-                    if hapid1 not in hapid_to_int:
-                        hapid_to_int[hapid1] = int(idnum)
-                        allhapid.append(hapid1)
-                        ibdvs.loc[int(idnum)] = [int(idnum), hapid1, iid1]
-                        idnum += 1
-                    if hapid2 not in hapid_to_int:
-                        hapid_to_int[hapid2] = int(idnum)
-                        allhapid.append(hapid2)
-                        ibdvs.loc[int(idnum)] = [int(idnum), hapid2, iid2]
-                        idnum += 1
-                    ibdpd = ibdpd.append(
-                        {
-                            "idnum1": int(hapid_to_int[hapid1]),
-                            "idnum2": int(hapid_to_int[hapid2]),
-                            "cm": cM,
-                        },
-                        ignore_index=True,
-                    )
-    ibdpd = ibdpd.astype({"idnum1": "int", "idnum2": "int"})
+    # sys.exit()
+    filter_obj = Filter.load_file(input_file, indices, target_gene)
+
+    filter_obj.preprocess(min_cm)
+
+    sys.exit()
+
+    # ibdvs.to_csv("ibdvs.txt", sep="\t", index=None)
+    # ibdpd.to_csv("ibdpd.txt", sep="\t", index=None)
+    # ibdpd = ibdpd.astype({"idnum1": "int", "idnum2": "int"})
     # print(ibdpd)
     ibd_g = ig.Graph.DataFrame(ibdpd, directed=False, vertices=ibdvs, use_vids=True)
+
     ibd_walktrap = ig.Graph.community_walktrap(ibd_g, weights="cm", steps=step)
     ibd_walktrap_clusters = ibd_walktrap.as_clustering()
     print(ibd_walktrap_clusters.summary())
@@ -204,8 +182,8 @@ def main(
         )
         if (
             check_times < max_check
-            and clst_info[name]["true_positive"] < TP
-            and len(clst_info[name]["member"]) > maxN
+            and clst_info[name]["true_positive"] < minimum_connected_thres
+            and len(clst_info[name]["member"]) > max_network_size
         ):
             recheck[check_times].append(name)
         else:
@@ -259,7 +237,7 @@ def main(
             rmID = list(
                 clst_conn.loc[
                     (clst_conn["conn.N"] > (0.2 * len(clst_info[i]["member"])))
-                    & (clst_conn["TP"] < TP)
+                    & (clst_conn["TP"] < minimum_connected_thres)
                     & (
                         clst_conn["conn"]
                         > sorted(clst_conn["conn"], reverse=True)[

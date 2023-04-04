@@ -1,9 +1,12 @@
 from dataclasses import dataclass
 from typing import Protocol
+from pandas import Series, DataFrame
 
 
 class FileIndices(Protocol):
-    def get_haplotype_id(IID: str, hap_id: str) -> str:
+    def get_haplotype_id(
+        self, data: DataFrame, ind_id_indx: int, phase_col_indx: int, col_name: str
+    ) -> None:
         ...
 
 
@@ -18,8 +21,13 @@ class HapIBD(FileIndices):
     end_indx: int = 6
     cM_indx: int = 7
 
-    def get_haplotype_id(IID: str, hap_id: str) -> str:
-        return "{0}.{1}".format(IID, hap_id)
+    def get_haplotype_id(
+        self, data: DataFrame, ind_id_indx: int, phase_col_indx: int, col_name: str
+    ) -> None:
+
+        data.loc[:, col_name] = (
+            data[ind_id_indx] + "." + data[phase_col_indx].astype(str)
+        )
 
     def __str__(self):
         """Custom string message used for debugging"""
@@ -38,8 +46,11 @@ class Germline(FileIndices):
     cM_indx: int = 10
     unit: int = 11
 
-    def get_haplotype_id(IID: str, hap_id: str) -> str:
-        return hap_id
+    def get_haplotype_id(
+        self, data: DataFrame, ind_id_indx: int, phase_col_indx: int, col_name: str
+    ) -> None:
+
+        data.loc[:, col_name] = data[phase_col_indx]
 
     def __str__(self):
         """Custom string message used for debugging"""
@@ -57,8 +68,11 @@ class iLASH(FileIndices):
     end_indx: int = 6
     cM_indx: int = 10
 
-    def get_haplotype_id(IID: str, hap_id: str) -> str:
-        return hap_id
+    def get_haplotype_id(
+        self, data: DataFrame, ind_id_indx: int, phase_col_indx: int, col_name: str
+    ) -> None:
+
+        data.loc[:, col_name] = data[phase_col_indx]
 
     def __str__(self):
         """Custom string message used for debugging"""
@@ -76,8 +90,13 @@ class Rapid(FileIndices):
     str_indx: int = 5
     end_indx: int = 6
 
-    def get_haplotype_id(IID, hapID) -> str:
-        return "{0}.{1}".format(IID, hapID)
+    def get_haplotype_id(
+        self, data: DataFrame, ind_id_indx: int, phase_col_indx: int, col_name: str
+    ) -> None:
+
+        data.loc[:, col_name] = (
+            data[ind_id_indx] + "." + data[phase_col_indx].astype(str)
+        )
 
     def __str__(self):
         """Custom string message used for debugging"""
