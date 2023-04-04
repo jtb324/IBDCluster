@@ -18,3 +18,8 @@ IBDCluster/log/README.md
 
 # BUILD DIRECTORIES
 /dist/
+
+# FILES THAT CAN'T BE UPLOADED
+./tests/test_true_results/biovu_longQT.DRIVE.txt
+./tests/test_inputs/biovu_longQT_EUR_chr21.ibd.gz
+
