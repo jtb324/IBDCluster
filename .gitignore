@@ -22,4 +22,5 @@ IBDCluster/log/README.md
 # FILES THAT CAN'T BE UPLOADED
 ./tests/test_true_results/biovu_longQT.DRIVE.txt
 ./tests/test_inputs/biovu_longQT_EUR_chr21.ibd.gz
+tests/test_kcne_inputs/
 
