@@ -4,13 +4,13 @@ from pathlib import Path
 from typing import Dict, Iterator, List
 
 import log
-from models import FileIndices, Genes
+from models import FileIndices, Genes, Filter
 from pandas import DataFrame, concat, read_csv
 from rich.progress import Progress
 
 
 @dataclass
-class Filter:
+class IbdFilter:
     ibd_file: Iterator[DataFrame]
     indices: FileIndices
     target_gene: Genes
@@ -80,7 +80,7 @@ class Filter:
         if not ibd_file.is_file():
             raise FileNotFoundError(f"The file, {ibd_file}, was not found")
 
-        chunk_count = Filter._determine_chunk_count(ibd_file)
+        chunk_count = IbdFilter._determine_chunk_count(ibd_file)
 
         input_file_chunks = read_csv(ibd_file, sep="\t", header=None, chunksize=100_100)
 
@@ -189,13 +189,17 @@ class Filter:
             determined by the chunksize argument to
             pd.read_csv. This value is currently set to 100,000.
         """
-        self.ibd_vs = concat(
-            [self.ibd_vs, data_chunk[["idnum1", "hapid1", self.indices.id1_indx]]]
+        id1_df = data_chunk[["idnum1", "hapid1", self.indices.id1_indx]].rename(
+            columns={"idnum1": "idnum", "hapid1": "hapID", 0: "IID"}
         )
 
-        self.ibd_vs = concat(
-            [self.ibd_vs, data_chunk[["idnum2", "hapid2", self.indices.id2_indx]]]
+        self.ibd_vs = concat([self.ibd_vs, id1_df])
+
+        id2_df = data_chunk[["idnum2", "hapid2", self.indices.id2_indx]].rename(
+            columns={"idnum2": "idnum", "hapid2": "hapID", 2: "IID"}
         )
+
+        self.ibd_vs = concat([self.ibd_vs, id2_df])
 
     def preprocess(self, min_centimorgan: int):
         """Method that will filter the ibd file.
@@ -240,5 +244,5 @@ class Filter:
                     self.ibd_pd = concat([self.ibd_pd, removed_dups])
 
                     self._generate_vertices(removed_dups)
-        print(self.ibd_pd)
-        print(self.ibd_vs)
+
+            self.ibd_vs = self.ibd_vs.drop_duplicates()
