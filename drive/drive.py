@@ -9,8 +9,9 @@ import log
 import pandas as pd
 import typer
 from callbacks import check_input_exists
-from filter import Filter
+from filter import IbdFilter
 from models import FormatTypes, Genes, LogLevel, create_indices
+from cluster import cluster, Networks
 
 app = typer.Typer(add_completion=False)
 
@@ -110,13 +111,13 @@ def main(
         is_flag=True,
     ),
     log_filename: str = typer.Option(
-        "IBDCluster.log", "--log-filename", help="Name for the log output file."
+        "drive.log", "--log-filename", help="Name for the log output file."
     ),
 ) -> None:
 
     logger = log.create_logger()
 
-    log.configure(logger, "./", "test_log.log", "verbose", True)
+    log.configure(logger, output.parent, log_filename, loglevel, log_to_console)
 
     indices = create_indices(ibd_format.lower())
 
@@ -129,84 +130,83 @@ def main(
     (f"Identified a target region: {target_gene}")
 
     # sys.exit()
-    filter_obj = Filter.load_file(input_file, indices, target_gene)
+    filter_obj = IbdFilter.load_file(input_file, indices, target_gene)
 
     filter_obj.preprocess(min_cm)
-    # sys.exit()
-    # ibd_g = ig.Graph.DataFrame(filter_obj.ibd_pd, directed=False, vertices=filter_obj.ibd_vs, use_vids=True)
 
     # ibd_walktrap = ig.Graph.community_walktrap(ibd_g, weights="cm", steps=step)
-
+    networks = Networks(minimum_connected_thres, max_network_size, max_check, step)
     # sys.exit()
-    ibd_walktrap_clusters = ibd_walktrap.as_clustering()
-    print(ibd_walktrap_clusters.summary())
-    allclst = [
-        i for i, v in enumerate(ibd_walktrap_clusters.sizes()) if v > min_network_size
-    ]
+    cluster(filter_obj, networks, min_network_size, indices.cM_indx)
 
-    def get_clst_info(name, clst, target_clsts, target_ig):
-        clst_info[name] = {}
-        clst_info[name]["memberID"] = [
-            target_ig.vs()[c]["name"]
-            for c, v in enumerate(target_clsts.membership)
-            if v == clst
-        ]
-        clst_info[name]["member"] = [
-            c for c, v in enumerate(target_clsts.membership) if v == clst
-        ]
-        clst_edge_n = (
-            len(clst_info[name]["member"]) * (len(clst_info[name]["member"]) - 1) / 2
-        )
-        clst_info[name]["true_positive_edge"] = list(
-            filter(
-                lambda a: a != -1,
-                target_ig.get_eids(
-                    pairs=list(itertools.combinations(clst_info[name]["member"], 2)),
-                    directed=False,
-                    error=False,
-                ),
-            )
-        )
-        clst_info[name]["true_positive_n"] = len(clst_info[name]["true_positive_edge"])
-        clst_info[name]["true_positive"] = (
-            clst_info[name]["true_positive_n"] / clst_edge_n
-        )
-        all_edge = set([])
-        for mem in clst_info[name]["member"]:
-            all_edge = set(all_edge.union(set(target_ig.incident(mem))))
-        clst_info[name]["false_negative_edge"] = list(
-            all_edge.difference(
-                list(
-                    target_ig.get_eids(
-                        pairs=list(
-                            itertools.combinations(clst_info[name]["member"], 2)
-                        ),
-                        directed=False,
-                        error=False,
-                    )
-                )
-            )
-        )
-        clst_info[name]["false_negative_n"] = len(
-            clst_info[name]["false_negative_edge"]
-        )
-        if (
-            check_times < max_check
-            and clst_info[name]["true_positive"] < minimum_connected_thres
-            and len(clst_info[name]["member"]) > max_network_size
-        ):
-            recheck[check_times].append(name)
-        else:
-            outclst.append(name)
+    sys.exit()
+    # allclst = [
+    #     i for i, v in enumerate(ibd_walktrap_clusters.sizes()) if v > min_network_size
+    # ]
 
-    clst_info = {}
-    recheck = {}
-    check_times = 0
-    recheck[check_times] = []
-    outclst = []
+    # def get_clst_info(name, clst, target_clsts, target_ig):
+    #     clst_info[name] = {}
+    #     clst_info[name]["memberID"] = [
+    #         target_ig.vs()[c]["name"]
+    #         for c, v in enumerate(target_clsts.membership)
+    #         if v == clst
+    #     ]
+    #     clst_info[name]["member"] = [
+    #         c for c, v in enumerate(target_clsts.membership) if v == clst
+    #     ]
+    #     clst_edge_n = (
+    #         len(clst_info[name]["member"]) * (len(clst_info[name]["member"]) - 1) / 2
+    #     )
+    #     clst_info[name]["true_positive_edge"] = list(
+    #         filter(
+    #             lambda a: a != -1,
+    #             target_ig.get_eids(
+    #                 pairs=list(itertools.combinations(clst_info[name]["member"], 2)),
+    #                 directed=False,
+    #                 error=False,
+    #             ),
+    #         )
+    #     )
+    #     clst_info[name]["true_positive_n"] = len(clst_info[name]["true_positive_edge"])
+    #     clst_info[name]["true_positive"] = (
+    #         clst_info[name]["true_positive_n"] / clst_edge_n
+    #     )
+    #     all_edge = set([])
+    #     for mem in clst_info[name]["member"]:
+    #         all_edge = set(all_edge.union(set(target_ig.incident(mem))))
+    #     clst_info[name]["false_negative_edge"] = list(
+    #         all_edge.difference(
+    #             list(
+    #                 target_ig.get_eids(
+    #                     pairs=list(
+    #                         itertools.combinations(clst_info[name]["member"], 2)
+    #                     ),
+    #                     directed=False,
+    #                     error=False,
+    #                 )
+    #             )
+    #         )
+    #     )
+    #     clst_info[name]["false_negative_n"] = len(
+    #         clst_info[name]["false_negative_edge"]
+    #     )
+    #     if (
+    #         check_times < max_check
+    #         and clst_info[name]["true_positive"] < minimum_connected_thres
+    #         and len(clst_info[name]["member"]) > max_network_size
+    #     ):
+    #         recheck[check_times].append(name)
+    #     else:
+    #         outclst.append(name)
 
-    for clst in allclst:
-        get_clst_info(str(clst), clst, ibd_walktrap_clusters, ibd_g)
+    # clst_info = {}
+    # recheck = {}
+    # check_times = 0
+    # recheck[check_times] = []
+    # outclst = []
+
+    # for clst in allclst:
+    #     get_clst_info(str(clst), clst, ibd_walktrap_clusters, ibd_g)
 
     def redo_clst(i):
         redopd = ibdpd.loc[

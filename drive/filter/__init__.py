@@ -1,1 +1,1 @@
-from .filter import Filter
+from .filter import IbdFilter
