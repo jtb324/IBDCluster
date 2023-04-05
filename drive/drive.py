@@ -1,32 +1,18 @@
 ###
 
-from collections import namedtuple
-from pathlib import Path
-from enum import Enum
-import sys
-import re
-import gzip
-import igraph as ig
-import pandas as pd
 import itertools
+import re
+import sys
+from pathlib import Path
+
+import log
+import pandas as pd
 import typer
 from callbacks import check_input_exists
-from generate_indices import create_indices
-
 from filter import Filter
-import log
+from models import FormatTypes, Genes, LogLevel, create_indices
 
 app = typer.Typer(add_completion=False)
-
-
-class FormatTypes(str, Enum):
-    HAPIBD = "hapibd"
-    ILASH = "ilash"
-    GERMLINE = "germline"
-    RAPID = "rapid"
-
-
-Genes = namedtuple("Genes", ["chr", "start", "end"])
 
 
 def split_target_string(chromo_pos_str: str) -> Genes:
@@ -35,20 +21,25 @@ def split_target_string(chromo_pos_str: str) -> Genes:
     Parameters
     ----------
     chromo_pos_str : str
-        string that has the region of interest in bbase pairs. This string
-        will look like 10:1234-1234 where the first number is the chromosome
-        number, then the start position, and then the end position of the
-        region of interest.
+        string that has the region of interest in bbase pairs.
+        This string will look like 10:1234-1234 where the
+        first number is the chromosome number, then the start
+        position, and then the end position of the region of
+        interest.
 
     Returns
     -------
     Genes
-        returns a namedtuple that has the chromosome number, the start position, and the end position
+        returns a namedtuple that has the chromosome number,
+        the start position, and the end position
 
     Raises
     ------
     ValueError
-        raises a value error if the string was formatted any other way than chromosome:start_position-end_position
+        raises a value error if the string was formatted any
+        other way than chromosome:start_position-end_position.
+        Also raises a value error if the start position is
+        larger than the end position
     """
     split_str = re.split(":|-", chromo_pos_str)
 
@@ -100,6 +91,27 @@ def main(
         "--min-connected-threshold",
         help="minimum connectedness ratio required for the network",
     ),
+    min_network_size: int = typer.Option(
+        3,
+        "--min-network-size",
+        help="This argument sets the minimun network size allowed for the clustering",
+    ),
+    loglevel: LogLevel = typer.Option(
+        LogLevel.WARNING.value,
+        "--loglevel",
+        "-l",
+        help="This argument sets the logging level for the program. Accepts values 'debug', 'warning', and 'verbose'.",
+        case_sensitive=True,
+    ),
+    log_to_console: bool = typer.Option(
+        False,
+        "--log-to-console",
+        help="Optional flag to log to only the console or also a file",
+        is_flag=True,
+    ),
+    log_filename: str = typer.Option(
+        "IBDCluster.log", "--log-filename", help="Name for the log output file."
+    ),
 ) -> None:
 
     logger = log.create_logger()
@@ -120,19 +132,17 @@ def main(
     filter_obj = Filter.load_file(input_file, indices, target_gene)
 
     filter_obj.preprocess(min_cm)
+    # sys.exit()
+    # ibd_g = ig.Graph.DataFrame(filter_obj.ibd_pd, directed=False, vertices=filter_obj.ibd_vs, use_vids=True)
 
-    sys.exit()
+    # ibd_walktrap = ig.Graph.community_walktrap(ibd_g, weights="cm", steps=step)
 
-    # ibdvs.to_csv("ibdvs.txt", sep="\t", index=None)
-    # ibdpd.to_csv("ibdpd.txt", sep="\t", index=None)
-    # ibdpd = ibdpd.astype({"idnum1": "int", "idnum2": "int"})
-    # print(ibdpd)
-    ibd_g = ig.Graph.DataFrame(ibdpd, directed=False, vertices=ibdvs, use_vids=True)
-
-    ibd_walktrap = ig.Graph.community_walktrap(ibd_g, weights="cm", steps=step)
+    # sys.exit()
     ibd_walktrap_clusters = ibd_walktrap.as_clustering()
     print(ibd_walktrap_clusters.summary())
-    allclst = [i for i, v in enumerate(ibd_walktrap_clusters.sizes()) if v > 2]
+    allclst = [
+        i for i, v in enumerate(ibd_walktrap_clusters.sizes()) if v > min_network_size
+    ]
 
     def get_clst_info(name, clst, target_clsts, target_ig):
         clst_info[name] = {}

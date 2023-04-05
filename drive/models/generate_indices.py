@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from typing import Protocol
-from pandas import Series, DataFrame
+
+from pandas import DataFrame, Series
 
 
 class FileIndices(Protocol):

@@ -1,29 +1,12 @@
-from collections import namedtuple
-from dataclasses import dataclass, field
 import logging
+from dataclasses import dataclass, field
 from pathlib import Path
-from rich.progress import Progress
+from typing import Dict, Iterator, List
+
 import log
-from pandas import DataFrame, read_csv, concat
-from typing import Iterator, Protocol, List, Dict
-
-Genes = namedtuple("Genes", ["chr", "start", "end"])
-
-
-class FileIndices(Protocol):
-    id1_indx: int
-    hap1_indx: int
-    id2_indx: int
-    hap2_indx: int
-    chr_indx: int
-    str_indx: int
-    end_indx: int
-    cM_indx: int
-
-    def get_haplotype_id(
-        self, data: DataFrame, ind_id_indx: int, phase_col_indx: int, col_name: str
-    ) -> None:
-        ...
+from models import FileIndices, Genes
+from pandas import DataFrame, concat, read_csv
+from rich.progress import Progress
 
 
 @dataclass
@@ -257,3 +240,5 @@ class Filter:
                     self.ibd_pd = concat([self.ibd_pd, removed_dups])
 
                     self._generate_vertices(removed_dups)
+        print(self.ibd_pd)
+        print(self.ibd_vs)
