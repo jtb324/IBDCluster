@@ -4,9 +4,8 @@ from enum import Enum
 class LogLevel(str, Enum):
     """Enum used to define the options for the log level in the cli"""
 
-    WARNING = "warning"
-    VERBOSE = "verbose"
-    DEBUG = "debug"
+    INFO = 0
+    DEBUG = 1
 
 
 class FormatTypes(str, Enum):

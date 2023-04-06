@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Dict, Iterator, List
 
 import log
-from models import FileIndices, Genes, Filter
+from models import FileIndices, Genes
 from pandas import DataFrame, concat, read_csv
 from rich.progress import Progress
 

@@ -8,9 +8,9 @@ from dataclasses import dataclass, field
 # namedtuple that will contain information about the gene being run
 Genes = namedtuple("Genes", ["chr", "start", "end"])
 
+
 # interface for the filter object
 @dataclass
 class Filter(Protocol):
-
     ibd_vs: DataFrame = field(default_factory=DataFrame)
     ibd_pd: DataFrame = field(default_factory=DataFrame)

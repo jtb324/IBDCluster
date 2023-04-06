@@ -97,12 +97,12 @@ def main(
         "--min-network-size",
         help="This argument sets the minimun network size allowed for the clustering",
     ),
-    loglevel: LogLevel = typer.Option(
-        LogLevel.WARNING.value,
-        "--loglevel",
-        "-l",
-        help="This argument sets the logging level for the program. Accepts values 'debug', 'warning', and 'verbose'.",
-        case_sensitive=True,
+    verbose: int = typer.Option(
+        0,
+        "--verbose",
+        "-v",
+        help="verbose flag indicating if the user wants more information",
+        count=True,
     ),
     log_to_console: bool = typer.Option(
         False,
@@ -114,10 +114,9 @@ def main(
         "drive.log", "--log-filename", help="Name for the log output file."
     ),
 ) -> None:
-
     logger = log.create_logger()
 
-    log.configure(logger, output.parent, log_filename, loglevel, log_to_console)
+    log.configure(logger, output.parent, log_filename, verbose, log_to_console)
 
     indices = create_indices(ibd_format.lower())
 

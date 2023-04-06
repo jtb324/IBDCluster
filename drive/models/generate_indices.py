@@ -25,7 +25,6 @@ class HapIBD(FileIndices):
     def get_haplotype_id(
         self, data: DataFrame, ind_id_indx: int, phase_col_indx: int, col_name: str
     ) -> None:
-
         data.loc[:, col_name] = (
             data[ind_id_indx] + "." + data[phase_col_indx].astype(str)
         )
@@ -50,7 +49,6 @@ class Germline(FileIndices):
     def get_haplotype_id(
         self, data: DataFrame, ind_id_indx: int, phase_col_indx: int, col_name: str
     ) -> None:
-
         data.loc[:, col_name] = data[phase_col_indx]
 
     def __str__(self):
@@ -72,7 +70,6 @@ class iLASH(FileIndices):
     def get_haplotype_id(
         self, data: DataFrame, ind_id_indx: int, phase_col_indx: int, col_name: str
     ) -> None:
-
         data.loc[:, col_name] = data[phase_col_indx]
 
     def __str__(self):
@@ -94,7 +91,6 @@ class Rapid(FileIndices):
     def get_haplotype_id(
         self, data: DataFrame, ind_id_indx: int, phase_col_indx: int, col_name: str
     ) -> None:
-
         data.loc[:, col_name] = (
             data[ind_id_indx] + "." + data[phase_col_indx].astype(str)
         )
