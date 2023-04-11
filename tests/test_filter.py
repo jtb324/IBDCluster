@@ -6,7 +6,7 @@ import sys
 
 sys.path.append("./drive")
 
-from drive.filter import Filter
+from drive.filter import IbdFilter
 from drive.models.generate_indices import HapIBD
 
 hapibd = HapIBD()
@@ -19,7 +19,7 @@ def test_ibd_file_not_found() -> None:
     """Unit test that will make sure a FileNotFound Exception is raised if the ibd file doesn't exist"""
     fake_gene = Genes(12, 1235, 1235)
     with pytest.raises(FileNotFoundError):
-        Filter.load_file(Path("FileDoesNotExist.txt"), hapibd, fake_gene)
+        IbdFilter.load_file(Path("FileDoesNotExist.txt"), hapibd, fake_gene)
 
 
 @pytest.mark.kcne1
@@ -30,7 +30,7 @@ def test_filter_results() -> None:
 
     kcne1_gene = Genes(21, 35818986, 35884508)
 
-    filter_obj = Filter.load_file(
+    filter_obj = IbdFilter.load_file(
         Path("tests/test_inputs/biovu_longQT_EUR_chr21.ibd.gz"), hapibd, kcne1_gene
     )
 
