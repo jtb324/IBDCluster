@@ -8,6 +8,8 @@ from models import FileIndices, Genes
 from pandas import DataFrame, concat, read_csv
 from rich.progress import Progress
 
+logger = log.get_logger(__name__)
+
 
 @dataclass
 class IbdFilter:
@@ -20,7 +22,6 @@ class IbdFilter:
     hapid_map: Dict[str, int] = field(default_factory=dict)
     all_haplotypes: List[str] = field(default_factory=list)
     haplotype_id: int = 0
-    logger: logging.Logger = log.get_logger(__name__)
 
     @staticmethod
     def _determine_chunk_count(ibd_file: Path) -> int:
@@ -97,7 +98,7 @@ class IbdFilter:
         """
         haplotypes = chunk_data.values.ravel()
 
-        self.logger.debug(f"identified {len(haplotypes)} haplotypes.")
+        logger.debug(f"identified {len(haplotypes)} haplotypes.")
         # iterate over each haplotype and add it to the dictionary if the value is not present
         for value in haplotypes:
             key_value = self.hapid_map.setdefault(value, self.haplotype_id)
@@ -113,7 +114,6 @@ class IbdFilter:
             determined by the chunksize argument to
             pd.read_csv. This value is currently set to 100,000.
         """
-        self.logger.debug("Mapping the haplotype ids to integers")
         # we are going to map the haplotype id to integers in a new
         # column. this needs to be done for both hapid1 an hapid2
         data_chunk.loc[:, "idnum1"] = data_chunk["hapid1"].map(self.hapid_map)
@@ -172,7 +172,7 @@ class IbdFilter:
         try:
             return data[data["hapid1"] != data["hapid2"]]
         except KeyError as e:
-            self.logger.critical(
+            logger.critical(
                 f"Expected the keys hapid1 and hapid2 to be in the dataframe. Instead the only keys were: {', '.join(data.columns)}"
             )
             raise e(
