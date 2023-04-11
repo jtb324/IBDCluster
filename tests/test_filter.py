@@ -6,7 +6,7 @@ import sys
 
 sys.path.append("./drive")
 
-from drive.filter import IbdFilter
+from drive.filters import IbdFilter
 from drive.models.generate_indices import HapIBD
 
 hapibd = HapIBD()
