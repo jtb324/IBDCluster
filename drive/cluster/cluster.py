@@ -18,9 +18,10 @@ T = TypeVar("T", bound="Networks")
 
 @dataclass
 class Networks:
-    graph: Optional[Any] = None
+    graph: ig.Graph
     clusters: Dict[int, Any] = field(default_factory=dict)
     final_clusters: List[int] = field(default_factory=list)
+    parent_cluster: Optional[int] = None
 
     @classmethod
     def generate_graph(
@@ -45,11 +46,12 @@ class Networks:
             boolean flag indicating if the user is redoing the
             clustering to make the networks smaller
         """
-        if ibd_vertices:
+        if ibd_vertices is not None:
             logger.debug("Generating graph with vertex labels.")
             graph = ig.Graph.DataFrame(
                 ibd_edges, directed=False, vertices=ibd_vertices, use_vids=True
             )
+
         else:
             logger.debug(
                 "No vertex metadata provided. Vertex ids will be nonnegative integers"
@@ -98,7 +100,9 @@ class ClusterHandler:
             result of the random walk cluster. This object has
             information about clusters and membership
         """
-        logger.debug("performing the random walk")
+        logger.info(
+            f"Using a random walk with a step size of {self.random_walk_step_size} to identify clusters within the provided graph"
+        )
 
         ibd_walktrap = ig.Graph.community_walktrap(
             network.graph, weights="cm", steps=self.random_walk_step_size
@@ -135,8 +139,7 @@ class ClusterHandler:
 
     def gather_cluster_info(
         self,
-        clusters: Dict[int, Any],
-        graph: ig.Graph,
+        network: Networks,
         cluster_ids: List[int],
         random_walk_clusters: ig.VertexClustering,
     ):
@@ -146,62 +149,57 @@ class ClusterHandler:
 
         Parameters
         ----------
+        network : Networks
+            object that has the graph and the clusters identified based on that graph.
+
         cluster_ids : List[int]
             list of integers for each cluster id
 
         random_walk_clusters : ig.VertexClustering
+            result from performing the random walk.
 
         """
+
         with Progress(transient=True) as progress_bar:
             for clst_id in progress_bar.track(
-                cluster_ids, description="clusters_processed:", total=len(cluster_ids)
+                cluster_ids, description="clusters processed:", total=len(cluster_ids)
             ):
-                clusters[clst_id] = {}
-                clusters[clst_id]["memberID"] = [
-                    self.graph.vs[c]["idnum"]
-                    for c, v in enumerate(random_walk_clusters.membership)
-                    if v == clst_id
-                ]
+                network.clusters[clst_id] = {}
 
-                clusters[clst_id]["member"] = [
-                    c
-                    for c, v in enumerate(random_walk_clusters.membership)
-                    if v == clst_id
-                ]
-                clst_edge_n = (
-                    len(self.clusters[clst_id]["member"])
-                    * (len(self.clusters[clst_id]["member"]) - 1)
-                    / 2
+                for c, v in enumerate(random_walk_clusters.membership):
+                    if v == clst_id:
+                        # print(network.graph.vs()[c].attributes())
+
+                        # network.clusters[clst_id].setdefault("memberID", []).append(network.graph.vs[c]["idnum"])
+
+                        network.clusters[clst_id].setdefault("member", []).append(c)
+
+                # getting the total number of edges possible
+                theoretical_edge_count = len(
+                    list(itertools.combinations(network.clusters[clst_id]["member"], 2))
                 )
-                clusters[clst_id]["true_positive_edge"] = list(
-                    filter(
-                        lambda a: a != -1,
-                        self.graph.get_eids(
-                            pairs=list(
-                                itertools.combinations(clusters[clst_id]["member"], 2)
-                            ),
-                            directed=False,
-                            error=False,
-                        ),
-                    )
+
+                cluster_edge_count = len(
+                    random_walk_clusters.subgraph(clst_id).get_edgelist()
                 )
-                clusters[clst_id]["true_positive_n"] = len(
-                    clusters[clst_id]["true_positive_edge"]
-                )
-                clusters[clst_id]["true_positive"] = (
-                    clusters[clst_id]["true_positive_n"] / clst_edge_n
+
+                network.clusters[clst_id]["true_positive_n"] = cluster_edge_count
+
+                network.clusters[clst_id]["true_positive"] = (
+                    cluster_edge_count / theoretical_edge_count
                 )
                 all_edge = set([])
-                for mem in clusters[clst_id]["member"]:
-                    all_edge = all_edge.union(set(self.graph.incident(mem)))
 
-                clusters[clst_id]["false_negative_edge"] = list(
+                for mem in network.clusters[clst_id]["member"]:
+                    all_edge = all_edge.union(set(network.graph.incident(mem)))
+
+                network.clusters[clst_id]["false_negative_edge"] = list(
                     all_edge.difference(
                         list(
-                            self.graph.get_eids(
+                            network.graph.get_eids(
                                 pairs=list(
                                     itertools.combinations(
-                                        self.clusters[clst_id]["member"], 2
+                                        network.clusters[clst_id]["member"], 2
                                     )
                                 ),
                                 directed=False,
@@ -211,41 +209,72 @@ class ClusterHandler:
                     )
                 )
 
-                clusters[clst_id]["false_negative_n"] = len(
-                    clusters[clst_id]["false_negative_edge"]
+                network.clusters[clst_id]["false_negative_n"] = len(
+                    network.clusters[clst_id]["false_negative_edge"]
                 )
 
                 if (
                     self.check_times < self.max_rechecks
-                    and clusters[clst_id]["true_positive"]
+                    and network.clusters[clst_id]["true_positive"]
                     < self.minimum_connected_thres
-                    and len(clusters[clst_id]["member"]) > self.max_network_size
+                    and len(network.clusters[clst_id]["member"]) > self.max_network_size
                 ):
                     self.recheck_clsts.setdefault(self.check_times, []).append(clst_id)
                     # self.recheck_clsts[self.check_times].append(clst_id)
                 else:
-                    self.final_clusters.append(clst_id)
+                    network.final_clusters.append(clst_id)
 
-    def redo_clustering(self, ibd_pd: DataFrame, clst_id: int, step: int) -> None:
-        """Method that will redo the clustering"""
+    def redo_clustering(
+        self,
+        orig_networks: Networks,
+        ibd_pd: DataFrame,
+        ibd_vs: DataFrame,
+        clst_id: int,
+        step: int,
+    ) -> None:
+        """Method that will redo the clustering, if the
+        networks were too large or did not show a high degree
+        of connectedness
 
+        Parameters
+        ----------
+        orig_networks : Networks
+
+        ibd_pd : pd.DataFrame
+
+        clst_id : int
+
+        step : int
+
+        """
+        # print(ibd_pd)
+        # print(len(orig_networks.clusters[clst_id]["memberID"]))
         # filters for the specific cluster
         redopd = ibd_pd.loc[
-            (ibd_pd["idnum1"].isin(self.clusters[clst_id]["memberID"]))
-            & (ibd_pd["idnum2"].isin(self.clusters[clst_id]["memberID"]))
+            (ibd_pd["idnum1"].isin(orig_networks.clusters[clst_id]["member"]))
+            & (ibd_pd["idnum2"].isin(orig_networks.clusters[clst_id]["member"]))
         ]
-        # loads that cluster into a Graph
-        redo_g = ig.Graph.DataFrame(redopd, directed=False)
-        # performing the walk step
-        redo_walktrap = ig.Graph.community_walktrap(redo_g, weights="cm", steps=step)
-        redo_walktrap_clusters = redo_walktrap.as_clustering()
+        redopd.to_csv("redopd_new.txt", sep="\t", index=None)
+        print(redopd)
+
+        # filters the vertex for specific members
+        # redo_vs = ibd_vs[ibd_vs.idnum.isin(orig_networks.clusters[clst_id]["member"])].reset_index(drop=True)
+        # We are going to generate a new Networks object using the redo graph
+        # redo_networks = Networks.generate_graph(redopd, redo_vs)
+        redo_networks = Networks.generate_graph(redopd.reset_index(drop=True))
+        graph_take_2 = ig.Graph.DataFrame(redopd, directed=False)
+        print(graph_take_2)
+        # print(redo_networks.graph)
+        redo_networks.parent_cluster = clst_id
+
+        redo_walktrap_clusters = self.random_walk(redo_networks)
 
         # If only one cluster is found
         if len(redo_walktrap_clusters.sizes()) == 1:
             # creates an empty dataframe with these columns
             clst_conn = DataFrame(columns=["idnum", "conn", "conn.N", "TP"])
             # iterate over each member id
-            for idnum in self.clusters[clst_id]["member"]:
+            for idnum in orig_networks.clusters[clst_id]["member"]:
                 conn = sum(
                     list(
                         map(
@@ -294,14 +323,13 @@ class ClusterHandler:
                 redo_g, weights="cm", steps=step
             )
             redo_walktrap_clusters = redo_walktrap.as_clustering()
-        print(redo_walktrap_clusters.summary())
-        # if there are more
-        allclst = [c for c, v in enumerate(redo_walktrap_clusters.sizes()) if v > 2]
 
-        for clst in allclst:
-            self.gather_cluster_info(
-                "{0}.{1}".format(clst_id, clst), clst, redo_walktrap_clusters, redo_g
-            )
+        logger.info(redo_walktrap_clusters.summary())
+
+        # if there are more
+        allclst = self.filter_cluster_size(redo_walktrap_clusters)
+
+        self.gather_cluster_info(redo_networks, allclst, redo_walktrap_clusters)
 
 
 def cluster(
@@ -328,10 +356,14 @@ def cluster(
     """
     filter_obj.ibd_pd = filter_obj.ibd_pd.rename(columns={centimorgan_indx: "cm"})
 
+    ibd_pd = filter_obj.ibd_pd.loc[:, ["idnum1", "idnum2", "cm"]]
+    print(ibd_pd)
+    ibd_vs = filter_obj.ibd_vs.reset_index(drop=True)
+
     # Generate the first pass networks
     network = Networks.generate_graph(
-        filter_obj.ibd_pd.loc[:, ["idnum1", "idnum2", "cm"]],
-        filter_obj.ibd_vs.reset_index(drop=True),
+        ibd_pd,
+        ibd_vs,
     )
 
     random_walk_results = cluster_obj.random_walk(network)
@@ -340,10 +372,23 @@ def cluster(
         i for i, v in enumerate(random_walk_results.sizes()) if v > min_network_size
     ]
 
-    network.gather_cluster_info(allclst, random_walk_results)
+    cluster_obj.gather_cluster_info(network, allclst, random_walk_results)
 
     while (
-        network.check_times < network.max_rechecks
-        and len(network.recheck[network.check_times]) > 0
+        cluster_obj.check_times < cluster_obj.max_rechecks
+        and len(cluster_obj.recheck_clsts[cluster_obj.check_times]) > 0
     ):
-        ...
+        cluster_obj.check_times += 1
+
+        logger.info(f"recheck: {cluster_obj.check_times}")
+
+        _ = cluster_obj.recheck_clsts.setdefault(cluster_obj.check_times, [])
+
+        for clst in cluster_obj.recheck_clsts.get(cluster_obj.check_times - 1):
+            cluster_obj.redo_clustering(
+                network,
+                ibd_pd,
+                ibd_vs,
+                clst,
+                cluster_obj.random_walk_step_size,
+            )
