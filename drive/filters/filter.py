@@ -244,5 +244,5 @@ class IbdFilter:
                     self.ibd_pd = concat([self.ibd_pd, removed_dups])
 
                     self._generate_vertices(removed_dups)
-
+            self.ibd_pd.reset_index(drop=True, inplace=True)
             self.ibd_vs = self.ibd_vs.drop_duplicates()
