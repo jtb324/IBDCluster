@@ -41,6 +41,10 @@ pydocstyle = "^6.3.0"
 ipykernel = "^6.22.0"
 
 
+
+[tool.poetry.group.notebook.dependencies]
+ipykernel = "^6.22.0"
+
 [tool.commitizen]
 name = "cz_conventional_commits"
 version = "1.1.0"
