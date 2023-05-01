@@ -210,39 +210,42 @@ class IbdFilter:
             Minimum segment threshold that is used to filter the ibd file. Program only
             keeps segments that are greater than or equal to the threshold
         """
-        with Progress(transient=True) as progress_bar:
-            for chunk in progress_bar.track(
-                self.ibd_file,
-                description="Filtering ibd file: ",
-                total=self.chunk_count,
-            ):
-                filtered_chunk = self._filter(chunk, min_centimorgan)
+        for chunk in self.ibd_file:
+            # with Progress(transient=True) as progress_bar:
+            #     for chunk in progress_bar.track(
+            #         self.ibd_file,
+            #         description="Filtering ibd file: ",
+            #         total=self.chunk_count,
+            #     ):
+            filtered_chunk = self._filter(chunk, min_centimorgan)
 
-                if not filtered_chunk.empty:
-                    # We have to add two column with the haplotype ids
-                    self.indices.get_haplotype_id(
-                        filtered_chunk,
-                        self.indices.id1_indx,
-                        self.indices.hap1_indx,
-                        "hapid1",
-                    )
+            if not filtered_chunk.empty:
+                # We have to add two column with the haplotype ids
+                self.indices.get_haplotype_id(
+                    filtered_chunk,
+                    self.indices.id1_indx,
+                    self.indices.hap1_indx,
+                    "hapid1",
+                )
 
-                    self.indices.get_haplotype_id(
-                        filtered_chunk,
-                        self.indices.id2_indx,
-                        self.indices.hap2_indx,
-                        "hapid2",
-                    )
-                    # We then need to make sure that the
-                    removed_dups = self._remove_dups(filtered_chunk)
+                self.indices.get_haplotype_id(
+                    filtered_chunk,
+                    self.indices.id2_indx,
+                    self.indices.hap2_indx,
+                    "hapid2",
+                )
+                # We then need to make sure that there are no duplicates in the dataframe
+                removed_dups = self._remove_dups(filtered_chunk)
 
-                    # We need to update the mappings for the grids
-                    self._generate_map(removed_dups[["hapid1", "hapid2"]])
+                # We need to update the mappings for the grids
+                self._generate_map(removed_dups[["hapid1", "hapid2"]])
 
-                    self._map_grids(removed_dups)
-                    # concat the filtered dataframe with the ibd_pd attribute to get all the edges in the graph
-                    self.ibd_pd = concat([self.ibd_pd, removed_dups])
+                self._map_grids(removed_dups)
+                # concat the filtered dataframe with the ibd_pd attribute to get all the edges in the graph
+                self.ibd_pd = concat([self.ibd_pd, removed_dups])
 
-                    self._generate_vertices(removed_dups)
-            self.ibd_pd.reset_index(drop=True, inplace=True)
-            self.ibd_vs = self.ibd_vs.drop_duplicates()
+                self._generate_vertices(removed_dups)
+
+        self.ibd_pd.reset_index(drop=True, inplace=True)
+        self.ibd_vs = self.ibd_vs.drop_duplicates().sort_values(by="idnum")
+        # self.ibd_vs.loc[:, "idnum"] = self.ibd_vs.idnum.astype(str)

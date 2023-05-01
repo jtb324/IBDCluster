@@ -140,8 +140,7 @@ def main(
     ##target gene region or variant position
     target_gene = split_target_string(target)
 
-    logger.debug
-    (f"Identified a target region: {target_gene}")
+    logger.debug(f"Identified a target region: {target_gene}")
 
     # sys.exit()
     filter_obj = IbdFilter.load_file(input_file, indices, target_gene)
