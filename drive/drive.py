@@ -146,13 +146,13 @@ def main(
     filter_obj = IbdFilter.load_file(input_file, indices, target_gene)
 
     filter_obj.preprocess(min_cm)
-    filter_obj.ibd_pd.to_csv("new_ibdpd.txt", sep="\t", index=None)
+
     # creating the object that will handle clustering within the networks
     cluster_handler = ClusterHandler(
         minimum_connected_thres, max_network_size, max_check, step, min_network_size
     )
 
-    cluster(filter_obj, cluster_handler, min_network_size, indices.cM_indx)
+    cluster(filter_obj, cluster_handler, indices.cM_indx)
 
     # with open("{}.DRIVE.txt".format(output), "w") as output:
     #     output.write(
