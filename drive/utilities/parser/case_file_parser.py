@@ -2,7 +2,7 @@
 
 import gzip
 from pathlib import Path
-from typing import List, Tuple, Union, TypeVar
+from typing import Dict, List, Tuple, Union, TypeVar
 from logging import Logger
 import log
 
@@ -126,6 +126,54 @@ class PhenotypeFileParser:
             )
             self.exclusion_list.append(status_list)
 
+    @staticmethod
+    def _create_phenotype_dictionary(
+        header_line: str,
+    ) -> Tuple[Dict[str, Dict[str, List[str]]], str]:
+        """Function that will generate a dictionary where the keys are
+        phenotypes and the values list of cases/exclusions/controls
+
+        Parameters
+        ----------
+        header_line : str
+            line from the phenotype file
+
+        Returns
+        -------
+        Tuple[Dict[str, Dict[str, List[str]]], Dict[int, str] str]
+            returns a tuple with three elements. The first element is a
+            dictionary where the keys are phenotypes. Values are
+            dictionaries where the keys are 'cases' or 'controls' or
+            'excluded' and values are list of ids. The second element is
+            a dictionary that maps the index of the phenotype in the
+            header line to the phenotype name. The third element is the
+            separator string
+        """
+
+        # determining what the appropriate separator should be
+        separator = PhenotypeFileParser._check_separator(header_line)
+
+        if not "grid" in header_line.lower() or not "grids" in header_line.lower():
+            raise ValueError(
+                "Expected the first line of the phenotype file to have a header line with a column called grid or grids."
+            )
+        else:
+            split_line_phenotypes = header_line.strip("\n").split(separator)[1:]
+
+        # creating a dictionary that will map an index position to a
+        # phecode
+        phenotype_indx = {}
+        # creating a dictionary to keep track of who are cases and
+        # controls
+        phenotype_dict = {}
+
+        # build each dictionary
+        for indx, phenotype in enumerate(split_line_phenotypes):
+            phenotype_indx[indx] = phenotype
+            phenotype_dict[phenotype] = {"cases": [], "controls": [], "excluded": []}
+
+        return phenotype_dict, phenotype_indx, separator
+
     def parse_cases_and_controls(self) -> Tuple[List[str], List[str], List[str]]:
         """Generate a list for cases, controls, and excluded individuals.
 
@@ -138,13 +186,14 @@ class PhenotypeFileParser:
         """
         separator = ""
 
+        phenotype_dict, separator = PhenotypeFileParser._create_phenotype_dictionary(
+            self.opened_file.readline()
+        )
+
         for line in self.opened_file:
             # we need to first check if there is a header row
-            if "grid" in line.lower() or "grids" in line.lower():
-                continue
-            # we can then determine the separator for the file
-            if separator == "":
-                separator = PhenotypeFileParser._check_separator(line)
+            split_line = line.strip("\n").split(separator)
+
             # Now we can split the file using that separator
             split_line = line.strip("\n").split(separator)
 
