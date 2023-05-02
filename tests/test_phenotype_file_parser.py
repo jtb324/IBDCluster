@@ -33,10 +33,32 @@ def test_check_separator_error(test_str: str) -> None:
 
 
 @pytest.mark.unit
+def test_single_phenotype_output_keys() -> None:
+    """Check that the PhenotypeFileParser identifies the correct phenotype in the output."""
+    with PhenotypeFileParser("./tests/test_inputs/test_phenotype_file.txt") as parser:
+        phenotype_counts = parser.parse_cases_and_controls()
+
+        assert "status" in phenotype_counts.keys()
+
+
+@pytest.mark.unit
+def test_single_phenotype_output_key_length() -> None:
+    """Check that the PhenotypeFileParser identifies the correct number of phenotypes in the output."""
+    with PhenotypeFileParser("./tests/test_inputs/test_phenotype_file.txt") as parser:
+        phenotype_counts = parser.parse_cases_and_controls()
+
+        assert len(phenotype_counts.keys()) == 1
+
+
+@pytest.mark.unit
 def test_case_control_exclusion_counts() -> None:
     """Check that the PhenotypeFileParser identifies the correct case/control/exlcusion counts."""
     with PhenotypeFileParser("./tests/test_inputs/test_phenotype_file.txt") as parser:
-        cases, controls, exclusions = parser.parse_cases_and_controls()
+        phenotype_counts = parser.parse_cases_and_controls()
+
+        cases = phenotype_counts["status"]["cases"]
+        controls = phenotype_counts["status"]["controls"]
+        exclusions = phenotype_counts["status"]["excluded"]
 
         expected_case_counts = 8
         expected_controls_counts = 84
@@ -55,6 +77,76 @@ def test_case_control_exclusion_counts() -> None:
         if len(exclusions) != expected_exclusion_counts:
             error_list.append(
                 f"Expected parser to identify {expected_exclusion_counts} cases. Instead {len(exclusions)} cases were identified"
+            )
+
+        assert not error_list, "errors occured:\n{}".format("\n".join(error_list))
+
+
+@pytest.mark.unit
+def test_multiple_phenotype_key_counts() -> None:
+    """Check that the PhenotypeFileParser output identifies the correct number of phenotypes."""
+    with PhenotypeFileParser(
+        "./tests/test_inputs/test_multiple_phenotype_file.txt"
+    ) as parser:
+        phenotype_counts = parser.parse_cases_and_controls()
+
+        assert len(phenotype_counts.keys()) == 2
+
+
+@pytest.mark.unit
+def test_multiple_phenotype_counts() -> None:
+    """Check that the PhenotypeFileParser identifies the correct case/control/exlcusion counts for multiple phenotypes."""
+    with PhenotypeFileParser(
+        "./tests/test_inputs/test_multiple_phenotype_file.txt"
+    ) as parser:
+        phenotype_counts = parser.parse_cases_and_controls()
+
+        cases_status_1 = phenotype_counts["status_1"]["cases"]
+        controls_status_1 = phenotype_counts["status_1"]["controls"]
+        exclusions_status_1 = phenotype_counts["status_1"]["excluded"]
+
+        cases_status_2 = phenotype_counts["status_2"]["cases"]
+        controls_status_2 = phenotype_counts["status_2"]["controls"]
+        exclusions_status_2 = phenotype_counts["status_2"]["excluded"]
+
+        expected_case_counts_status_1 = 8
+        expected_controls_counts_status_1 = 84
+        expected_exclusion_counts_status_1 = 8
+
+        expected_case_counts_status_2 = 7
+        expected_controls_counts_status_2 = 88
+        expected_exclusion_counts_status_2 = 5
+
+        error_list = []
+
+        if len(cases_status_1) != expected_case_counts_status_1:
+            error_list.append(
+                f"Expected parser to identify {expected_case_counts_status_1} cases. Instead {len(cases_status_1)} cases were identified."
+            )
+
+        if len(controls_status_1) != expected_controls_counts_status_1:
+            error_list.append(
+                f"Expected parser to identify {expected_controls_counts_status_1} cases. Instead {len(controls_status_1)} cases were identified"
+            )
+
+        if len(exclusions_status_1) != expected_exclusion_counts_status_1:
+            error_list.append(
+                f"Expected parser to identify {expected_exclusion_counts_status_1} cases. Instead {len(exclusions_status_1)} cases were identified"
+            )
+
+        if len(cases_status_2) != expected_case_counts_status_2:
+            error_list.append(
+                f"Expected parser to identify {expected_case_counts_status_2} cases. Instead {len(cases_status_2)} cases were identified."
+            )
+
+        if len(controls_status_2) != expected_controls_counts_status_2:
+            error_list.append(
+                f"Expected parser to identify {expected_controls_counts_status_2} cases. Instead {len(controls_status_2)} cases were identified"
+            )
+
+        if len(exclusions_status_2) != expected_exclusion_counts_status_2:
+            error_list.append(
+                f"Expected parser to identify {expected_exclusion_counts_status_2} cases. Instead {len(exclusions_status_2)} cases were identified"
             )
 
         assert not error_list, "errors occured:\n{}".format("\n".join(error_list))

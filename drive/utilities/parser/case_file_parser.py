@@ -1,9 +1,10 @@
 """Module to faciliate the user in parsing the phenotype file by incorporating multiple ecodings, separators, and by handling multiple errors."""
 
 import gzip
-from pathlib import Path
-from typing import Dict, List, Tuple, Union, TypeVar
 from logging import Logger
+from pathlib import Path
+from typing import Dict, List, Tuple, TypeVar, Union
+
 import log
 
 logger: Logger = log.get_logger(__name__)
@@ -92,39 +93,56 @@ class PhenotypeFileParser:
             raises a value error if the method doesn't identify a
             supported separator.
         """
-        if len(line.split(",")) == 2:
+        if len(line.split(",")) > 1:
             return ","
-        elif len(line.split("\t")) == 2:
+        elif len(line.split("\t")) > 1:
             return "\t"
-        elif len(line.split("|")) == 2:
+        elif len(line.split("|")) > 1:
             return "|"
         else:
             raise ValueError(
                 "The was no appropriate separator found for the file. Currently DRIVE supports: ',' or '\t' or '|'"
             )
 
-    def _generate_case_control(self, status_list: List[str]) -> None:
+    def _determine_status(
+        self,
+        line: list[str],
+        phenotype_dict: Dict[str, Dict[str, List[str]]],
+        phenotype_indx: Dict[int, str],
+    ) -> None:
         """Add the individual to the appropriate case/ control/exclusion list.
 
         Parameters
         ----------
-        status_list : List[str]
-            list of strings where the first element is the individual id
-            and the second element is the status coded as either 0, 1, N/
-            A, NA, or -1.
+        line: List[str]
+            list of individuals status for each phenotype in the file
+
+        phenotype_dict : Dict[str, Dict[str, List[str]]]
+            Tuple[Dict[str, Dict[str, List[str]]], Dict[int, str] str]
+            returns a tuple with three elements. The first element is a
+            dictionary where the keys are phenotypes. Values are
+            dictionaries where the keys are 'cases' or 'controls' or
+            'excluded' and values are list of ids. The second element is
+            a dictionary that maps the index of the phenotype in the
+            header line to the phenotype name. The third element is the
+            separator string
         """
-        print(status_list)
-        if status_list[1] == "1":
-            self.case_list.append(status_list[0])
-        elif status_list[1] == "0":
-            self.control_list.append(status_list[0])
-        elif status_list[1].lower() in ["na", "n/a", "-1"]:
-            self.exclusion_list.append(status_list[0])
-        else:
-            logger.warning(
-                f"The status for individual, {status_list[0]}, was not recognized. The status found in the file was {status_list[1]}. This individual will be added to the exclusion list but it is recommended that the user checks to ensure that this is not a typo in the phenotype file."
-            )
-            self.exclusion_list.append(status_list)
+        grid_id = line[0]
+
+        for indx, value in enumerate(line[1:]):
+            phenotype_mapping = phenotype_indx.get(indx)
+
+            if value == "1" or value == "1.0":
+                phenotype_dict[phenotype_mapping]["cases"].append(grid_id)
+            elif value == "0" or value == "0.0":
+                phenotype_dict[phenotype_mapping]["controls"].append(grid_id)
+            elif value.lower() in ["na", "n/a", "-1", "-1.0"]:
+                phenotype_dict[phenotype_mapping]["excluded"].append(grid_id)
+            else:
+                logger.warning(
+                    f"The status for individual, {grid_id}, was not recognized. The status found in the file was {value} for phenotype {phenotype_mapping}. This individual will be added to the exclusion list but it is recommended that the user checks to ensure that this is not a typo in the phenotype file."
+                )
+                self.exclusion_list.append(grid_id)
 
     @staticmethod
     def _create_phenotype_dictionary(
@@ -153,7 +171,7 @@ class PhenotypeFileParser:
         # determining what the appropriate separator should be
         separator = PhenotypeFileParser._check_separator(header_line)
 
-        if not "grid" in header_line.lower() or not "grids" in header_line.lower():
+        if not "grid" in header_line.lower() and not "grids" in header_line.lower():
             raise ValueError(
                 "Expected the first line of the phenotype file to have a header line with a column called grid or grids."
             )
@@ -186,7 +204,11 @@ class PhenotypeFileParser:
         """
         separator = ""
 
-        phenotype_dict, separator = PhenotypeFileParser._create_phenotype_dictionary(
+        (
+            phenotype_dict,
+            phenotype_mappings,
+            separator,
+        ) = PhenotypeFileParser._create_phenotype_dictionary(
             self.opened_file.readline()
         )
 
@@ -197,6 +219,6 @@ class PhenotypeFileParser:
             # Now we can split the file using that separator
             split_line = line.strip("\n").split(separator)
 
-            self._generate_case_control(split_line)
+            self._determine_status(split_line, phenotype_dict, phenotype_mappings)
 
-        return self.case_list, self.control_list, self.exclusion_list
+        return phenotype_dict

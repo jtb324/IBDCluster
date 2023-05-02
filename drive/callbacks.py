@@ -17,6 +17,8 @@ def check_input_exists(ibd_input_file: Path) -> Path:
     Raises
     ------
     FileNotFoundError
+        If the ibd input file does not exist then the program will
+        immediately raise a FileNotFoundError
     """
     if ibd_input_file.exists():
         return ibd_input_file
