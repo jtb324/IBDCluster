@@ -1,14 +1,17 @@
 import logging
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Dict, Iterator, List
+from typing import Dict, Iterator, List, Optional, TypeVar
 
 import log
 from models import FileIndices, Genes
 from pandas import DataFrame, concat, read_csv
-from rich.progress import Progress
 
 logger = log.get_logger(__name__)
+
+# we are going to create two exception class for the vertex
+
+T = TypeVar("T", bound="IbdFilter")
 
 
 @dataclass
@@ -16,30 +19,11 @@ class IbdFilter:
     ibd_file: Iterator[DataFrame]
     indices: FileIndices
     target_gene: Genes
-    chunk_count: int
     ibd_vs: DataFrame = field(default_factory=DataFrame)
     ibd_pd: DataFrame = field(default_factory=DataFrame)
     hapid_map: Dict[str, int] = field(default_factory=dict)
     all_haplotypes: List[str] = field(default_factory=list)
     haplotype_id: int = 0
-
-    @staticmethod
-    def _determine_chunk_count(ibd_file: Path) -> int:
-        """Staticmethod that will determine how many chunks the dataframe will be split into
-
-        Parameters
-        ----------
-        ibd_file : Path
-            Path object to the ibd file from hapIBD, iLASH, etc...
-
-        Returns
-        -------
-        int
-            returns the number of chunks that the dataframe will be broken into
-        """
-        input_file_chunks = read_csv(ibd_file, sep="\t", header=None, chunksize=100_100)
-
-        return sum([1 for _ in input_file_chunks])
 
     @classmethod
     def load_file(
@@ -47,8 +31,8 @@ class IbdFilter:
         ibd_file: Path,
         indices: FileIndices,
         target_gene: Genes,
-    ):
-        """Factory method that can returns the cluster model.
+    ) -> T:
+        """Factory method that returns the IBDFilter model
         This method makes sure that the ibd file exists
 
         Parameters
@@ -70,8 +54,8 @@ class IbdFilter:
 
         Returns
         -------
-        cluster
-            returns an initialized cluster object
+        IbdFilter
+            returns an initialized IbdFilter object
 
         Raises
         ------
@@ -81,11 +65,9 @@ class IbdFilter:
         if not ibd_file.is_file():
             raise FileNotFoundError(f"The file, {ibd_file}, was not found")
 
-        chunk_count = IbdFilter._determine_chunk_count(ibd_file)
-
         input_file_chunks = read_csv(ibd_file, sep="\t", header=None, chunksize=100_100)
 
-        return cls(input_file_chunks, indices, target_gene, chunk_count)
+        return cls(input_file_chunks, indices, target_gene)
 
     def _generate_map(self, chunk_data: DataFrame) -> None:
         """Method that will generate the dictionary that maps hapibd to integers
@@ -201,41 +183,109 @@ class IbdFilter:
 
         self.ibd_vs = concat([self.ibd_vs, id2_df])
 
-    def preprocess(self, min_centimorgan: int):
+    def _filter_for_cohort(
+        self, chunk: DataFrame, cohort_ids: Optional[List[str]] = None
+    ) -> DataFrame:
+        """filter cohort chunk to individuals in the cohort list
+
+        Parameters
+        ----------
+        chunk : DataFrame
+            chunk of pandas dataframe that has information about the shared
+            pairwise IBD segment.
+
+        cohort_ids : List[str]
+            Lists of ids that make up the cohort. The ibd_file will be filtered to only this list.
+
+        Returns
+        -------
+        DataFrame
+            returns the filtered pandas dataframe
+        """
+        # if no cohort ids were provided then we just return the chunk, otherwise we
+        # filter the dataframe for where id1 and id2 are in the cohort
+        if not cohort_ids:
+            return chunk
+        else:
+            return chunk[
+                (chunk[self.indices.id1_indx].isin(cohort_ids))
+                & (chunk[self.indices.id2_indx].isin(cohort_ids))
+            ]
+
+    def _check_for_no_shared_segments(ibd_pd: DataFrame, ibd_vs: DataFrame) -> None:
+        """Check to ensure that there were shared IBD segments found
+        based on the input conditions
+
+        Parameters
+        ----------
+        ibd_pd : DataFrame
+            dataframe that has all the pairwise shared segments that
+            satisfy the input conditions
+
+        ibd_vs : DataFrame
+            dataframe that has the information about each haplotype
+            and individual that are in ibd_pd
+
+        Raises
+        ------
+        ValueError
+            raises a ValueError if the dataframes are empty because
+            they cannot be empty or other steps of the program will
+            fail.
+        """
+        if ibd_pd.empty:
+            logger.critical(
+                "There were no shared IBD segments that satisfied the provided input conditions"
+            )
+            raise ValueError(
+                "There were no shared IBD segments that satisfied the provided input conditions. Please check to make sure that there is no typo in the target region or that the correct ibd input file was provided."
+            )
+        elif ibd_vs.empty:
+            logger.critical(
+                "There were no haplotype ids identified in the filtering step."
+            )
+            raise ValueError(
+                "There were no haplotype ids identified in the filtering step."
+            )
+        else:
+            logger.debug(
+                f"Identified {ibd_pd.shape[0]} shared ibd segments with {ibd_vs.shape[0]} unique haplotypes"
+            )
+
+    def preprocess(self, min_centimorgan: int, cohort_ids: Optional[List[str]] = None):
         """Method that will filter the ibd file.
 
         Parameters
         ----------
         min_centimorgan : int
             Minimum segment threshold that is used to filter the ibd file. Program only
-            keeps segments that are greater than or equal to the threshold
+            keeps segments that are greater than or equal to the threshold.
+
+        cohort_ids : List[str]
+            Lists of ids that make up the cohort. The ibd_file will be filtered to only this list.
         """
         for chunk in self.ibd_file:
-            # with Progress(transient=True) as progress_bar:
-            #     for chunk in progress_bar.track(
-            #         self.ibd_file,
-            #         description="Filtering ibd file: ",
-            #         total=self.chunk_count,
-            #     ):
-            filtered_chunk = self._filter(chunk, min_centimorgan)
+            cohort_restricted_chunk = self._filter_for_cohort(chunk, cohort_ids)
 
-            if not filtered_chunk.empty:
+            size_filtered_chunk = self._filter(cohort_restricted_chunk, min_centimorgan)
+
+            if not size_filtered_chunk.empty:
                 # We have to add two column with the haplotype ids
                 self.indices.get_haplotype_id(
-                    filtered_chunk,
+                    size_filtered_chunk,
                     self.indices.id1_indx,
                     self.indices.hap1_indx,
                     "hapid1",
                 )
 
                 self.indices.get_haplotype_id(
-                    filtered_chunk,
+                    size_filtered_chunk,
                     self.indices.id2_indx,
                     self.indices.hap2_indx,
                     "hapid2",
                 )
                 # We then need to make sure that there are no duplicates in the dataframe
-                removed_dups = self._remove_dups(filtered_chunk)
+                removed_dups = self._remove_dups(size_filtered_chunk)
 
                 # We need to update the mappings for the grids
                 self._generate_map(removed_dups[["hapid1", "hapid2"]])
@@ -248,4 +298,3 @@ class IbdFilter:
 
         self.ibd_pd.reset_index(drop=True, inplace=True)
         self.ibd_vs = self.ibd_vs.drop_duplicates().sort_values(by="idnum")
-        # self.ibd_vs.loc[:, "idnum"] = self.ibd_vs.idnum.astype(str)
