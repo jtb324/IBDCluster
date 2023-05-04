@@ -1,5 +1,6 @@
 import json
 import re
+from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
@@ -144,19 +145,40 @@ def main(
         "drive.log", "--log-filename", help="Name for the log output file."
     ),
 ) -> None:
+    # getting the programs start time
+    start_time = datetime.now()
+
     # creating and configuring the logger and then recording user inputs
     logger = CustomLogger.create_logger()
 
     logger.configure(output.parent, log_filename, verbose, log_to_console)
 
+    logger.record_inputs(
+        ibd_file=input_file,
+        ibd_program_used=ibd_format,
+        gene_target_region=target,
+        output_prefix=output,
+        phenotype_description_file=phenotype_description_file,
+        phenotype_file=case_file,
+        minimum_centimorgan_threshold=min_cm,
+        random_walk_step_size=step,
+        max_recheck_times=max_check,
+        max_network_size=max_network_size,
+        minimum_connection_threshold=minimum_connected_thres,
+        min_network_size=min_network_size,
+        log_to_console=log_to_console,
+        log_filename=log_filename,
+    )
+
+    logger.info(f"Start time: {start_time}")
     # we need to load in the phenotype descriptions file to get descriptions of each phenotype
     if phenotype_description_file:
-        logger.info(
+        logger.verbose(
             f"Using the phenotype descriptions file at: {phenotype_description_file}"
         )
         desc_dict = load_phenotype_descriptions(phenotype_description_file)
     else:
-        logger.info("No phenotype descriptions provided")
+        logger.verbose("No phenotype descriptions provided")
         desc_dict = {}
 
     # if the user has provided a phenotype file then we will determine case/control/
@@ -165,11 +187,11 @@ def main(
         with PhenotypeFileParser(case_file) as phenotype_file:
             phenotype_counts, cohort_ids = phenotype_file.parse_cases_and_controls()
 
-            logger.info(
+            logger.verbose(
                 f"identified {len(phenotype_counts.keys())} phenotypes within the file {case_file}"
             )
     else:
-        logger.info(
+        logger.verbose(
             "No phenotype information provided. Only the clustering step of the analysis will be performed"
         )
 
@@ -227,6 +249,12 @@ def main(
         for analysis_obj in analysis_plugins:
             logger.debug(f"output path being used in analysis: {output}")
             analysis_obj.analyze(data=plugin_api)
+
+    end_time = datetime.now()
+
+    logger.info(
+        f"Analysis finished at {end_time}. Total runtime: {end_time - start_time}"
+    )
 
 
 if __name__ == "__main__":
