@@ -28,10 +28,8 @@ class PhenotypeFileParser:
         ------
         FileNotFoundError
         """
-        # creating list to keep track of cases and controls
-        self.case_list: List[str] = []
-        self.control_list: List[str] = []
-        self.exclusion_list: List[str] = []
+        self.individuals: List[str] = []
+
         # now we are going to try to create an attribute for the input file
         filepath = Path(filepath)
         if not filepath.exists():
@@ -127,8 +125,13 @@ class PhenotypeFileParser:
             header line to the phenotype name. The third element is the
             separator string
         """
+        # pull out the correct grid id
         grid_id = line[0]
+        # we need to keep track of the total list of grids used in the
+        # analysis
+        self.individuals.append(grid_id)
 
+        # go through each value in the file
         for indx, value in enumerate(line[1:]):
             phenotype_mapping = phenotype_indx.get(indx)
 
@@ -142,12 +145,12 @@ class PhenotypeFileParser:
                 logger.warning(
                     f"The status for individual, {grid_id}, was not recognized. The status found in the file was {value} for phenotype {phenotype_mapping}. This individual will be added to the exclusion list but it is recommended that the user checks to ensure that this is not a typo in the phenotype file."
                 )
-                self.exclusion_list.append(grid_id)
+                phenotype_dict[phenotype_mapping]["excluded"].append(grid_id)
 
     @staticmethod
     def _create_phenotype_dictionary(
         header_line: str,
-    ) -> Tuple[Dict[str, Dict[str, List[str]]], str]:
+    ) -> Tuple[Dict[str, Dict[str, List[str]]], Dict[int, str], str]:
         """Function that will generate a dictionary where the keys are
         phenotypes and the values list of cases/exclusions/controls
 
@@ -158,7 +161,7 @@ class PhenotypeFileParser:
 
         Returns
         -------
-        Tuple[Dict[str, Dict[str, List[str]]], Dict[int, str] str]
+        Tuple[Dict[str, Dict[str, List[str]]], Dict[int, str], str]
             returns a tuple with three elements. The first element is a
             dictionary where the keys are phenotypes. Values are
             dictionaries where the keys are 'cases' or 'controls' or
@@ -171,6 +174,7 @@ class PhenotypeFileParser:
         # determining what the appropriate separator should be
         separator = PhenotypeFileParser._check_separator(header_line)
 
+        # raise an error if there is no header line, otherwise determine all the phenotypes
         if not "grid" in header_line.lower() and not "grids" in header_line.lower():
             raise ValueError(
                 "Expected the first line of the phenotype file to have a header line with a column called grid or grids."
@@ -192,21 +196,25 @@ class PhenotypeFileParser:
 
         return phenotype_dict, phenotype_indx, separator
 
-    def parse_cases_and_controls(self) -> Tuple[List[str], List[str], List[str]]:
+    def parse_cases_and_controls(
+        self,
+    ) -> Tuple[Dict[str, Dict[str, List[str]]], List[str]]:
         """Generate a list for cases, controls, and excluded individuals.
 
         Returns
         -------
-        Tuple[List[str], List[str], List[str]]
-            returns a tuple where the first element is a list of case
-            ids, second element is a list of control ids, and the final
-            element is a list of excluded individuals.
+        Tuple[Dict[str, Dict[str, List[str]]], List[str]]
+            returns a tuple where the first element is a dictionary where
+            the keys are the phenotypes and the values are dictionary of
+            the case/controls/excluded individuals lists. The second
+            element is a list of all grids from the file to be used as a
+            cohort
         """
         separator = ""
 
         (
             phenotype_dict,
-            phenotype_mappings,
+            phenotype_indx_mappings,
             separator,
         ) = PhenotypeFileParser._create_phenotype_dictionary(
             self.opened_file.readline()
@@ -216,9 +224,6 @@ class PhenotypeFileParser:
             # we need to first check if there is a header row
             split_line = line.strip("\n").split(separator)
 
-            # Now we can split the file using that separator
-            split_line = line.strip("\n").split(separator)
+            self._determine_status(split_line, phenotype_dict, phenotype_indx_mappings)
 
-            self._determine_status(split_line, phenotype_dict, phenotype_mappings)
-
-        return phenotype_dict
+        return phenotype_dict, self.individuals
