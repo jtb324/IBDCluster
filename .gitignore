@@ -15,7 +15,8 @@
 *.log
 # SUBMODULES
 IBDCluster/log/README.md
-
+# PROFILES
+/profiles/
 # BUILD DIRECTORIES
 /dist/
 
