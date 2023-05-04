@@ -36,7 +36,7 @@ def test_check_separator_error(test_str: str) -> None:
 def test_single_phenotype_output_keys() -> None:
     """Check that the PhenotypeFileParser identifies the correct phenotype in the output."""
     with PhenotypeFileParser("./tests/test_inputs/test_phenotype_file.txt") as parser:
-        phenotype_counts = parser.parse_cases_and_controls()
+        phenotype_counts, _ = parser.parse_cases_and_controls()
 
         assert "status" in phenotype_counts.keys()
 
@@ -45,7 +45,7 @@ def test_single_phenotype_output_keys() -> None:
 def test_single_phenotype_output_key_length() -> None:
     """Check that the PhenotypeFileParser identifies the correct number of phenotypes in the output."""
     with PhenotypeFileParser("./tests/test_inputs/test_phenotype_file.txt") as parser:
-        phenotype_counts = parser.parse_cases_and_controls()
+        phenotype_counts, _ = parser.parse_cases_and_controls()
 
         assert len(phenotype_counts.keys()) == 1
 
@@ -54,7 +54,7 @@ def test_single_phenotype_output_key_length() -> None:
 def test_case_control_exclusion_counts() -> None:
     """Check that the PhenotypeFileParser identifies the correct case/control/exlcusion counts."""
     with PhenotypeFileParser("./tests/test_inputs/test_phenotype_file.txt") as parser:
-        phenotype_counts = parser.parse_cases_and_controls()
+        phenotype_counts, _ = parser.parse_cases_and_controls()
 
         cases = phenotype_counts["status"]["cases"]
         controls = phenotype_counts["status"]["controls"]
@@ -88,7 +88,7 @@ def test_multiple_phenotype_key_counts() -> None:
     with PhenotypeFileParser(
         "./tests/test_inputs/test_multiple_phenotype_file.txt"
     ) as parser:
-        phenotype_counts = parser.parse_cases_and_controls()
+        phenotype_counts, _ = parser.parse_cases_and_controls()
 
         assert len(phenotype_counts.keys()) == 2
 
@@ -99,7 +99,7 @@ def test_multiple_phenotype_counts() -> None:
     with PhenotypeFileParser(
         "./tests/test_inputs/test_multiple_phenotype_file.txt"
     ) as parser:
-        phenotype_counts = parser.parse_cases_and_controls()
+        phenotype_counts, _ = parser.parse_cases_and_controls()
 
         cases_status_1 = phenotype_counts["status_1"]["cases"]
         controls_status_1 = phenotype_counts["status_1"]["controls"]
