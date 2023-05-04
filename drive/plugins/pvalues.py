@@ -3,7 +3,7 @@ from typing import Dict, List, Protocol, Tuple
 
 import log
 from factory import factory_register
-from models import Network, Data_Interface, Network_Interface
+from models import Data_Interface, Network, Network_Interface
 from numpy import float64
 from scipy.stats import binomtest
 

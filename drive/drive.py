@@ -4,13 +4,13 @@ import re
 from pathlib import Path
 from typing import Optional
 
+import factory
 import log
 import typer
-from utilities.callbacks import check_input_exists, check_json_path
-from cluster import cluster, ClusterHandler
+from cluster import ClusterHandler, cluster
 from filters import IbdFilter
-from models import FormatTypes, Genes, create_indices, Data
-import factory
+from models import Data, FormatTypes, Genes, create_indices
+from utilities.callbacks import check_input_exists, check_json_path
 from utilities.parser import PhenotypeFileParser, load_phenotype_descriptions
 
 app = typer.Typer(add_completion=False)
