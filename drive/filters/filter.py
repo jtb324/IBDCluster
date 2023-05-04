@@ -3,11 +3,11 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Dict, Iterator, List, Optional, TypeVar
 
-import log
+from log import CustomLogger
 from models import FileIndices, Genes
 from pandas import DataFrame, concat, read_csv
 
-logger = log.get_logger(__name__)
+logger = CustomLogger.get_logger(__name__)
 
 # we are going to create two exception class for the vertex
 

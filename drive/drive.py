@@ -1,14 +1,13 @@
 import json
-import os
 import re
 from pathlib import Path
 from typing import Optional
 
 import factory
-import log
 import typer
 from cluster import ClusterHandler, cluster
 from filters import IbdFilter
+from log import CustomLogger
 from models import Data, FormatTypes, Genes, create_indices
 from utilities.callbacks import check_input_exists, check_json_path
 from utilities.parser import PhenotypeFileParser, load_phenotype_descriptions
@@ -146,9 +145,9 @@ def main(
     ),
 ) -> None:
     # creating and configuring the logger and then recording user inputs
-    logger = log.create_logger()
+    logger = CustomLogger.create_logger()
 
-    log.configure(logger, output.parent, log_filename, verbose, log_to_console)
+    logger.configure(output.parent, log_filename, verbose, log_to_console)
 
     # we need to load in the phenotype descriptions file to get descriptions of each phenotype
     if phenotype_description_file:

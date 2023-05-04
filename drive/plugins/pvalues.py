@@ -1,13 +1,13 @@
 from dataclasses import dataclass
-from typing import Dict, List, Protocol, Tuple
+from typing import Dict, List, Tuple
 
-import log
 from factory import factory_register
-from models import Data_Interface, Network, Network_Interface
+from log import CustomLogger
+from models import Data_Interface, Network_Interface
 from numpy import float64
 from scipy.stats import binomtest
 
-logger = log.get_logger(__name__)
+logger = CustomLogger.get_logger(__name__)
 
 
 @dataclass

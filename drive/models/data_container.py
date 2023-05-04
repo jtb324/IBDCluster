@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, List, Protocol
 
-from models import Network_Interface
+from .networks import Network_Interface
 
 
 class Data_Interface(Protocol):

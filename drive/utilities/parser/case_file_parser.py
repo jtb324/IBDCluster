@@ -5,9 +5,9 @@ from logging import Logger
 from pathlib import Path
 from typing import Dict, List, Tuple, TypeVar, Union
 
-import log
+from log import CustomLogger
 
-logger: Logger = log.get_logger(__name__)
+logger: Logger = CustomLogger.get_logger(__name__)
 
 # creating a type annotation for the PhenotypeFileParser class
 T = TypeVar("T", bound="PhenotypeFileParser")

@@ -4,12 +4,12 @@ from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Set, Tuple
 
 import igraph as ig
-import log
+from log import CustomLogger
 from models import Filter, Network, Network_Interface
 from pandas import DataFrame
 
 # creating a logger
-logger: logging.Logger = log.get_logger(__name__)
+logger: logging.Logger = CustomLogger.get_logger(__name__)
 
 # Create a generic variable that can represents the class from the
 

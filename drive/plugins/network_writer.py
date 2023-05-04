@@ -1,14 +1,11 @@
-import os
-import pathlib
-from dataclasses import dataclass, field
-from typing import List, Protocol
+from dataclasses import dataclass
+from typing import List
 
-import log
-import pandas as pd
 from factory import factory_register
+from log import CustomLogger
 from models import Data_Interface, Network_Interface
 
-logger = log.get_logger(__name__)
+logger = CustomLogger.get_logger(__name__)
 
 
 @dataclass
