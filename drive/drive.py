@@ -1,12 +1,17 @@
+import json
+import os
 import re
 from pathlib import Path
+from typing import Optional
 
 import log
 import typer
-from callbacks import check_input_exists
+from utilities.callbacks import check_input_exists, check_json_path
 from cluster import cluster, ClusterHandler
 from filters import IbdFilter
-from models import FormatTypes, Genes, create_indices
+from models import FormatTypes, Genes, create_indices, Data
+import factory
+from utilities.parser import PhenotypeFileParser, load_phenotype_descriptions
 
 app = typer.Typer(add_completion=False)
 
@@ -81,11 +86,17 @@ def main(
         "--max-recheck",
         help="Maximum number of times to re-perform the clustering. If the user wishes to not re-perform the clustering, this value can just be set to 0.",
     ),
-    case_file: Path = typer.Option(
-        "",
+    case_file: Optional[Path] = typer.Option(
+        None,
         "-c",
         "--cases",
         help="A file containing individuals who are cases. This file expects for there to be two columns. The first column will have individual ids and the second has status where cases are indicated by a 1 and control are indicated by a 0.",
+    ),
+    phenotype_description_file: Optional[Path] = typer.Option(
+        None,
+        "-d",
+        "--descriptions",
+        help="tab delimited text file that has descriptions for each phecode. this file should have two columns called phecode and phenotype",
     ),
     max_network_size: int = typer.Option(
         30, "--max-network-size", help="maximum network size allowed"
@@ -110,6 +121,13 @@ def main(
         "--hub-threshold",
         help="Threshold to determine what percentage of hubs to keep",
     ),
+    json_path: Path = typer.Option(
+        None,
+        "--json-config",
+        "-j",
+        help="path to the json config file",
+        callback=check_json_path,
+    ),
     verbose: int = typer.Option(
         0,
         "--verbose",
@@ -127,9 +145,37 @@ def main(
         "drive.log", "--log-filename", help="Name for the log output file."
     ),
 ) -> None:
+    # creating and configuring the logger and then recording user inputs
     logger = log.create_logger()
 
     log.configure(logger, output.parent, log_filename, verbose, log_to_console)
+
+    # we need to load in the phenotype descriptions file to get descriptions of each phenotype
+    if phenotype_description_file:
+        logger.info(
+            f"Using the phenotype descriptions file at: {phenotype_description_file}"
+        )
+        desc_dict = load_phenotype_descriptions(phenotype_description_file)
+    else:
+        logger.info("No phenotype descriptions provided")
+        desc_dict = {}
+
+    # if the user has provided a phenotype file then we will determine case/control/
+    # exclusion counts. Otherwise we return an empty dictionary
+    if case_file:
+        with PhenotypeFileParser(case_file) as phenotype_file:
+            phenotype_counts, cohort_ids = phenotype_file.parse_cases_and_controls()
+
+            logger.info(
+                f"identified {len(phenotype_counts.keys())} phenotypes within the file {case_file}"
+            )
+    else:
+        logger.info(
+            "No phenotype information provided. Only the clustering step of the analysis will be performed"
+        )
+
+        phenotype_counts = {}
+        cohort_ids = []
 
     indices = create_indices(ibd_format.lower())
 
@@ -143,46 +189,45 @@ def main(
     # sys.exit()
     filter_obj = IbdFilter.load_file(input_file, indices, target_gene)
 
-    filter_obj.preprocess(min_cm)
+    filter_obj.preprocess(min_cm, cohort_ids)
+
+    # We need to invert the hapid_map dictionary so that the integer mappings are keys and the values are the haplotype string
+    hapid_inverted = {value: key for key, value in filter_obj.hapid_map.items()}
 
     # creating the object that will handle clustering within the networks
     cluster_handler = ClusterHandler(
-        minimum_connected_thres, max_network_size, max_check, step, min_network_size
+        minimum_connected_thres,
+        max_network_size,
+        max_check,
+        step,
+        min_network_size,
+        segment_dist_threshold,
+        hub_threshold,
+        hapid_inverted,
     )
 
-    cluster(filter_obj, cluster_handler, indices.cM_indx)
+    networks = cluster(filter_obj, cluster_handler, indices.cM_indx)
 
-    # with open("{}.DRIVE.txt".format(output), "w") as output:
-    #     output.write(
-    #         "## {0} IBD segments from {1} haplotypes\n".format(
-    #             ibd_g.ecount(), ibd_g.vcount()
-    #         )
-    #     )
-    #     output.write("## Identified {} IBD clusters\n".format(len(outclst)))
-    #     output.write(
-    #         "clstID\tn.total\tn.haplotype\ttrue.postive.n\ttrue.postive\tfalst.postive\tIDs\tID.haplotype\n"
-    #     )
-    #     for clst in outclst:
-    #         clsthapid = list(
-    #             ibdvs.loc[ibdvs["idnum"].isin(clst_info[clst]["memberID"])]["hapID"]
-    #         )
-    #         clstIID = set(
-    #             ibdvs.loc[ibdvs["idnum"].isin(clst_info[clst]["memberID"])]["IID"]
-    #         )
-    #         n = len(clstIID)
-    #         nhap = len(clsthapid)
-    #         output.write(
-    #             "clst{0}\t{1}\t{2}\t{3}\t{4:.4f}\t{5}\t{6}\t{7}\n".format(
-    #                 clst,
-    #                 n,
-    #                 nhap,
-    #                 clst_info[clst]["true_positive_n"],
-    #                 clst_info[clst]["true_positive"],
-    #                 clst_info[clst]["false_negative_n"],
-    #                 ",".join(clstIID),
-    #                 ",".join(clsthapid),
-    #             )
-    #         )
+    # creating the data container that all the plugins can interact with
+    plugin_api = Data(networks, output, phenotype_counts, desc_dict)
+
+    # making sure that the output directory is created
+    # This section will load in the analysis plugins
+    with open(json_path, encoding="utf-8") as json_config:
+        config = json.load(json_config)
+
+        factory.load_plugins(config["plugins"])
+
+        analysis_plugins = [factory.factory_create(item) for item in config["modules"]]
+
+        logger.debug(
+            f"Using plugins: {', '.join([obj.name for obj in analysis_plugins])}"
+        )
+
+        # iterating over every plugin and then running the analyze and write method
+        for analysis_obj in analysis_plugins:
+            logger.debug(f"output path being used in analysis: {output}")
+            analysis_obj.analyze(data=plugin_api)
 
 
 if __name__ == "__main__":
