@@ -1,1 +1,1 @@
-from .cluster import Network, cluster, ClusterHandler
+from .cluster import ClusterHandler, cluster
