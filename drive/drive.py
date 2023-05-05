@@ -128,6 +128,10 @@ def main(
         help="path to the json config file",
         callback=check_json_path,
     ),
+    recluster: bool = typer.Option(
+        True,
+        help="whether or not the user wishes the program to automically recluster based on things lik hub threshold, max network size and how connected the graph is. ",
+    ),
     verbose: int = typer.Option(
         0,
         "--verbose",
@@ -152,7 +156,7 @@ def main(
     logger = CustomLogger.create_logger()
 
     logger.configure(output.parent, log_filename, verbose, log_to_console)
-
+    # record the input parameters
     logger.record_inputs(
         ibd_file=input_file,
         ibd_program_used=ibd_format,
@@ -168,6 +172,7 @@ def main(
         min_network_size=min_network_size,
         log_to_console=log_to_console,
         log_filename=log_filename,
+        recluster=recluster,
     )
 
     logger.info(f"Start time: {start_time}")
@@ -225,6 +230,7 @@ def main(
         segment_dist_threshold,
         hub_threshold,
         hapid_inverted,
+        recluster,
     )
 
     networks = cluster(filter_obj, cluster_handler, indices.cM_indx)
@@ -233,7 +239,7 @@ def main(
     plugin_api = Data(networks, output, phenotype_counts, desc_dict)
 
     # making sure that the output directory is created
-    # This section will load in the analysis plugins
+    # This section will load in the analysis plugins and run each plugin
     with open(json_path, encoding="utf-8") as json_config:
         config = json.load(json_config)
 
@@ -247,7 +253,6 @@ def main(
 
         # iterating over every plugin and then running the analyze and write method
         for analysis_obj in analysis_plugins:
-            logger.debug(f"output path being used in analysis: {output}")
             analysis_obj.analyze(data=plugin_api)
 
     end_time = datetime.now()

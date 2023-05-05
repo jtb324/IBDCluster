@@ -56,9 +56,16 @@ class Pvalues:
         float
             returns the phenotype frequency as a float
         """
-        return len(phenotype_counts.get("cases")) / len(
+
+        phenotype_frequency = len(phenotype_counts.get("cases")) / len(
             phenotype_counts.get("controls")
         )
+
+        logger.verbose(
+            f"Identified {len(phenotype_counts.get('cases'))} cases and {len(phenotype_counts.get('controls'))} giving a phenotype frequency of {phenotype_frequency}"
+        )
+
+        return phenotype_frequency
 
     @staticmethod
     def _get_carriers_in_network(
@@ -83,6 +90,7 @@ class Pvalues:
             returns the number of carriers in the network
         """
         # determine the number of carriers in the network
+
         return len(network.members.intersection(set(phenotype_counts.get("cases"))))
 
     def _remove_exclusions(
@@ -127,13 +135,16 @@ class Pvalues:
         ----------
         carriers_list : dict[str, list[str]]
             Dictionary that has all the carriers in list for each phenotype of interest
+
         network : Network
             Network objectattributes for iids, pairs, and haplotypes
+
         phenotype_percentages : dict[str, float]
             dictionary where the keys are phecode strings and the values are the phecode
             frequencies in the population
 
         Returns
+        -------
         Tuple[str, str, Dict[str, str]]
             returns a tuple where the first element is the string of the
             minimum phenotype code. The second value is the description
@@ -172,7 +183,7 @@ class Pvalues:
             )
 
             # Next two lines create the string and then concats it to the output_str
-            phenotype_str = f"{num_carriers_in_network}\t{excluded_count}\t{pvalue}\t"
+            phenotype_str = f"{num_carriers_in_network}\t{excluded_count}\t{pvalue}"
 
             phenotype_pvalues[phenotype] = phenotype_str
 
@@ -235,16 +246,16 @@ class Pvalues:
                     data.phenotype_descriptions, min_phenotype_code
                 )
 
-            # create an attribute that has all the strings for what is the
-            # min_pvalue, the min_phenotype_code, and the description of the
-            # phenotype
-            network.min_pvalue_str = "\t".join(
-                [min_pvalue_str, min_phenotype_code, min_phecode_description]
-            )
+                # create an attribute that has all the strings for what is the
+                # min_pvalue, the min_phenotype_code, and the description of the
+                # phenotype
+                network.min_pvalue_str = (
+                    f"{min_pvalue_str}\t{min_phenotype_code}\t{min_phecode_description}"
+                )
 
-            # adding the dictionary of phenotype values to the attribute
-            # pvalues
-            network.pvalues = phenotype_pvalues
+                # adding the dictionary of phenotype values to the attribute
+                # pvalues
+                network.pvalues = phenotype_pvalues
 
 
 def initialize() -> None:

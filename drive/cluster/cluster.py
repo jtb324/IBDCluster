@@ -26,6 +26,7 @@ class ClusterHandler:
     segment_dist_threshold: int
     hub_threshold: float
     haplotype_mappings: Dict[str, int]
+    recluster: bool
     check_times: int = 0
     recheck_clsts: Dict[int, List[Network_Interface]] = field(default_factory=dict)
     final_clusters: List[Network_Interface] = field(default_factory=list)
@@ -74,9 +75,6 @@ class ClusterHandler:
             result of the random walk cluster. This object has
             information about clusters and membership
         """
-        # logger.info(
-        #     f"Using a random walk with a step size of {self.random_walk_step_size} to identify clusters within the provided graph"
-        # )
 
         ibd_walktrap = ig.Graph.community_walktrap(
             graph, weights="cm", steps=self.random_walk_step_size
@@ -84,7 +82,7 @@ class ClusterHandler:
 
         random_walk_clusters = ibd_walktrap.as_clustering()
 
-        logger.info(random_walk_clusters.summary())
+        logger.verbose(random_walk_clusters.summary())
 
         return random_walk_clusters
 
@@ -311,6 +309,7 @@ class ClusterHandler:
                 self.check_times < self.max_rechecks
                 and true_pos_ratio < self.minimum_connected_thres
                 and len(member_list) > self.max_network_size
+                and self.recluster
             ):
                 # We can put all of this information into a network class. Here the member list will still be in integers
                 network = Network(
@@ -482,7 +481,7 @@ def cluster(
         and len(cluster_obj.recheck_clsts[cluster_obj.check_times]) > 0
     ):
         cluster_obj.check_times += 1
-        logger.info(f"recheck: {cluster_obj.check_times}")
+        logger.verbose(f"recheck: {cluster_obj.check_times}")
 
         _ = cluster_obj.recheck_clsts.setdefault(cluster_obj.check_times, [])
 
@@ -494,7 +493,7 @@ def cluster(
     # logginng the number of segments, haplotypes, and clusters
     # identified in the analysis
     logger.info(
-        f"{network_graph.ecount()} IBD segments from {network_graph.vcount()} haplotypes"
+        f"Identified {network_graph.ecount()} IBD segments from {network_graph.vcount()} haplotypes"
     )
 
     logger.info(f"Identified {len(cluster_obj.final_clusters)} IBD clusters")
