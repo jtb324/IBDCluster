@@ -36,14 +36,14 @@ class NetworkWriter:
             return header_str + "\n"
         else:
             # We need to add columns for the min pvalue descriptions
-            header_str += "\tmin_pvalue\tmin_phenotype\tmin_phenotype_description\t"
+            header_str += "\tmin_pvalue\tmin_phenotype\tmin_phenotype_description"
             # for each phenotype we are going to create 4 columns for the number
             # of cases in the network, the number of excluded individuals in the
             # network, and the pvalue for the phenotype
             for column in phenotypes:
-                header_str += f"{column + '_cases_in_network'}\t{column + '_excluded_in_network'}\t{column + '_pvalue'}\n"
+                header_str += f"\t{column + '_cases_in_network'}\t{column + '_excluded_in_network'}\t{column + '_pvalue'}"
 
-            return header_str
+            return header_str + "\n"
 
     @staticmethod
     def _create_network_info_str(
@@ -94,7 +94,7 @@ class NetworkWriter:
             header_str = NetworkWriter._form_header(phenotypes)
             # iterate over each network and pull out the appropriate
             # information into strings
-            networks_output.write(header_str)
+            _ = networks_output.write(header_str)
 
             for network in data.networks:
                 network_info_str = NetworkWriter._create_network_info_str(

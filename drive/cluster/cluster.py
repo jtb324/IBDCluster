@@ -478,7 +478,7 @@ def cluster(
 
     while (
         cluster_obj.check_times < cluster_obj.max_rechecks
-        and len(cluster_obj.recheck_clsts[cluster_obj.check_times]) > 0
+        and len(cluster_obj.recheck_clsts.get(cluster_obj.check_times, [])) > 0
     ):
         cluster_obj.check_times += 1
         logger.verbose(f"recheck: {cluster_obj.check_times}")

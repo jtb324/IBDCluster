@@ -62,6 +62,8 @@ class IbdFilter:
         FileNotFoundError
             raises an error if the file doesn't exist
         """
+        logger.verbose(f"Reading in the ibd input file at {ibd_file}")
+
         if not ibd_file.is_file():
             raise FileNotFoundError(f"The file, {ibd_file}, was not found")
 
@@ -80,7 +82,8 @@ class IbdFilter:
         """
         haplotypes = chunk_data.values.ravel()
 
-        logger.debug(f"identified {len(haplotypes)} haplotypes.")
+        logger.verbose(f"identified {len(haplotypes)} haplotypes.")
+
         # iterate over each haplotype and add it to the dictionary if the value is not present
         for value in haplotypes:
             key_value = self.hapid_map.setdefault(value, self.haplotype_id)
