@@ -9,12 +9,14 @@ DRIVE program inputs
 
 The DRIVE program has several command line arguments shown in the image below. 
 
-.. ![image](https://belowlab.github.io/drive/assets/images/DRIVE_cli_options.png)
+.. image:: /assets/images/DRIVE_cli_options.png
+    :height: 300
+    :align: center
+    :alt: DRIVE cli option menu
 
 Required Inputs:
 ----------------
 
-----
 
 * :yellow:`INPUT`: This input file is formed as the result of running hap-IBD, iLASH, GERMLINE, or RapID. These program output a file where pairwise shared IBD segments have been identified.
 
