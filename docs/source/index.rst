@@ -33,7 +33,11 @@ If you have any questions about DRIVE, you can either post an issue on the Githu
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
+   :hidden:
 
    installation/install
+   inputs
+   output
+   examples/examples_command_format
 
 

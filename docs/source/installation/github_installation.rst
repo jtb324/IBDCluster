@@ -17,8 +17,6 @@ This installation method assumes that you are familiar with Git and Github, the 
 Steps to installing DRIVE:
 --------------------------
 
----------------------------
-
 Step 1: Clone the Github repository:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 You can clone the Github repository into your local environment using the command shown below:
@@ -37,13 +35,18 @@ You should now have a directory called drive. You can check if this exists using
 
 The process should look similar to the screencasts below:
 
-.. <img src="https://belowlab.github.io/drive/screencasts/github_cloning.gif" alt="Github Drive repository cloning" width="600" height="400" />
+.. image:: /screencasts/github_cloning.gif
+    :height: 300
+    :align: center
+    :alt: github cloning screencast
+
 
 If you see a directory file tree then the program cloned correctly. If you receive an error saying that the directory does not exist, then you will have to debug the error to move onto step 2.
 
 Step 2: Installing necessary dependencies:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-*if not using Poetry or are not interested in developing the project:* <br>
+*if not using Poetry or are not interested in developing the project:* 
+
 If you are not using Poetry than you can directly clone the conda environment.yml file using the following command:
 
 .. code::
@@ -53,7 +56,8 @@ If you are not using Poetry than you can directly clone the conda environment.ym
 
 Make sure that you are in the drive directory. This command will create a virtual environment called DRIVE using python 3.6 with all the required dependencies. 
 
-*If using Poetry:* <br>
+*If using Poetry:* 
+
 If you are using poetry you will first have to create a new [conda environment](https://conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html) or [virtual environment using venv](https://docs.python.org/3/library/venv.html) and then activate the environment.
 
 
@@ -68,7 +72,10 @@ Once you have created and activated the environment, you can install the necessa
     poetry install --without dev, docs
 
 
-.. <img src="https://belowlab.github.io/drive/screencasts/poetry_dependency_install.gif" alt="Poetry installation example" width="600" height="400" />
+.. image:: /screencasts/poetry_dependency_install.gif
+    :height: 300
+    :align: center
+    :alt: screencast of installing dependencies using poetry
 
 
 This command will install all of the runtime dependencies and not the developer dependencies. If you are developing the tool then you can use the command
@@ -87,4 +94,7 @@ If successful you will have all the dependencies you need to run the program. Yo
 
 you should see the DRIVE cli as shown below: 
 
-.. <img src="https://belowlab.github.io/drive/screencasts/drive_cli.gif" alt="DRIVE cli options" width="600" height="400" />
+.. image:: /screencasts/drive_cli.gif
+    :height: 300
+    :align: center
+    :alt: help message displayed by successful install of DRIVE
