@@ -33,6 +33,7 @@ If you have any questions about DRIVE, you can either post an issue on the Githu
    :caption: Contents:
    :hidden:
 
+   /installation/installation
    contributing
 
 

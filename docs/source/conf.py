@@ -14,7 +14,12 @@ release = '2.0.1'
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
-extensions = []
+github_url = "https://github.com/belowlab/drive"
+
+extensions = [
+    'sphinx.ext.napoleon',
+    'sphinx_copybutton',
+]
 
 templates_path = ['_templates']
 exclude_patterns = []
@@ -24,5 +29,10 @@ exclude_patterns = []
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
-html_theme = 'furo'
+html_theme = "piccolo_theme"
+
+html_theme_options = {
+    "source_url": 'https://github.com/belowlab/drive',
+    "source_icon": 'github'
+}
 html_static_path = ['_static']
