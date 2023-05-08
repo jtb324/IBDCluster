@@ -4,7 +4,7 @@ import sys
 
 sys.path.append("./drive")
 
-from drive.drive import app
+from drive import app
 
 runner = CliRunner()
 
@@ -20,15 +20,17 @@ def test_drive_full_run():
         app,
         [
             "-i",
-            "./tests/test_inputs/biovu_longQT_EUR_chr21.ibd.gz",
+            "./tests/test_kcne_inputs/biovu_longQT_EUR_chr21.ibd.gz",
             "-f",
-            "hapIBD",
+            "hapibd",
             "-t",
-            "22:35818986-35884508",
+            "21:35818986-35884508",
             "-o",
             "./tests/test_output/integration_test_results",
             "-m",
             "3",
+            "-vv",
+            "--no-recluster"
         ],
     )
     # result = runner.invoke(
@@ -38,5 +40,5 @@ def test_drive_full_run():
     #     ],
     #     color=True
     # )
-    # print(result)
+    print(result)
     assert result.exit_code == 0
