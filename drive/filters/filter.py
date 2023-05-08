@@ -47,10 +47,10 @@ class IbdFilter:
             get_haplotype_ids method that will form the
             haplotype ibd.
 
-            target_gene : Genes
-                namedtuple that has attributes for the
-                chromosome, the gene start position, and the
-                gene end position.
+        target_gene : Genes
+            namedtuple that has attributes for the
+            chromosome, the gene start position, and the
+            gene end position.
 
         Returns
         -------
@@ -122,8 +122,26 @@ class IbdFilter:
         -------
         pd.DataFrame
             returns the filtered dataframe
-        """
 
+        Raises
+        ------
+        ValueError
+            raises a ValueError if the target chromosome number is not 
+            found within the provided IBD file. This situation will 
+            lead to a error later in the program which is why the 
+            exception is raised. It is assumed to be due the user 
+            providing the incorrect file by accident
+        """
+        # we are going to first make sure that the ibd file is for the 
+        # right chromosome. If the target_gene chromosome number is not 
+        # found in the file then a ValueError is raised.
+        if self.target_gene.chr not in data_chunk[self.indices.chr_indx].values:
+            
+            error_msg = f"Expected the value of the chromosome column in the ibd file to be {self.target_gene.chr}. This value was not found in the column. Please ensure that you selected the proper IBD file for chromosome {self.target_gene.chr} before rerunning DRIVE."
+
+            logger.critical(error_msg)
+
+            raise ValueError(error_msg)
         # We are going to filter the data and then make a copy
         # of it to return so that we don't get the
         # SettingWithCopyWarning
