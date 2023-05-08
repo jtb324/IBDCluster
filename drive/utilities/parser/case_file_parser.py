@@ -139,7 +139,9 @@ class PhenotypeFileParser:
                 phenotype_dict[phenotype_mapping]["cases"].append(grid_id)
             elif value == "0" or value == "0.0":
                 phenotype_dict[phenotype_mapping]["controls"].append(grid_id)
-            elif value.lower() in ["na", "n/a", "-1", "-1.0"]:
+            # we are going to excluded on values na, n/a, -1, -1.
+            # 0, "", " " to try to catch different values
+            elif value.lower() in ["na", "n/a", "-1", "-1.0", " ", ""]:
                 phenotype_dict[phenotype_mapping]["excluded"].append(grid_id)
             else:
                 logger.warning(
