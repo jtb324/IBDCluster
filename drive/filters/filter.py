@@ -153,7 +153,8 @@ class IbdFilter:
         ].copy()
 
     def _remove_dups(self, data: DataFrame) -> DataFrame:
-        """Filters out rows where the haplotype ids are the same
+        """Filters out rows where the haplotype ids are the 
+        same
 
         Parameters
         ----------
@@ -170,7 +171,7 @@ class IbdFilter:
         Raises
         ------
         KeyError
-            raises a key error if hapid1 and hapid2 are not columns in the dataframe
+            raises a key error if hapid1 or hapid2 are not columns in the dataframe
         """
         try:
             return data[data["hapid1"] != data["hapid2"]]
@@ -207,7 +208,8 @@ class IbdFilter:
     def _filter_for_cohort(
         self, chunk: DataFrame, cohort_ids: Optional[List[str]] = None
     ) -> DataFrame:
-        """filter cohort chunk to individuals in the cohort list
+        """filter cohort chunk to individuals in the cohort 
+        list
 
         Parameters
         ----------
@@ -234,25 +236,25 @@ class IbdFilter:
             ]
 
     def _check_for_no_shared_segments(ibd_pd: DataFrame, ibd_vs: DataFrame) -> None:
-        """Check to ensure that there were shared IBD segments found
-        based on the input conditions
+        """Check to ensure that there were shared IBD segments 
+        found based on the input conditions
 
         Parameters
         ----------
         ibd_pd : DataFrame
-            dataframe that has all the pairwise shared segments that
-            satisfy the input conditions
+            dataframe that has all the pairwise shared 
+            segments that satisfy the input conditions
 
         ibd_vs : DataFrame
-            dataframe that has the information about each haplotype
-            and individual that are in ibd_pd
+            dataframe that has the information about each 
+            haplotype and individual that are in ibd_pd
 
         Raises
         ------
         ValueError
-            raises a ValueError if the dataframes are empty because
-            they cannot be empty or other steps of the program will
-            fail.
+            raises a ValueError if the dataframes are empty 
+            because they cannot be empty or other steps of the 
+            program will fail.
         """
         if ibd_pd.empty:
             logger.critical(
@@ -279,8 +281,9 @@ class IbdFilter:
         Parameters
         ----------
         min_centimorgan : int
-            Minimum segment threshold that is used to filter the ibd file. Program only
-            keeps segments that are greater than or equal to the threshold.
+            Minimum segment threshold that is used to filter
+            the ibd file. Program only keeps segments that 
+            are greater than or equal to the threshold.
 
         cohort_ids : List[str]
             Lists of ids that make up the cohort. The ibd_file will be filtered to only this list.

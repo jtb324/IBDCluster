@@ -30,8 +30,12 @@ class PhenotypeFileParser:
         """
         self.individuals: List[str] = []
 
-        # now we are going to try to create an attribute for the input file
+        # we are going to make sure the filepath variable is a 
+        # PosixPath
         filepath = Path(filepath)
+
+        # now we are going to try to create an attribute for 
+        # the input file
         if not filepath.exists():
             raise FileNotFoundError(f"The file {filepath} was not found")
         else:
