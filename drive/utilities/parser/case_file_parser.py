@@ -3,7 +3,7 @@
 import gzip
 from logging import Logger
 from pathlib import Path
-from typing import Dict, List, Tuple, TypeVar, Union
+from typing import Dict, List, Set, Tuple, TypeVar, Union
 
 from log import CustomLogger
 
@@ -11,7 +11,6 @@ logger: Logger = CustomLogger.get_logger(__name__)
 
 # creating a type annotation for the PhenotypeFileParser class
 T = TypeVar("T", bound="PhenotypeFileParser")
-
 
 class PhenotypeFileParser:
     """Parser used to read in the phenotype file. This will allow use to account for different delimiters in files as well as catch errors."""
@@ -109,7 +108,7 @@ class PhenotypeFileParser:
     def _determine_status(
         self,
         line: list[str],
-        phenotype_dict: Dict[str, Dict[str, List[str]]],
+        phenotype_dict: Dict[str, Dict[str, Set[str]]],
         phenotype_indx: Dict[int, str],
     ) -> None:
         """Add the individual to the appropriate case/ control/exclusion list.
@@ -119,8 +118,8 @@ class PhenotypeFileParser:
         line: List[str]
             list of individuals status for each phenotype in the file
 
-        phenotype_dict : Dict[str, Dict[str, List[str]]]
-            Tuple[Dict[str, Dict[str, List[str]]], Dict[int, str] str]
+        phenotype_dict : Dict[str, Dict[str, Set[str]]]
+
             returns a tuple with three elements. The first element is a
             dictionary where the keys are phenotypes. Values are
             dictionaries where the keys are 'cases' or 'controls' or
@@ -140,13 +139,13 @@ class PhenotypeFileParser:
             phenotype_mapping = phenotype_indx.get(indx)
 
             if value == "1" or value == "1.0":
-                phenotype_dict[phenotype_mapping]["cases"].append(grid_id)
+                phenotype_dict[phenotype_mapping]["cases"].add(grid_id)
             elif value == "0" or value == "0.0":
-                phenotype_dict[phenotype_mapping]["controls"].append(grid_id)
+                phenotype_dict[phenotype_mapping]["controls"].add(grid_id)
             # we are going to excluded on values na, n/a, -1, -1.
             # 0, "", " " to try to catch different values
             elif value.lower() in ["na", "n/a", "-1", "-1.0", " ", ""]:
-                phenotype_dict[phenotype_mapping]["excluded"].append(grid_id)
+                phenotype_dict[phenotype_mapping]["excluded"].add(grid_id)
             else:
                 logger.warning(
                     f"The status for individual, {grid_id}, was not recognized. The status found in the file was {value} for phenotype {phenotype_mapping}. This individual will be added to the exclusion list but it is recommended that the user checks to ensure that this is not a typo in the phenotype file."
@@ -156,7 +155,7 @@ class PhenotypeFileParser:
     @staticmethod
     def _create_phenotype_dictionary(
         header_line: str,
-    ) -> Tuple[Dict[str, Dict[str, List[str]]], Dict[int, str], str]:
+    ) -> Tuple[Dict[str, Dict[str, Set[str]]], Dict[int, str], str]:
         """Function that will generate a dictionary where the keys are
         phenotypes and the values list of cases/exclusions/controls
 
@@ -167,7 +166,7 @@ class PhenotypeFileParser:
 
         Returns
         -------
-        Tuple[Dict[str, Dict[str, List[str]]], Dict[int, str], str]
+        Tuple[Dict[str, Dict[str, Set[str]]], Dict[int, str], str]
             returns a tuple with three elements. The first element is a
             dictionary where the keys are phenotypes. Values are
             dictionaries where the keys are 'cases' or 'controls' or
@@ -198,13 +197,13 @@ class PhenotypeFileParser:
         # build each dictionary
         for indx, phenotype in enumerate(split_line_phenotypes):
             phenotype_indx[indx] = phenotype
-            phenotype_dict[phenotype] = {"cases": [], "controls": [], "excluded": []}
+            phenotype_dict[phenotype] = {"cases": set(), "controls": set(), "excluded": set()}
 
         return phenotype_dict, phenotype_indx, separator
 
     def parse_cases_and_controls(
         self,
-    ) -> Tuple[Dict[str, Dict[str, List[str]]], List[str]]:
+    ) -> Tuple[Dict[str, Dict[str, Set[str]]], List[str]]:
         """Generate a list for cases, controls, and excluded individuals.
 
         Returns
