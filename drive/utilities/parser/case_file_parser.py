@@ -12,6 +12,7 @@ logger: Logger = CustomLogger.get_logger(__name__)
 # creating a type annotation for the PhenotypeFileParser class
 T = TypeVar("T", bound="PhenotypeFileParser")
 
+
 class PhenotypeFileParser:
     """Parser used to read in the phenotype file. This will allow use to account for different delimiters in files as well as catch errors."""
 
@@ -28,12 +29,11 @@ class PhenotypeFileParser:
         FileNotFoundError
         """
         self.individuals: List[str] = []
-
-        # we are going to make sure the filepath variable is a 
+        # we are going to make sure the filepath variable is a
         # PosixPath
         filepath = Path(filepath)
 
-        # now we are going to try to create an attribute for 
+        # now we are going to try to create an attribute for
         # the input file
         if not filepath.exists():
             raise FileNotFoundError(f"The file {filepath} was not found")
@@ -152,8 +152,8 @@ class PhenotypeFileParser:
                 )
                 phenotype_dict[phenotype_mapping]["excluded"].append(grid_id)
 
-    @staticmethod
     def _create_phenotype_dictionary(
+        self,
         header_line: str,
     ) -> Tuple[Dict[str, Dict[str, Set[str]]], Dict[int, str], str]:
         """Function that will generate a dictionary where the keys are
@@ -179,11 +179,15 @@ class PhenotypeFileParser:
         # determining what the appropriate separator should be
         separator = PhenotypeFileParser._check_separator(header_line)
 
+        logger.debug(f"Identified the separator, {separator}, in the file: {self.file}")
+
         # raise an error if there is no header line, otherwise determine all the phenotypes
         if not "grid" in header_line.lower() and not "grids" in header_line.lower():
-            raise ValueError(
-                "Expected the first line of the phenotype file to have a header line with a column called grid or grids."
-            )
+            error_msg = "Expected the first line of the phenotype file to have a header line with a column called grid or grids."
+
+            logger.critical(error_msg)
+
+            raise ValueError(error_msg)
         else:
             split_line_phenotypes = header_line.strip("\n").split(separator)[1:]
 
@@ -197,8 +201,14 @@ class PhenotypeFileParser:
         # build each dictionary
         for indx, phenotype in enumerate(split_line_phenotypes):
             phenotype_indx[indx] = phenotype
-            phenotype_dict[phenotype] = {"cases": set(), "controls": set(), "excluded": set()}
+            phenotype_dict[phenotype] = {
+                "cases": set(),
+                "controls": set(),
+                "excluded": set(),
+            }
 
+        logger.debug(f"Phenotype index dictionary:\n {phenotype_indx}")
+        logger.debug(f"Phenotype counts dictionary: \n {phenotype_dict}")
         return phenotype_dict, phenotype_indx, separator
 
     def parse_cases_and_controls(
@@ -215,7 +225,6 @@ class PhenotypeFileParser:
             element is a list of all grids from the file to be used as a
             cohort
         """
-        separator = ""
 
         (
             phenotype_dict,

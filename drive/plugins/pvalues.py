@@ -49,7 +49,7 @@ class Pvalues:
         Parameters
         ----------
         phenotype_counts : Dict[str, List[str]]
-            Dictionary that has list for individuals who are 
+            Dictionary that has list for individuals who are
             cases, controls, or exclusions.
 
         Returns
@@ -72,17 +72,17 @@ class Pvalues:
     def _get_carriers_in_network(
         phenotype_counts: Dict[str, List[str]], network: Network_Interface
     ) -> int:
-        """determine the number of individual cases that are 
+        """determine the number of individual cases that are
         also in the network
 
         Parameters
         ----------
         phenotype_counts : Dict[str, List[str]]
-            Dictionary that has list for individuals who are 
+            Dictionary that has list for individuals who are
             cases, controls, or exclusions.
 
         network : Network_Interface
-            Network object with information about members of 
+            Network object with information about members of
             the networks and what haplotypes are in the network
 
         Returns
@@ -97,25 +97,25 @@ class Pvalues:
     def _remove_exclusions(
         phenotype_counts: Dict[str, List[str]], network: Network_Interface
     ) -> Tuple[int, int]:
-        """determine size of network after removing excluded 
+        """determine size of network after removing excluded
         individuals
 
         Parameters
         ----------
         phenotype_counts : Dict[str, List[str]]
-            Dictionary that has list for individuals who are 
+            Dictionary that has list for individuals who are
             cases, controls, or exclusions.
 
         network : Network_Interface
-            Network object with information about members of 
+            Network object with information about members of
             the networks and what haplotypes are in the network
 
         Returns
         -------
         Tuple[int, int]
-            returns the number of individuals in the network, 
-            not counting those individuals classified as 
-            excluded in the phenotype_counts dictionary. Also 
+            returns the number of individuals in the network,
+            not counting those individuals classified as
+            excluded in the phenotype_counts dictionary. Also
             returns the number of individuals excluded.
         """
 

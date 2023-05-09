@@ -46,7 +46,7 @@ def split_target_string(chromo_pos_str: str) -> Genes:
 
     if len(split_str) != 3:
         error_msg = f"Expected the gene position string to be formatted like chromosome:start_position-end_position. Instead it was formatted as {chromo_pos_str}"
-        
+
         raise ValueError(error_msg)
 
     integer_split_str = [int(value) for value in split_str]

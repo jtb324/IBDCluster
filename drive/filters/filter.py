@@ -126,17 +126,16 @@ class IbdFilter:
         Raises
         ------
         ValueError
-            raises a ValueError if the target chromosome number is not 
-            found within the provided IBD file. This situation will 
-            lead to a error later in the program which is why the 
-            exception is raised. It is assumed to be due the user 
+            raises a ValueError if the target chromosome number is not
+            found within the provided IBD file. This situation will
+            lead to a error later in the program which is why the
+            exception is raised. It is assumed to be due the user
             providing the incorrect file by accident
         """
-        # we are going to first make sure that the ibd file is for the 
-        # right chromosome. If the target_gene chromosome number is not 
+        # we are going to first make sure that the ibd file is for the
+        # right chromosome. If the target_gene chromosome number is not
         # found in the file then a ValueError is raised.
         if self.target_gene.chr not in data_chunk[self.indices.chr_indx].values:
-            
             error_msg = f"Expected the value of the chromosome column in the ibd file to be {self.target_gene.chr}. This value was not found in the column. Please ensure that you selected the proper IBD file for chromosome {self.target_gene.chr} before rerunning DRIVE."
 
             logger.critical(error_msg)
@@ -153,7 +152,7 @@ class IbdFilter:
         ].copy()
 
     def _remove_dups(self, data: DataFrame) -> DataFrame:
-        """Filters out rows where the haplotype ids are the 
+        """Filters out rows where the haplotype ids are the
         same
 
         Parameters
@@ -208,7 +207,7 @@ class IbdFilter:
     def _filter_for_cohort(
         self, chunk: DataFrame, cohort_ids: Optional[List[str]] = None
     ) -> DataFrame:
-        """filter cohort chunk to individuals in the cohort 
+        """filter cohort chunk to individuals in the cohort
         list
 
         Parameters
@@ -236,24 +235,24 @@ class IbdFilter:
             ]
 
     def _check_for_no_shared_segments(ibd_pd: DataFrame, ibd_vs: DataFrame) -> None:
-        """Check to ensure that there were shared IBD segments 
+        """Check to ensure that there were shared IBD segments
         found based on the input conditions
 
         Parameters
         ----------
         ibd_pd : DataFrame
-            dataframe that has all the pairwise shared 
+            dataframe that has all the pairwise shared
             segments that satisfy the input conditions
 
         ibd_vs : DataFrame
-            dataframe that has the information about each 
+            dataframe that has the information about each
             haplotype and individual that are in ibd_pd
 
         Raises
         ------
         ValueError
-            raises a ValueError if the dataframes are empty 
-            because they cannot be empty or other steps of the 
+            raises a ValueError if the dataframes are empty
+            because they cannot be empty or other steps of the
             program will fail.
         """
         if ibd_pd.empty:
@@ -282,7 +281,7 @@ class IbdFilter:
         ----------
         min_centimorgan : int
             Minimum segment threshold that is used to filter
-            the ibd file. Program only keeps segments that 
+            the ibd file. Program only keeps segments that
             are greater than or equal to the threshold.
 
         cohort_ids : List[str]
