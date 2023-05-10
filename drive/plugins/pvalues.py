@@ -92,7 +92,7 @@ class Pvalues:
         """
         # determine the number of carriers in the network
 
-        return len(network.members.intersection(set(phenotype_counts.get("cases"))))
+        return len(network.members.intersection(phenotype_counts.get("cases")))
 
     def _remove_exclusions(
         phenotype_counts: Dict[str, List[str]], network: Network_Interface

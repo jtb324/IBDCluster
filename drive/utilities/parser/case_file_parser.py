@@ -230,9 +230,7 @@ class PhenotypeFileParser:
             phenotype_dict,
             phenotype_indx_mappings,
             separator,
-        ) = PhenotypeFileParser._create_phenotype_dictionary(
-            self.opened_file.readline()
-        )
+        ) = self._create_phenotype_dictionary(self.opened_file.readline())
 
         for line in self.opened_file:
             # we need to first check if there is a header row
