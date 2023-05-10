@@ -1,4 +1,5 @@
 import logging
+import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Dict, Iterator, List, Optional, TypeVar
@@ -274,6 +275,15 @@ class IbdFilter:
                 f"Identified {ibd_pd.shape[0]} shared ibd segments with {ibd_vs.shape[0]} unique haplotypes"
             )
 
+    def _check_empty_dataframes(self) -> None:
+        """Check if the provided dataframe is empty. If it is then it
+        raises an error and exits the program"""
+        if self.ibd_pd.empty:
+            logger.info(
+                "No individuals from the analysis cohort share an IBD segment across the provided target region"
+            )
+            sys.exit(0)
+
     def preprocess(self, min_centimorgan: int, cohort_ids: Optional[List[str]] = None):
         """Method that will filter the ibd file.
 
@@ -288,12 +298,11 @@ class IbdFilter:
             Lists of ids that make up the cohort. The ibd_file will be filtered to only this list.
         """
         for chunk in self.ibd_file:
-            
             cohort_restricted_chunk = self._filter_for_cohort(chunk, cohort_ids)
 
             if cohort_restricted_chunk.empty:
                 continue
-            
+
             size_filtered_chunk = self._filter(cohort_restricted_chunk, min_centimorgan)
 
             if not size_filtered_chunk.empty:
@@ -322,6 +331,8 @@ class IbdFilter:
                 self.ibd_pd = concat([self.ibd_pd, removed_dups])
 
                 self._generate_vertices(removed_dups)
+
+        self._check_empty_dataframes()
 
         self.ibd_pd.reset_index(drop=True, inplace=True)
         self.ibd_vs = self.ibd_vs.drop_duplicates().sort_values(by="idnum")
