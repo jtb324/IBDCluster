@@ -288,8 +288,12 @@ class IbdFilter:
             Lists of ids that make up the cohort. The ibd_file will be filtered to only this list.
         """
         for chunk in self.ibd_file:
+            
             cohort_restricted_chunk = self._filter_for_cohort(chunk, cohort_ids)
 
+            if cohort_restricted_chunk.empty:
+                continue
+            
             size_filtered_chunk = self._filter(cohort_restricted_chunk, min_centimorgan)
 
             if not size_filtered_chunk.empty:
