@@ -8,3 +8,4 @@ DRIVE has several installation options. Pip installation is the most straightfow
 
     pip_installation
     github_installation
+    docker
