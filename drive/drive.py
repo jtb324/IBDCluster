@@ -45,9 +45,9 @@ def split_target_string(chromo_pos_str: str) -> Genes:
     split_str = re.split(":|-", chromo_pos_str)
 
     if len(split_str) != 3:
-        raise ValueError(
-            f"Expected the gene position string to be formatted like chromosome:start_position-end_position. Instead it was formatted as {chromo_pos_str}"
-        )
+        error_msg = f"Expected the gene position string to be formatted like chromosome:start_position-end_position. Instead it was formatted as {chromo_pos_str}"
+
+        raise ValueError(error_msg)
 
     integer_split_str = [int(value) for value in split_str]
 
@@ -192,11 +192,11 @@ def main(
         with PhenotypeFileParser(case_file) as phenotype_file:
             phenotype_counts, cohort_ids = phenotype_file.parse_cases_and_controls()
 
-            logger.verbose(
+            logger.info(
                 f"identified {len(phenotype_counts.keys())} phenotypes within the file {case_file}"
             )
     else:
-        logger.verbose(
+        logger.info(
             "No phenotype information provided. Only the clustering step of the analysis will be performed"
         )
 

@@ -49,7 +49,8 @@ class Pvalues:
         Parameters
         ----------
         phenotype_counts : Dict[str, List[str]]
-            Dictionary that has list for individuals who are cases, controls, or exclusions.
+            Dictionary that has list for individuals who are
+            cases, controls, or exclusions.
 
         Returns
         -------
@@ -57,6 +58,7 @@ class Pvalues:
             returns the phenotype frequency as a float
         """
 
+        # We need to first check if there are even controls in the file
         phenotype_frequency = len(phenotype_counts.get("cases")) / len(
             phenotype_counts.get("controls")
         )
@@ -71,18 +73,18 @@ class Pvalues:
     def _get_carriers_in_network(
         phenotype_counts: Dict[str, List[str]], network: Network_Interface
     ) -> int:
-        """determine the number of individual cases that are also in the
-        network
+        """determine the number of individual cases that are
+        also in the network
 
         Parameters
         ----------
         phenotype_counts : Dict[str, List[str]]
-            Dictionary that has list for individuals who are cases,
-            controls, or exclusions.
+            Dictionary that has list for individuals who are
+            cases, controls, or exclusions.
 
         network : Network_Interface
-            Network object with information about members of the networks
-            and what haplotypes are in the network
+            Network object with information about members of
+            the networks and what haplotypes are in the network
 
         Returns
         -------
@@ -91,29 +93,31 @@ class Pvalues:
         """
         # determine the number of carriers in the network
 
-        return len(network.members.intersection(set(phenotype_counts.get("cases"))))
+        return len(network.members.intersection(phenotype_counts.get("cases")))
 
     def _remove_exclusions(
         phenotype_counts: Dict[str, List[str]], network: Network_Interface
     ) -> Tuple[int, int]:
-        """determine size of network after removing excluded individuals
+        """determine size of network after removing excluded
+        individuals
 
         Parameters
         ----------
         phenotype_counts : Dict[str, List[str]]
-            Dictionary that has list for individuals who are cases,
-            controls, or exclusions.
+            Dictionary that has list for individuals who are
+            cases, controls, or exclusions.
 
         network : Network_Interface
-            Network object with information about members of the networks
-            and what haplotypes are in the network
+            Network object with information about members of
+            the networks and what haplotypes are in the network
 
         Returns
         -------
         Tuple[int, int]
-            returns the number of individuals in the network, not
-            counting those individuals classified as excluded in the
-            phenotype_counts dictionary. Also returns the number of individuals excluded.
+            returns the number of individuals in the network,
+            not counting those individuals classified as
+            excluded in the phenotype_counts dictionary. Also
+            returns the number of individuals excluded.
         """
 
         return len(network.members.difference(phenotype_counts.get("excluded"))), len(
@@ -164,35 +168,44 @@ class Pvalues:
 
         # iterating over each phenotype
         for phenotype, phenotype_counts in cohort_carriers.items():
-            phenotype_freq = Pvalues._determine_phenotype_frequency(phenotype_counts)
+            # if the control frequency is zero then we can't do the
+            # stats and should N/A for all values
+            # TODO: Make this not so hacky
+            if len(phenotype_counts.get("controls")) == 0:
+                phenotype_pvalues[phenotype] = "N/A\tN/A\tN/A"
+            else:
+                phenotype_freq = Pvalues._determine_phenotype_frequency(
+                    phenotype_counts
+                )
 
-            num_carriers_in_network = Pvalues._get_carriers_in_network(
-                phenotype_counts, network
-            )
+                num_carriers_in_network = Pvalues._get_carriers_in_network(
+                    phenotype_counts, network
+                )
 
-            network_size_after_exclusions, excluded_count = Pvalues._remove_exclusions(
-                phenotype_counts, network
-            )
+                (
+                    network_size_after_exclusions,
+                    excluded_count,
+                ) = Pvalues._remove_exclusions(phenotype_counts, network)
 
-            # calling the sub function that determines the pvalue
-            pvalue: float = Pvalues._determine_pvalue(
-                phenotype,
-                phenotype_freq,
-                num_carriers_in_network,
-                network_size_after_exclusions,
-            )
+                # calling the sub function that determines the pvalue
+                pvalue: float = Pvalues._determine_pvalue(
+                    phenotype,
+                    phenotype_freq,
+                    num_carriers_in_network,
+                    network_size_after_exclusions,
+                )
 
-            # Next two lines create the string and then concats it to the output_str
-            phenotype_str = f"{num_carriers_in_network}\t{excluded_count}\t{pvalue}"
+                # Next two lines create the string and then concats it to the output_str
+                phenotype_str = f"{num_carriers_in_network}\t{excluded_count}\t{pvalue}"
 
-            phenotype_pvalues[phenotype] = phenotype_str
+                phenotype_pvalues[phenotype] = phenotype_str
 
-            # Now we will see if the phecode is lower then the cur_min_pvalue. If it is then
-            # we will change the cur_min_pvalue and we will update the cur_min_phecode
-            if pvalue < cur_min_pvalue and pvalue != 0:
-                cur_min_pvalue = pvalue
+                # Now we will see if the phecode is lower then the cur_min_pvalue. If it is then
+                # we will change the cur_min_pvalue and we will update the cur_min_phecode
+                if pvalue < cur_min_pvalue and pvalue != 0:
+                    cur_min_pvalue = pvalue
 
-                cur_min_phenotype = phenotype
+                    cur_min_phenotype = phenotype
 
         # if a minimum phecode is identified then we need to create a string, otherwise we
         # use N/A's

@@ -1,4 +1,5 @@
 import logging
+import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Dict, Iterator, List, Optional, TypeVar
@@ -47,10 +48,10 @@ class IbdFilter:
             get_haplotype_ids method that will form the
             haplotype ibd.
 
-            target_gene : Genes
-                namedtuple that has attributes for the
-                chromosome, the gene start position, and the
-                gene end position.
+        target_gene : Genes
+            namedtuple that has attributes for the
+            chromosome, the gene start position, and the
+            gene end position.
 
         Returns
         -------
@@ -122,8 +123,25 @@ class IbdFilter:
         -------
         pd.DataFrame
             returns the filtered dataframe
-        """
 
+        Raises
+        ------
+        ValueError
+            raises a ValueError if the target chromosome number is not
+            found within the provided IBD file. This situation will
+            lead to a error later in the program which is why the
+            exception is raised. It is assumed to be due the user
+            providing the incorrect file by accident
+        """
+        # we are going to first make sure that the ibd file is for the
+        # right chromosome. If the target_gene chromosome number is not
+        # found in the file then a ValueError is raised.
+        if self.target_gene.chr not in data_chunk[self.indices.chr_indx].values:
+            error_msg = f"Expected the value of the chromosome column in the ibd file to be {self.target_gene.chr}. This value was not found in the column. Please ensure that you selected the proper IBD file for chromosome {self.target_gene.chr} before rerunning DRIVE."
+
+            logger.critical(error_msg)
+
+            raise ValueError(error_msg)
         # We are going to filter the data and then make a copy
         # of it to return so that we don't get the
         # SettingWithCopyWarning
@@ -135,7 +153,8 @@ class IbdFilter:
         ].copy()
 
     def _remove_dups(self, data: DataFrame) -> DataFrame:
-        """Filters out rows where the haplotype ids are the same
+        """Filters out rows where the haplotype ids are the
+        same
 
         Parameters
         ----------
@@ -152,7 +171,7 @@ class IbdFilter:
         Raises
         ------
         KeyError
-            raises a key error if hapid1 and hapid2 are not columns in the dataframe
+            raises a key error if hapid1 or hapid2 are not columns in the dataframe
         """
         try:
             return data[data["hapid1"] != data["hapid2"]]
@@ -189,7 +208,8 @@ class IbdFilter:
     def _filter_for_cohort(
         self, chunk: DataFrame, cohort_ids: Optional[List[str]] = None
     ) -> DataFrame:
-        """filter cohort chunk to individuals in the cohort list
+        """filter cohort chunk to individuals in the cohort
+        list
 
         Parameters
         ----------
@@ -216,25 +236,25 @@ class IbdFilter:
             ]
 
     def _check_for_no_shared_segments(ibd_pd: DataFrame, ibd_vs: DataFrame) -> None:
-        """Check to ensure that there were shared IBD segments found
-        based on the input conditions
+        """Check to ensure that there were shared IBD segments
+        found based on the input conditions
 
         Parameters
         ----------
         ibd_pd : DataFrame
-            dataframe that has all the pairwise shared segments that
-            satisfy the input conditions
+            dataframe that has all the pairwise shared
+            segments that satisfy the input conditions
 
         ibd_vs : DataFrame
-            dataframe that has the information about each haplotype
-            and individual that are in ibd_pd
+            dataframe that has the information about each
+            haplotype and individual that are in ibd_pd
 
         Raises
         ------
         ValueError
-            raises a ValueError if the dataframes are empty because
-            they cannot be empty or other steps of the program will
-            fail.
+            raises a ValueError if the dataframes are empty
+            because they cannot be empty or other steps of the
+            program will fail.
         """
         if ibd_pd.empty:
             logger.critical(
@@ -255,20 +275,33 @@ class IbdFilter:
                 f"Identified {ibd_pd.shape[0]} shared ibd segments with {ibd_vs.shape[0]} unique haplotypes"
             )
 
+    def _check_empty_dataframes(self) -> None:
+        """Check if the provided dataframe is empty. If it is then it
+        raises an error and exits the program"""
+        if self.ibd_pd.empty:
+            logger.info(
+                "No individuals from the analysis cohort share an IBD segment across the provided target region"
+            )
+            sys.exit(0)
+
     def preprocess(self, min_centimorgan: int, cohort_ids: Optional[List[str]] = None):
         """Method that will filter the ibd file.
 
         Parameters
         ----------
         min_centimorgan : int
-            Minimum segment threshold that is used to filter the ibd file. Program only
-            keeps segments that are greater than or equal to the threshold.
+            Minimum segment threshold that is used to filter
+            the ibd file. Program only keeps segments that
+            are greater than or equal to the threshold.
 
         cohort_ids : List[str]
             Lists of ids that make up the cohort. The ibd_file will be filtered to only this list.
         """
         for chunk in self.ibd_file:
             cohort_restricted_chunk = self._filter_for_cohort(chunk, cohort_ids)
+
+            if cohort_restricted_chunk.empty:
+                continue
 
             size_filtered_chunk = self._filter(cohort_restricted_chunk, min_centimorgan)
 
@@ -298,6 +331,8 @@ class IbdFilter:
                 self.ibd_pd = concat([self.ibd_pd, removed_dups])
 
                 self._generate_vertices(removed_dups)
+
+        self._check_empty_dataframes()
 
         self.ibd_pd.reset_index(drop=True, inplace=True)
         self.ibd_vs = self.ibd_vs.drop_duplicates().sort_values(by="idnum")
