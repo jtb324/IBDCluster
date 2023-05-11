@@ -54,6 +54,7 @@ furo = "^2023.3.27"
 sphinx-autodocgen = "^1.3"
 sphinx-copybutton = "^0.5.2"
 piccolo-theme = "^0.15.0"
+sphinx-book-theme = "^1.0.1"
 
 [tool.commitizen]
 name = "cz_conventional_commits"
