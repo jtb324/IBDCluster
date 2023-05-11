@@ -1,5 +1,5 @@
-Contributing
-============
+How to contribute
+=================
 
 Aliqua elit cillum irure nulla commodo occaecat nisi adipisicing non magna tempor. Adipisicing ex minim dolor sint reprehenderit ex sit veniam id excepteur do voluptate. Excepteur incididunt nisi consequat laboris. Cillum irure sunt sit culpa anim occaecat do cupidatat culpa deserunt. Esse adipisicing non esse amet eiusmod. Laborum id incididunt ut Lorem ea ea consectetur ut exercitation ullamco nulla laboris. Et laborum reprehenderit in ullamco ea ullamco duis et.
 
