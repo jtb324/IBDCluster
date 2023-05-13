@@ -84,7 +84,7 @@ def main(
     max_check: int = typer.Option(
         5,
         "--max-recheck",
-        help="Maximum number of times to re-perform the clustering. If the user wishes to not re-perform the clustering, this value can just be set to 0.",
+        help="Maximum number of times to re-perform the clustering. This value will not be used if the flag --no-recluster is used.",
     ),
     case_file: Optional[Path] = typer.Option(
         None,
