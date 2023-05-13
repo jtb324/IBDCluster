@@ -54,29 +54,10 @@ html_theme_options = {
     "repository_branch": "refactor",
     "path_to_docs": "/docs/source/",
     "use_repository_button": True,
+    "use_sidenotes": True,
     # 'navbar_pagenav': True
 }
 html_static_path = ['_static']
 
 # Napolean Settings
 napoleon_numpy_docstring = True
-
-# autodocgen_config = [{
-#         # 'modules':[drive],
-#         # 'generated_source_dir': DOC_SOURCE_DIR+'/autodocgen-output/',
-
-#         # if module matches this then it and any of its submodules will be skipped
-#         # 'skip_module_regex': '(.*[.]__|myskippedmodule)',
-
-#         # produce a text file containing a list of everything documented. you can use this in a test to notice when you've
-#         # intentionally added/removed/changed a documented API
-#         'write_documented_items_output_file': 'autodocgen_documented_items.txt',
-
-#         # customize autodoc on a per-module basis
-#         # 'autodoc_options_decider': {
-#         #         'mymodule.FooBar':    { 'inherited-members':True },
-#         # },
-
-#         # # choose a different title for specific modules, e.g. the toplevel one
-#         # 'module_title_decider': lambda modulename: 'API Reference' if modulename=='mymodule' else modulename,
-# }]

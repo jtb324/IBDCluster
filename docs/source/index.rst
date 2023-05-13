@@ -37,6 +37,7 @@ If you have any questions about DRIVE, you can either post an issue on the Githu
    /inputs_and_outputs/inputs
    /inputs_and_outputs/outputs
    /contributing/contributing
+   /plugin_descriptions/extending_drive
    /modules/modules
 
 
