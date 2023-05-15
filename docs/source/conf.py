@@ -46,6 +46,7 @@ exclude_patterns = []
 html_theme = 'sphinx_book_theme'
 html_title = "DRIVE documentation"
 html_theme_options = {
+    "home_page_in_toc": True,
     "repository_url": 'https://github.com/belowlab/drive',
     "repository_provider": 'github',
     "use_edit_page_button": True,

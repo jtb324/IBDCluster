@@ -30,16 +30,30 @@ If you have any questions about DRIVE, you can either post an issue on the Githu
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
+   :caption: User's Guide
    :hidden:
 
    /installation/installation
    /inputs_and_outputs/inputs
    /inputs_and_outputs/outputs
+   
+   
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Tutorial
+   :hidden:
+
+   /examples/tutorial
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Developer's Guide
+   :hidden:
+
    /contributing/contributing
    /plugin_descriptions/extending_drive
    /modules/modules
-
 
 
 
