@@ -59,8 +59,10 @@ sphinx-book-theme = "^1.0.1"
 
 [tool.commitizen]
 name = "cz_conventional_commits"
-version = "1.1.0"
+version = "2.0.1"
 tag_format = "$version"
+update_changelog_on_bump = true
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
