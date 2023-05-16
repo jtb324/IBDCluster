@@ -523,24 +523,6 @@ files = [
 tests = ["asttokens", "littleutils", "pytest", "rich"]
 
 [[package]]
-name = "furo"
-version = "2023.3.27"
-description = "A clean customisable Sphinx documentation theme."
-category = "dev"
-optional = false
-python-versions = ">=3.7"
-files = [
-    {file = "furo-2023.3.27-py3-none-any.whl", hash = "sha256:4ab2be254a2d5e52792d0ca793a12c35582dd09897228a6dd47885dabd5c9521"},
-    {file = "furo-2023.3.27.tar.gz", hash = "sha256:b99e7867a5cc833b2b34d7230631dd6558c7a29f93071fdbb5709634bb33c5a5"},
-]
-
-[package.dependencies]
-beautifulsoup4 = "*"
-pygments = ">=2.7"
-sphinx = ">=5.0,<7.0"
-sphinx-basic-ng = "*"
-
-[[package]]
 name = "idna"
 version = "3.4"
 description = "Internationalized Domain Names in Applications (IDNA)"
@@ -1220,21 +1202,6 @@ files = [
 ptyprocess = ">=0.5"
 
 [[package]]
-name = "piccolo-theme"
-version = "0.15.0"
-description = "A modern Sphinx theme."
-category = "dev"
-optional = false
-python-versions = ">=3.6.0"
-files = [
-    {file = "piccolo_theme-0.15.0-py3-none-any.whl", hash = "sha256:cebd7ed3f0f7c1100dab125f2c7027876c05bb476e134cf6e8b2ca17a4e92dca"},
-    {file = "piccolo_theme-0.15.0.tar.gz", hash = "sha256:f15c64af3003a77c8279bd36071b53ea848fd45097f065b8a1ce8e1022b6849c"},
-]
-
-[package.dependencies]
-sphinx = "*"
-
-[[package]]
 name = "pickleshare"
 version = "0.7.5"
 description = "Tiny 'shelve'-like database with concurrency support"
@@ -1882,24 +1849,6 @@ files = [
 sphinx = "*"
 
 [[package]]
-name = "sphinx-basic-ng"
-version = "1.0.0b1"
-description = "A modern skeleton for Sphinx themes."
-category = "dev"
-optional = false
-python-versions = ">=3.7"
-files = [
-    {file = "sphinx_basic_ng-1.0.0b1-py3-none-any.whl", hash = "sha256:ade597a3029c7865b24ad0eda88318766bcc2f9f4cef60df7e28126fde94db2a"},
-    {file = "sphinx_basic_ng-1.0.0b1.tar.gz", hash = "sha256:89374bd3ccd9452a301786781e28c8718e99960f2d4f411845ea75fc7bb5a9b0"},
-]
-
-[package.dependencies]
-sphinx = ">=4.0"
-
-[package.extras]
-docs = ["furo", "ipython", "myst-parser", "sphinx-copybutton", "sphinx-inline-tabs"]
-
-[[package]]
 name = "sphinx-book-theme"
 version = "1.0.1"
 description = "A clean book theme for scientific explanations and documentation with Sphinx"
@@ -2312,4 +2261,4 @@ testing = ["big-O", "flake8 (<5)", "jaraco.functools", "jaraco.itertools", "more
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8,<3.12"
-content-hash = "9d5c8c427dbe0768048622ae092b391f1d0b0c8d824803b96f1449c101c2d312"
+content-hash = "623ed6a6a5544add50ea90e7221a5d2e7bd216f4665ce9968a071fab06797517"
