@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "drive"
-version = "2.0.1"
+version = "2.0.2"
 description = "cli tool to identify networks of individuals who share IBD segments overlapping loci of interest"
 authors = ["James Baker <james.baker@vanderbilt.edu>", "Hung-Hsin Chen <hung-hsin.chen.1@vumc.org>", "Jennifer E. Below <jennifer.e.below@vumc.org>"]
 maintainers = ["James Baker <james.baker@vanderbilt.edu>", "Hung-Hsin Chen <hung-hsin.chen.1@vumc.org>"]
@@ -59,7 +59,7 @@ sphinx-book-theme = "^1.0.1"
 
 [tool.commitizen]
 name = "cz_conventional_commits"
-version = "2.0.1"
+version = "2.0.2"
 tag_format = "$version"
 update_changelog_on_bump = true
 

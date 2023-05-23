@@ -59,8 +59,10 @@ class Pvalues:
         """
 
         # We need to first check if there are even controls in the file
-        phenotype_frequency = len(phenotype_counts.get("cases")) / len(
-            phenotype_counts.get("controls")
+        phenotype_frequency = len(phenotype_counts.get("cases")) / (
+            len(phenotype_counts.get("controls"))
+            + len(phenotype_counts.get("cases"))
+            + len(phenotype_counts.get("excluded", []))
         )
 
         logger.verbose(
@@ -120,8 +122,9 @@ class Pvalues:
             returns the number of individuals excluded.
         """
 
-        return len(network.members.difference(phenotype_counts.get("excluded"))), len(
-            network.members.intersection(phenotype_counts.get("excluded"))
+        return (
+            len(network.members.difference(phenotype_counts.get("excluded"))),
+            len(network.members.intersection(phenotype_counts.get("excluded"))),
         )
 
     def _gather_network_information(
@@ -141,7 +144,7 @@ class Pvalues:
             Dictionary that has all the carriers in list for each phenotype of interest
 
         network : Network
-            Network objectattributes for iids, pairs, and haplotypes
+            Network object attributes for iids, pairs, and haplotypes
 
         phenotype_percentages : dict[str, float]
             dictionary where the keys are phecode strings and the values are the phecode
@@ -168,9 +171,8 @@ class Pvalues:
 
         # iterating over each phenotype
         for phenotype, phenotype_counts in cohort_carriers.items():
-            # if the control frequency is zero then we can't do the
-            # stats and should N/A for all values
-            # TODO: Make this not so hacky
+            # if there are no controls then we can't do the
+            # stats and should just return a string of N/A for all values
             if len(phenotype_counts.get("controls")) == 0:
                 phenotype_pvalues[phenotype] = "N/A\tN/A\tN/A"
             else:
