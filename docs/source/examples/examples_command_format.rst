@@ -15,7 +15,7 @@ The following command assumes that you have either installed DRIVE using pip or 
 
 .. note::
 
-    If you installed DRIVE from github then you can replace the 'drive' portion with "python /path_to_drive.py". The rest of the command will be the same.
+    If you installed DRIVE from github then you can replace the 'drive' portion with "python /path_to_drive.py" or you can add drive to your path. The rest of the command will be the same.
 
 Explanation of command:
 -----------------------
