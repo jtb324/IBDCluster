@@ -15,7 +15,7 @@ class FormatTypes(str, Enum):
     RAPID = "rapid"
 
 
-class Overlap(str, Enum):
+class OverlapOptions(str, Enum):
     """Enum defining options for how the use wants to define
     overlap with the gene region of interest. Values can be contains or overlaps"""
 

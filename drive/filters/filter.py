@@ -1,11 +1,10 @@
-import logging
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Dict, Iterator, List, Optional, TypeVar
 
 from log import CustomLogger
-from models import FileIndices, Genes
+from models import FileIndices, Genes, OverlapOptions
 from pandas import DataFrame, concat, read_csv
 
 logger = CustomLogger.get_logger(__name__)
@@ -277,13 +276,34 @@ class IbdFilter:
             )
 
     def _check_empty_dataframes(self) -> None:
-        """Check if the provided dataframe is empty. If it is then it
-        raises an error and exits the program"""
+        """Check if the provided dataframe is empty. If it is
+        then it raises an error and exits the program"""
         if self.ibd_pd.empty:
             logger.info(
-                "No individuals from the analysis cohort share an IBD segment across the provided target region"
+                "No individuals from the analysis cohort share an IBD segment across the provided target region. Please ensure that the target region is correct. Exiting program now."
             )
             sys.exit(0)
+
+    def set_filter(self, filter_option: OverlapOptions) -> None:
+        """Method to determine how the user wishes to filter the IBD segments file
+
+        Parameters
+        ----------
+        filter_option : OverlapOptions
+            Enum that represents the user's choice for how to filter the ibd segments.
+            If the user chooses 'contains' the only segments that contain the entire
+            region are kept. If the user chooses 'overlaps' then segments that overlap
+            at all with the target region are kept."""
+        if filter_option == "contains":
+            ...
+        elif filter_option == "overlaps":
+            ...
+        else:
+            logger.critical(
+                "Non-recognized filter option selected. Allowed values are 'contains' and 'overlaps'. Exiting program now..."
+            )
+            sys.exit(0)
+        ...
 
     def preprocess(self, min_centimorgan: int, cohort_ids: Optional[List[str]] = None):
         """Method that will filter the ibd file.
