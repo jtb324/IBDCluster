@@ -9,7 +9,7 @@ import typer
 from cluster import ClusterHandler, cluster
 from filters import IbdFilter
 from log import CustomLogger
-from models import Data, FormatTypes, Genes, create_indices
+from models import Data, FormatTypes, Genes, Overlap, create_indices
 from utilities.callbacks import check_input_exists, check_json_path
 from utilities.parser import PhenotypeFileParser, load_phenotype_descriptions
 
@@ -91,6 +91,11 @@ def main(
         "-c",
         "--cases",
         help="A file containing individuals who are cases. This file expects for there to be two columns. The first column will have individual ids and the second has status where cases are indicated by a 1 and control are indicated by a 0.",
+    ),
+    segment_overlap: Overlap = typer.Option(
+        Overlap.CONTAINS.value,
+        "--segment-overlap",
+        help="Indicates if the user wants the gene to contain the whole target region or if it just needs to overlap the segment.",
     ),
     phenotype_description_file: Optional[Path] = typer.Option(
         None,

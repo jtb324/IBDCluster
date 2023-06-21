@@ -13,3 +13,11 @@ class FormatTypes(str, Enum):
     ILASH = "ilash"
     GERMLINE = "germline"
     RAPID = "rapid"
+
+
+class Overlap(str, Enum):
+    """Enum defining options for how the use wants to define
+    overlap with the gene region of interest. Values can be contains or overlaps"""
+
+    CONTAINS = "contains"
+    OVERLAPS = "overlaps"

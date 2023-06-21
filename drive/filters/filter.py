@@ -15,6 +15,7 @@ logger = CustomLogger.get_logger(__name__)
 T = TypeVar("T", bound="IbdFilter")
 
 
+# def filter_
 @dataclass
 class IbdFilter:
     ibd_file: Iterator[DataFrame]
@@ -137,7 +138,7 @@ class IbdFilter:
         # right chromosome. If the target_gene chromosome number is not
         # found in the file then a ValueError is raised.
         if self.target_gene.chr not in data_chunk[self.indices.chr_indx].values:
-            error_msg = f"Expected the value of the chromosome column in the ibd file to be {self.target_gene.chr}. This value was not found in the column. Please ensure that you selected the proper IBD file for chromosome {self.target_gene.chr} before rerunning DRIVE."
+            error_msg = f"Expected the value of the chromosome column in the ibd file to be {self.target_gene.chr}. This value was not found in the column. Please ensure that you selected the proper IBD file for chromosome {self.target_gene.chr} before re-running DRIVE."
 
             logger.critical(error_msg)
 
