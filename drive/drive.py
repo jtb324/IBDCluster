@@ -45,7 +45,7 @@ def split_target_string(chromo_pos_str: str) -> Genes:
     split_str = re.split(":|-", chromo_pos_str)
 
     if len(split_str) != 3:
-        error_msg = f"Expected the gene position string to be formatted like chromosome:start_position-end_position. Instead it was formatted as {chromo_pos_str}"
+        error_msg = f"Expected the gene position string to be formatted like chromosome:start_position-end_position. Instead it was formatted as {chromo_pos_str}"  # noqa: E501
 
         raise ValueError(error_msg)
 
@@ -53,7 +53,7 @@ def split_target_string(chromo_pos_str: str) -> Genes:
 
     if integer_split_str[1] > integer_split_str[2]:
         raise ValueError(
-            f"expected the start position of the target string to be <= the end position. Instead the start position was {integer_split_str[1]} and the end position was {integer_split_str[2]}"
+            f"expected the start position of the target string to be <= the end position. Instead the start position was {integer_split_str[1]} and the end position was {integer_split_str[2]}"  # noqa: E501
         )
 
     return Genes(*integer_split_str)
@@ -84,24 +84,24 @@ def main(
     max_check: int = typer.Option(
         5,
         "--max-recheck",
-        help="Maximum number of times to re-perform the clustering. This value will not be used if the flag --no-recluster is used.",
+        help="Maximum number of times to re-perform the clustering. This value will not be used if the flag --no-recluster is used.",  # noqa: E501
     ),
     case_file: Optional[Path] = typer.Option(
         None,
         "-c",
         "--cases",
-        help="A file containing individuals who are cases. This file expects for there to be two columns. The first column will have individual ids and the second has status where cases are indicated by a 1 and control are indicated by a 0.",
+        help="A file containing individuals who are cases. This file expects for there to be two columns. The first column will have individual ids and the second has status where cases are indicated by a 1 and control are indicated by a 0.",  # noqa: E501
     ),
     segment_overlap: OverlapOptions = typer.Option(
         OverlapOptions.CONTAINS.value,
         "--segment-overlap",
-        help="Indicates if the user wants the gene to contain the whole target region or if it just needs to overlap the segment.",
+        help="Indicates if the user wants the gene to contain the whole target region or if it just needs to overlap the segment.",  # noqa: E501
     ),
     phenotype_description_file: Optional[Path] = typer.Option(
         None,
         "-d",
         "--descriptions",
-        help="tab delimited text file that has descriptions for each phecode. this file should have two columns called phecode and phenotype",
+        help="tab delimited text file that has descriptions for each phecode. this file should have two columns called phecode and phenotype",  # noqa: E501
     ),
     max_network_size: int = typer.Option(
         30, "--max-network-size", help="maximum network size allowed"
@@ -114,7 +114,7 @@ def main(
     min_network_size: int = typer.Option(
         2,
         "--min-network-size",
-        help="This argument sets the minimun network size that we allow. All networks smaller than this size will be filtered out. If the user wishes to keep all networks they can set this to 0",
+        help="This argument sets the minimun network size that we allow. All networks smaller than this size will be filtered out. If the user wishes to keep all networks they can set this to 0",  # noqa: E501
     ),
     segment_dist_threshold: float = typer.Option(
         0.2,
@@ -135,7 +135,7 @@ def main(
     ),
     recluster: bool = typer.Option(
         True,
-        help="whether or not the user wishes the program to automically recluster based on things lik hub threshold, max network size and how connected the graph is. ",
+        help="whether or not the user wishes the program to automically recluster based on things lik hub threshold, max network size and how connected the graph is. ",  # noqa: E501
     ),
     verbose: int = typer.Option(
         0,
@@ -181,7 +181,8 @@ def main(
     )
 
     logger.info(f"Start time: {start_time}")
-    # we need to load in the phenotype descriptions file to get descriptions of each phenotype
+    # we need to load in the phenotype descriptions file to get
+    # descriptions of each phenotype
     if phenotype_description_file:
         logger.verbose(
             f"Using the phenotype descriptions file at: {phenotype_description_file}"
@@ -198,11 +199,11 @@ def main(
             phenotype_counts, cohort_ids = phenotype_file.parse_cases_and_controls()
 
             logger.info(
-                f"identified {len(phenotype_counts.keys())} phenotypes within the file {case_file}"
+                f"identified {len(phenotype_counts.keys())} phenotypes within the file {case_file}"  # noqa: E501
             )
     else:
         logger.info(
-            "No phenotype information provided. Only the clustering step of the analysis will be performed"
+            "No phenotype information provided. Only the clustering step of the analysis will be performed"  # noqa: E501
         )
 
         phenotype_counts = {}
@@ -217,11 +218,10 @@ def main(
 
     logger.debug(f"Identified a target region: {target_gene}")
 
-    # sys.exit()
-    filter_obj = IbdFilter.load_file(input_file, indices, target_gene)
+    filter_obj: IbdFilter = IbdFilter.load_file(input_file, indices, target_gene)
 
     # choosing the proper way to filter the ibd files
-    filter_obj.set_filter()
+    filter_obj.set_filter(segment_overlap)
 
     filter_obj.preprocess(min_cm, cohort_ids)
 

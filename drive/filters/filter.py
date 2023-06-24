@@ -1,7 +1,7 @@
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Dict, Iterator, List, Optional, TypeVar
+from typing import Callable, Dict, Iterator, List, Optional, TypeVar
 
 from log import CustomLogger
 from models import FileIndices, Genes, OverlapOptions
@@ -20,6 +20,7 @@ class IbdFilter:
     ibd_file: Iterator[DataFrame]
     indices: FileIndices
     target_gene: Genes
+    filter: Optional[Callable] = None
     ibd_vs: DataFrame = field(default_factory=DataFrame)
     ibd_pd: DataFrame = field(default_factory=DataFrame)
     hapid_map: Dict[str, int] = field(default_factory=dict)
@@ -85,7 +86,8 @@ class IbdFilter:
 
         logger.verbose(f"identified {len(haplotypes)} haplotypes.")
 
-        # iterate over each haplotype and add it to the dictionary if the value is not present
+        # iterate over each haplotype and add it to the
+        # dictionary if the value is not present
         for value in haplotypes:
             key_value = self.hapid_map.setdefault(value, self.haplotype_id)
             if key_value == self.haplotype_id:
@@ -106,7 +108,7 @@ class IbdFilter:
 
         data_chunk.loc[:, "idnum2"] = data_chunk["hapid2"].map(self.hapid_map)
 
-    def _filter(self, data_chunk: DataFrame, min_cm: int) -> DataFrame:
+    def _contains_filter(self, data_chunk: DataFrame, min_cm: int) -> DataFrame:
         """Method that will filter the ibd file on four conditions: Chromosome number is the same, segment start position is <= target start position, segment end position is >= to the start position, and the size of the segment is >= to the minimum centimorgan threshold.
 
         Parameters
@@ -132,12 +134,12 @@ class IbdFilter:
             lead to a error later in the program which is why the
             exception is raised. It is assumed to be due the user
             providing the incorrect file by accident
-        """
+        """  # noqa: E501
         # we are going to first make sure that the ibd file is for the
         # right chromosome. If the target_gene chromosome number is not
         # found in the file then a ValueError is raised.
         if self.target_gene.chr not in data_chunk[self.indices.chr_indx].values:
-            error_msg = f"Expected the value of the chromosome column in the ibd file to be {self.target_gene.chr}. This value was not found in the column. Please ensure that you selected the proper IBD file for chromosome {self.target_gene.chr} before re-running DRIVE."
+            error_msg = f"Expected the value of the chromosome column in the ibd file to be {self.target_gene.chr}. This value was not found in the column. Please ensure that you selected the proper IBD file for chromosome {self.target_gene.chr} before re-running DRIVE."  # noqa: E501
 
             logger.critical(error_msg)
 
@@ -151,6 +153,85 @@ class IbdFilter:
             & (data_chunk[self.indices.end_indx] >= self.target_gene.end)
             & (data_chunk[self.indices.cM_indx] >= min_cm)
         ].copy()
+
+    def _overlaps_filter(self, data_chunk: DataFrame, min_cm: int) -> DataFrame:
+        """Method that will filter the ibd file on four conditions: Chromosome number is the same, segment start position is <= target start position, segment end position is >= to the start position, and the size of the segment is >= to the minimum centimorgan threshold.
+
+        Parameters
+        ----------
+        data_chunk : pd.DataFrame
+            chunk of the ibdfile. The size of this chunk is
+            determined by the chunksize argument to
+            pd.read_csv. This value is currently set to 100,000.
+
+        min_cm : int
+            centimorgan threshold
+
+        Returns
+        -------
+        pd.DataFrame
+            returns the filtered dataframe
+
+        Raises
+        ------
+        ValueError
+            raises a ValueError if the target chromosome number is not
+            found within the provided IBD file. This situation will
+            lead to a error later in the program which is why the
+            exception is raised. It is assumed to be due the user
+            providing the incorrect file by accident
+        """  # noqa: E501
+        # we are going to first make sure that the ibd file is for the
+        # right chromosome. If the target_gene chromosome number is not
+        # found in the file then a ValueError is raised.
+        if self.target_gene.chr not in data_chunk[self.indices.chr_indx].values:
+            error_msg = f"Expected the value of the chromosome column in the ibd file to be {self.target_gene.chr}. This value was not found in the column. Please ensure that you selected the proper IBD file for chromosome {self.target_gene.chr} before re-running DRIVE."  # noqa: E501
+
+            logger.critical(error_msg)
+
+            raise ValueError(error_msg)
+        # We are going to filter the data and then make a copy
+        # of it to return so that we don't get the
+        # SettingWithCopyWarning
+        return data_chunk[
+            (
+                (
+                    (data_chunk[self.indices.str_indx] <= int(self.target_gene.start))
+                    & (data_chunk[self.indices.end_indx] >= int(self.target_gene.start))
+                )
+                | (
+                    (data_chunk[self.indices.str_indx] >= int(self.target_gene.start))
+                    & (data_chunk[self.indices.end_indx] <= int(self.target_gene.end))
+                )
+                | (
+                    (data_chunk[self.indices.str_indx] <= int(self.target_gene.end))
+                    & (data_chunk[self.indices.end_indx] >= int(self.target_gene.end))
+                )
+            )
+            & (data_chunk[self.indices.cM_indx] >= min_cm)
+        ].copy()
+
+    def set_filter(self, filter_option: OverlapOptions) -> None:
+        """Method to determine how the user wishes to filter the IBD segments file
+
+        Parameters
+        ----------
+        filter_option : OverlapOptions
+            Enum that represents the user's choice for how to filter the ibd segments.
+            If the user chooses 'contains' the only segments that contain the entire
+            region are kept. If the user chooses 'overlaps' then segments that overlap
+            at all with the target region are kept."""
+        if filter_option == "contains":
+            logger.info("Identifying IBD segments that contain the target region")
+            self.filter = self._contains_filter
+        elif filter_option == "overlaps":
+            logger.info("Identifying IBD segments that overlap the target region")
+            self.filter = self._overlaps_filter
+        else:
+            logger.critical(
+                "Non-recognized filter option selected. Allowed values are 'contains' and 'overlaps'. Exiting program now..."  # noqa: E501
+            )
+            sys.exit(0)
 
     def _remove_dups(self, data: DataFrame) -> DataFrame:
         """Filters out rows where the haplotype ids are the
@@ -177,10 +258,10 @@ class IbdFilter:
             return data[data["hapid1"] != data["hapid2"]]
         except KeyError as e:
             logger.critical(
-                f"Expected the keys hapid1 and hapid2 to be in the dataframe. Instead the only keys were: {', '.join(data.columns)}"
+                f"Expected the keys hapid1 and hapid2 to be in the dataframe. Instead the only keys were: {', '.join(data.columns)}"  # noqa: E501
             )
             raise e(
-                f"Expected the keys hapid1 and hapid2 to be in the dataframe. Instead the only keys were: {', '.join(data.columns)}"
+                f"Expected the keys hapid1 and hapid2 to be in the dataframe. Instead the only keys were: {', '.join(data.columns)}"  # noqa: E501
             )
 
     def _generate_vertices(self, data_chunk: DataFrame) -> None:
@@ -192,7 +273,7 @@ class IbdFilter:
             chunk of the ibdfile. The size of this chunk is
             determined by the chunksize argument to
             pd.read_csv. This value is currently set to 100,000.
-        """
+        """  # noqa: E501
         id1_df = data_chunk[["idnum1", "hapid1", self.indices.id1_indx]].rename(
             columns={"idnum1": "idnum", "hapid1": "hapID", 0: "IID"}
         )
@@ -224,7 +305,7 @@ class IbdFilter:
         -------
         DataFrame
             returns the filtered pandas dataframe
-        """
+        """  # noqa: E501
         # if no cohort ids were provided then we just return the chunk, otherwise we
         # filter the dataframe for where id1 and id2 are in the cohort
         if not cohort_ids:
@@ -258,10 +339,10 @@ class IbdFilter:
         """
         if ibd_pd.empty:
             logger.critical(
-                "There were no shared IBD segments that satisfied the provided input conditions"
+                "There were no shared IBD segments that satisfied the provided input conditions"  # noqa: E501
             )
             raise ValueError(
-                "There were no shared IBD segments that satisfied the provided input conditions. Please check to make sure that there is no typo in the target region or that the correct ibd input file was provided."
+                "There were no shared IBD segments that satisfied the provided input conditions. Please check to make sure that there is no typo in the target region or that the correct ibd input file was provided."  # noqa: E501
             )
         elif ibd_vs.empty:
             logger.critical(
@@ -272,7 +353,7 @@ class IbdFilter:
             )
         else:
             logger.debug(
-                f"Identified {ibd_pd.shape[0]} shared ibd segments with {ibd_vs.shape[0]} unique haplotypes"
+                f"Identified {ibd_pd.shape[0]} shared ibd segments with {ibd_vs.shape[0]} unique haplotypes"  # noqa: E501
             )
 
     def _check_empty_dataframes(self) -> None:
@@ -280,32 +361,16 @@ class IbdFilter:
         then it raises an error and exits the program"""
         if self.ibd_pd.empty:
             logger.info(
-                "No individuals from the analysis cohort share an IBD segment across the provided target region. Please ensure that the target region is correct. Exiting program now."
+                "No individuals from the analysis cohort share an IBD segment across the provided target region. Please ensure that the target region is correct. Exiting program now."  # noqa: E501
             )
             sys.exit(0)
 
-    def set_filter(self, filter_option: OverlapOptions) -> None:
-        """Method to determine how the user wishes to filter the IBD segments file
-
-        Parameters
-        ----------
-        filter_option : OverlapOptions
-            Enum that represents the user's choice for how to filter the ibd segments.
-            If the user chooses 'contains' the only segments that contain the entire
-            region are kept. If the user chooses 'overlaps' then segments that overlap
-            at all with the target region are kept."""
-        if filter_option == "contains":
-            ...
-        elif filter_option == "overlaps":
-            ...
-        else:
-            logger.critical(
-                "Non-recognized filter option selected. Allowed values are 'contains' and 'overlaps'. Exiting program now..."
-            )
-            sys.exit(0)
-        ...
-
-    def preprocess(self, min_centimorgan: int, cohort_ids: Optional[List[str]] = None):
+    def preprocess(
+        self,
+        min_centimorgan: int,
+        target_overlap_style: OverlapOptions,
+        cohort_ids: Optional[List[str]] = None,
+    ) -> None:
         """Method that will filter the ibd file.
 
         Parameters
@@ -316,7 +381,8 @@ class IbdFilter:
             are greater than or equal to the threshold.
 
         cohort_ids : List[str]
-            Lists of ids that make up the cohort. The ibd_file will be filtered to only this list.
+            Lists of ids that make up the cohort. The ibd_file
+            will be filtered to only this list.
         """
         for chunk in self.ibd_file:
             cohort_restricted_chunk = self._filter_for_cohort(chunk, cohort_ids)
@@ -324,7 +390,7 @@ class IbdFilter:
             if cohort_restricted_chunk.empty:
                 continue
 
-            size_filtered_chunk = self._filter(cohort_restricted_chunk, min_centimorgan)
+            size_filtered_chunk = self.filter(cohort_restricted_chunk, min_centimorgan)
 
             if not size_filtered_chunk.empty:
                 # We have to add two column with the haplotype ids
@@ -341,14 +407,16 @@ class IbdFilter:
                     self.indices.hap2_indx,
                     "hapid2",
                 )
-                # We then need to make sure that there are no duplicates in the dataframe
+                # We then need to make sure that there are no
+                # duplicates in the dataframe
                 removed_dups = self._remove_dups(size_filtered_chunk)
 
                 # We need to update the mappings for the grids
                 self._generate_map(removed_dups[["hapid1", "hapid2"]])
 
                 self._map_grids(removed_dups)
-                # concat the filtered dataframe with the ibd_pd attribute to get all the edges in the graph
+                # concat the filtered dataframe with the ibd_pd
+                # attribute to get all the edges in the graph
                 self.ibd_pd = concat([self.ibd_pd, removed_dups])
 
                 self._generate_vertices(removed_dups)
