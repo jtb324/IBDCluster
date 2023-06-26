@@ -180,7 +180,9 @@ def main(
         recluster=recluster,
     )
 
-    logger.info(f"Start time: {start_time}")
+    logger.debug(f"Parent directory for log files and output: {output.parent}")
+
+    logger.info(f"Analysis start time: {start_time}")
     # we need to load in the phenotype descriptions file to get
     # descriptions of each phenotype
     if phenotype_description_file:
@@ -225,7 +227,9 @@ def main(
 
     filter_obj.preprocess(min_cm, cohort_ids)
 
-    # We need to invert the hapid_map dictionary so that the integer mappings are keys and the values are the haplotype string
+    # We need to invert the hapid_map dictionary so that the
+    # integer mappings are keys and the values are the
+    # haplotype string
     hapid_inverted = {value: key for key, value in filter_obj.hapid_map.items()}
 
     # creating the object that will handle clustering within the networks
@@ -245,6 +249,8 @@ def main(
 
     # creating the data container that all the plugins can interact with
     plugin_api = Data(networks, output, phenotype_counts, desc_dict)
+
+    logger.debug(f"Data container: {plugin_api}")
 
     # making sure that the output directory is created
     # This section will load in the analysis plugins and run each plugin

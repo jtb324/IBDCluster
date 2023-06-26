@@ -10,7 +10,8 @@ logger = CustomLogger.get_logger(__name__)
 
 @dataclass
 class NetworkWriter:
-    """Class that is responsible for creating the *_networks.txt file from the information provided"""
+    """Class that is responsible for creating the *_networks.
+    txt file from the information provided"""
 
     name: str = "NetworkWriter plugin"
 
@@ -30,7 +31,7 @@ class NetworkWriter:
         """
 
         # making a string for the initial first few columns
-        header_str = "clstID\tn.total\tn.haplotype\ttrue.positive.n\ttrue.positive\tfalst.postive\tIDs\tID.haplotype"
+        header_str = "clstID\tn.total\tn.haplotype\ttrue.positive.n\ttrue.positive\tfalst.postive\tIDs\tID.haplotype"  # noqa: E501
 
         if not phenotypes:
             return header_str + "\n"
@@ -41,7 +42,7 @@ class NetworkWriter:
             # of cases in the network, the number of excluded individuals in the
             # network, and the pvalue for the phenotype
             for column in phenotypes:
-                header_str += f"\t{column + '_cases_in_network'}\t{column + '_excluded_in_network'}\t{column + '_pvalue'}"
+                header_str += f"\t{column + '_cases_in_network'}\t{column + '_excluded_in_network'}\t{column + '_pvalue'}"  # noqa: E501
 
             return header_str + "\n"
 
@@ -55,7 +56,9 @@ class NetworkWriter:
         Parameters
         ----------
         network : Network_Interface
-            network object that has all the per network information from the clusters such as cluster ids, networks, pvalues, etc...
+            network object that has all the per network
+            information from the clusters such as cluster
+            ids, networks, pvalues, etc...
 
         phenotypes : List[str]
             list of the phenotypes provided the program.
@@ -66,7 +69,7 @@ class NetworkWriter:
             returns a string formatted for the output file
         """
         # fill in the initial few columns of the output string
-        output_str = f"{network.clst_id}\t{len(network.members)}\t{len(network.haplotypes)}\t{network.true_positive_count}\t{network.true_positive_percent:.4f}\t{network.false_negative_count}\t{','.join(network.members)}\t{','.join(network.haplotypes)}"
+        output_str = f"{network.clst_id}\t{len(network.members)}\t{len(network.haplotypes)}\t{network.true_positive_count}\t{network.true_positive_percent:.4f}\t{network.false_negative_count}\t{','.join(network.members)}\t{','.join(network.haplotypes)}"  # noqa: E501
 
         if not phenotypes:
             return output_str + "\n"
@@ -79,12 +82,20 @@ class NetworkWriter:
             return output_str + "\n"
 
     def analyze(self, **kwargs) -> None:
-        """main function of the plugin that will create the output path and then use helper functions to write information to a file"""
+        """main function of the plugin that will create the
+        output path and then use helper functions to write
+        information to a file"""
 
         data: Data_Interface = kwargs["data"]
 
         # creating the full output path for the output file
-        network_file_output = data.output_path.with_suffix(".drive_networks.txt")
+        network_file_output = data.output_path.parent / (
+            data.output_path.name + ".drive_networks.txt"
+        )  # noqa: E501
+
+        logger.debug(
+            f"The output in the network_writer plugin is being written to: {network_file_output}"  # noqa: E501
+        )  
 
         # we are going to pull out the phenotypes into a list so that we
         # are guarenteed to maintain order as we are creating the rows
