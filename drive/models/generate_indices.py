@@ -31,7 +31,7 @@ class HapIBD(FileIndices):
 
     def __str__(self):
         """Custom string message used for debugging"""
-        return f"HapIBD: id1_index={self.id1_indx}, id2_index={self.id2_indx}, haplotype_1_index={self.hap1_indx}, haplotype_2_index={self.hap2_indx}, chromosome_index={self.chr_indx}, start_position_index={self.str_indx}, end_position_index={self.end_indx}, centimorgan_index={self.cM_indx}"
+        return f"HapIBD: id1_index={self.id1_indx}, id2_index={self.id2_indx}, haplotype_1_index={self.hap1_indx}, haplotype_2_index={self.hap2_indx}, chromosome_index={self.chr_indx}, start_position_index={self.str_indx}, end_position_index={self.end_indx}, centimorgan_index={self.cM_indx}"  # noqa: E501
 
 
 @dataclass
@@ -53,7 +53,7 @@ class Germline(FileIndices):
 
     def __str__(self):
         """Custom string message used for debugging"""
-        return f"Germline: id1_index={self.id1_indx}, id2_index={self.id2_indx}, haplotype_1_index={self.hap1_indx}, haplotype_2_index={self.hap2_indx}, chromosome_index={self.chr_indx}, start_position_index={self.str_indx}, end_position_index={self.end_indx}, centimorgan_index={self.cM_indx}, unit_index={self.unit}"
+        return f"Germline: id1_index={self.id1_indx}, id2_index={self.id2_indx}, haplotype_1_index={self.hap1_indx}, haplotype_2_index={self.hap2_indx}, chromosome_index={self.chr_indx}, start_position_index={self.str_indx}, end_position_index={self.end_indx}, centimorgan_index={self.cM_indx}, unit_index={self.unit}"  # noqa: E501
 
 
 @dataclass
@@ -65,7 +65,7 @@ class iLASH(FileIndices):
     chr_indx: int = 4
     str_indx: int = 5
     end_indx: int = 6
-    cM_indx: int = 10
+    cM_indx: int = 9
 
     def get_haplotype_id(
         self, data: DataFrame, ind_id_indx: int, phase_col_indx: int, col_name: str
@@ -74,7 +74,7 @@ class iLASH(FileIndices):
 
     def __str__(self):
         """Custom string message used for debugging"""
-        return f"iLASH: id1_index={self.id1_indx}, id2_index={self.id2_indx}, haplotype_1_index={self.hap1_indx}, haplotype_2_index={self.hap2_indx}, chromosome_index={self.chr_indx}, start_position_index={self.str_indx}, end_position_index={self.end_indx}, centimorgan_index={self.cM_indx}"
+        return f"iLASH: id1_index={self.id1_indx}, id2_index={self.id2_indx}, haplotype_1_index={self.hap1_indx}, haplotype_2_index={self.hap2_indx}, chromosome_index={self.chr_indx}, start_position_index={self.str_indx}, end_position_index={self.end_indx}, centimorgan_index={self.cM_indx}"  # noqa: E501
 
 
 @dataclass
@@ -97,7 +97,7 @@ class Rapid(FileIndices):
 
     def __str__(self):
         """Custom string message used for debugging"""
-        return f"Rapid: id1_index={self.id1_indx}, id2_index={self.id2_indx}, haplotype_1_index={self.hap1_indx}, haplotype_2_index={self.hap2_indx}, chromosome_index={self.chr_indx}, start_position_index={self.str_indx}, end_position_index={self.end_indx}, centimorgan_index={self.cM_indx}"
+        return f"Rapid: id1_index={self.id1_indx}, id2_index={self.id2_indx}, haplotype_1_index={self.hap1_indx}, haplotype_2_index={self.hap2_indx}, chromosome_index={self.chr_indx}, start_position_index={self.str_indx}, end_position_index={self.end_indx}, centimorgan_index={self.cM_indx}"  # noqa: E501
 
 
 def create_indices(ibd_file_format: str) -> FileIndices:

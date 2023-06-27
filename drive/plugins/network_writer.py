@@ -95,7 +95,7 @@ class NetworkWriter:
 
         logger.debug(
             f"The output in the network_writer plugin is being written to: {network_file_output}"  # noqa: E501
-        )  
+        )
 
         # we are going to pull out the phenotypes into a list so that we
         # are guarenteed to maintain order as we are creating the rows
