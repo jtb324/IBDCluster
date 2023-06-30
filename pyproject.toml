@@ -32,7 +32,6 @@ sphinx = "<7.0.0"
 
 
 [tool.poetry.group.docs.dependencies]
-sphinx-rtd-theme = "^1.2.0"
 sphinx-autobuild = "^2021.3.14"
 furo = "^2023.3.27"
 
