@@ -147,7 +147,7 @@ class IbdFilter:
         # We are going to filter the data and then make a copy
         # of it to return so that we don't get the
         # SettingWithCopyWarning
-        logger.info(self.indices.cM_indx)
+
         return data_chunk[
             (data_chunk[self.indices.chr_indx] == self.target_gene.chr)
             & (data_chunk[self.indices.str_indx] <= self.target_gene.start)
@@ -386,14 +386,14 @@ class IbdFilter:
             will be filtered to only this list.
         """
         for chunk in self.ibd_file:
-            print(chunk)
+
             cohort_restricted_chunk = self._filter_for_cohort(chunk, cohort_ids)
 
             if cohort_restricted_chunk.empty:
                 continue
 
             size_filtered_chunk = self.filter(cohort_restricted_chunk, min_centimorgan)
-            logger.info(size_filtered_chunk.empty)
+
             if not size_filtered_chunk.empty:
                 # We have to add two column with the haplotype ids
                 self.indices.get_haplotype_id(
