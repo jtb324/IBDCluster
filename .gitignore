@@ -1,7 +1,7 @@
 # ENVIRONMENTAL FILE
 /venv/
-
 .env
+
 # TEST FILES
 *.ipynb
 *.txt
@@ -26,4 +26,6 @@ IBDCluster/log/README.md
 # FILES THAT CAN'T BE UPLOADED
 ./tests/test_true_results/biovu_longQT.DRIVE.txt
 tests/test_kcne_inputs/
+
+
 

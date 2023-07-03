@@ -1,4 +1,5 @@
 .. DRIVE documentation master file, created by
+
    sphinx-quickstart on Sat May  6 10:53:12 2023.
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
@@ -23,6 +24,7 @@ The easiest way to install DRIVE is from the PYPI register. Users can use the fo
 Citation:
 ---------
 Currently the paper DRIVE originally appeared in can be found on medrxiv at the following link: `<https://www.medrxiv.org/content/10.1101/2023.04.19.23288831v1>`_
+
 
 Contact:
 --------
