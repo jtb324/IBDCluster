@@ -1,14 +1,11 @@
 {
-    "plugins":["plugins.pvalues", "plugins.network_writer", "plugins.allpair_writer"],
+    "plugins":["plugins.pvalues", "plugins.network_writer"],
     "modules": [
         {
             "name":"pvalues"
         },
         {
-            "name": "network_writer"
-        },
-        {
-            "name": "allpair_writer"
+            "name":"network_writer"
         }
     ]
 }
