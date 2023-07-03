@@ -3,9 +3,10 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Callable, Dict, Iterator, List, Optional, TypeVar
 
-from log import CustomLogger
-from models import FileIndices, Genes, OverlapOptions
 from pandas import DataFrame, concat, read_csv
+
+from drive.log import CustomLogger
+from drive.models import FileIndices, Genes, OverlapOptions
 
 logger = CustomLogger.get_logger(__name__)
 
@@ -386,7 +387,6 @@ class IbdFilter:
             will be filtered to only this list.
         """
         for chunk in self.ibd_file:
-
             cohort_restricted_chunk = self._filter_for_cohort(chunk, cohort_ids)
 
             if cohort_restricted_chunk.empty:

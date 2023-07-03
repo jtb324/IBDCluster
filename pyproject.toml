@@ -1,6 +1,6 @@
 [tool.poetry]
-name = "drive"
-version = "2.0.2"
+name = "drive-ibd"
+version = "2.0.8"
 description = "cli tool to identify networks of individuals who share IBD segments overlapping loci of interest"
 authors = ["James Baker <james.baker@vanderbilt.edu>", "Hung-Hsin Chen <hung-hsin.chen.1@vumc.org>", "Jennifer E. Below <jennifer.e.below@vumc.org>"]
 maintainers = ["James Baker <james.baker@vanderbilt.edu>", "Hung-Hsin Chen <hung-hsin.chen.1@vumc.org>"]
@@ -20,7 +20,7 @@ packages = [
 ]
 
 [tool.poetry.scripts]
-my_package_cli = 'drive.drive:app'
+drive = 'drive.drive:app'
 
 [tool.poetry.dependencies]
 python = ">=3.8,<3.12"

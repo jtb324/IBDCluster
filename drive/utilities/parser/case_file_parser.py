@@ -1,11 +1,12 @@
-"""Module to faciliate the user in parsing the phenotype file by incorporating multiple ecodings, separators, and by handling multiple errors."""
+"""Module to faciliate the user in parsing the phenotype file by incorporating multiple 
+ecodings, separators, and by handling multiple errors."""
 
 import gzip
 from logging import Logger
 from pathlib import Path
 from typing import Dict, List, Set, Tuple, TypeVar, Union
 
-from log import CustomLogger
+from drive.log import CustomLogger
 
 logger: Logger = CustomLogger.get_logger(__name__)
 
@@ -14,7 +15,8 @@ T = TypeVar("T", bound="PhenotypeFileParser")
 
 
 class PhenotypeFileParser:
-    """Parser used to read in the phenotype file. This will allow use to account for different delimiters in files as well as catch errors."""
+    """Parser used to read in the phenotype file. This will allow use to account for
+    different delimiters in files as well as catch errors."""
 
     def __init__(self, filepath: Union[Path, str]) -> None:
         """Initialize the PhenotypeFileParser class.
@@ -41,7 +43,8 @@ class PhenotypeFileParser:
             self.file: Path = filepath
 
     def __enter__(self) -> T:
-        """Open the input file. Method determines the appropriate file type and open the file. Method is called automatically by the context manager.
+        """Open the input file. Method determines the appropriate file type and open
+        the file. Method is called automatically by the context manager.
 
         Raises
         ------
@@ -58,10 +61,10 @@ class PhenotypeFileParser:
         except OSError as e:
             logger.critical(e)
             logger.critical(
-                f"Encountered the following error while trying to open the file: {self.file}"
+                f"Encountered the following error while trying to open the file: {self.file}"  # noqa: E501
             )
             raise OSError(
-                f"Encountered the following error while trying to open the file: {self.file}"
+                f"Encountered the following error while trying to open the file: {self.file}"  # noqa: E501
             )
 
         self.opened_file = file
@@ -69,7 +72,8 @@ class PhenotypeFileParser:
         return self
 
     def __exit__(self, exc_type, exc_value, traceback) -> None:
-        """Close the resource when it is not longer being used. Used by the context manager."""
+        """Close the resource when it is not longer being used. Used by the context
+        manager."""
         self.opened_file.close()
 
     @staticmethod
@@ -102,7 +106,7 @@ class PhenotypeFileParser:
             return "|"
         else:
             raise ValueError(
-                "The was no appropriate separator found for the file. Currently DRIVE supports: ',' or '\t' or '|'"
+                "The was no appropriate separator found for the file. Currently DRIVE supports: ',' or '\t' or '|'"  # noqa: E501
             )
 
     def _determine_status(
@@ -148,7 +152,7 @@ class PhenotypeFileParser:
                 phenotype_dict[phenotype_mapping]["excluded"].add(grid_id)
             else:
                 logger.warning(
-                    f"The status for individual, {grid_id}, was not recognized. The status found in the file was {value} for phenotype {phenotype_mapping}. This individual will be added to the exclusion list but it is recommended that the user checks to ensure that this is not a typo in the phenotype file."
+                    f"The status for individual, {grid_id}, was not recognized. The status found in the file was {value} for phenotype {phenotype_mapping}. This individual will be added to the exclusion list but it is recommended that the user checks to ensure that this is not a typo in the phenotype file."  # noqa: E501
                 )
                 phenotype_dict[phenotype_mapping]["excluded"].append(grid_id)
 
@@ -181,9 +185,10 @@ class PhenotypeFileParser:
 
         logger.debug(f"Identified the separator, {separator}, in the file: {self.file}")
 
-        # raise an error if there is no header line, otherwise determine all the phenotypes
-        if not "grid" in header_line.lower() and not "grids" in header_line.lower():
-            error_msg = "Expected the first line of the phenotype file to have a header line with a column called grid or grids."
+        # raise an error if there is no header line, otherwise determine all the
+        # phenotypes
+        if "grid" not in header_line.lower() and "grids" not in header_line.lower():
+            error_msg = "Expected the first line of the phenotype file to have a header line with a column called grid or grids."  # noqa: E501
 
             logger.critical(error_msg)
 

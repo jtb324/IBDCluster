@@ -9,7 +9,7 @@ class PluginNotFound(Exception):
 
     def __init__(self, plugin_type: str) -> None:
         super().__init__(
-            f"Plugin, {plugin_type} not found in the plugins folder. Make sure you loaded the plugin into the json file."
+            f"Plugin, {plugin_type} not found in the plugins folder. Make sure you loaded the plugin into the json file."  # noqa: E501
         )
 
 

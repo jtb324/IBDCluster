@@ -4,9 +4,10 @@ from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Set, Tuple
 
 import igraph as ig
-from log import CustomLogger
-from models import Filter, Network, Network_Interface
 from pandas import DataFrame
+
+from drive.log import CustomLogger
+from drive.models import Filter, Network, Network_Interface
 
 # creating a logger
 logger: logging.Logger = CustomLogger.get_logger(__name__)
@@ -89,7 +90,8 @@ class ClusterHandler:
     def filter_cluster_size(
         self, random_walk_clusters_sizes: ig.VertexClustering
     ) -> List[int]:
-        """Method to filter networks that are smaller than the min_cluster_size from the analysis
+        """Method to filter networks that are smaller than the min_cluster_size from
+        the analysis
 
         Parameters
         ----------
@@ -232,7 +234,8 @@ class ClusterHandler:
         Parameters
         ----------
         members : List[int]
-            list of integers that represent the name of each vertex in the network corresponding the the graph
+            list of integers that represent the name of each vertex in the network
+            corresponding the the graph
 
         Returns
         -------
@@ -311,7 +314,8 @@ class ClusterHandler:
                 and len(member_list) > self.max_network_size
                 and self.recluster
             ):
-                # We can put all of this information into a network class. Here the member list will still be in integers
+                # We can put all of this information into a network class. Here the
+                # member list will still be in integers
                 network = Network(
                     clst_name,
                     true_pos_count,
@@ -354,7 +358,9 @@ class ClusterHandler:
         Parameters
         ----------
         network : Network_InterFace
-            object that represents each cluster. These objects have information about the cluster id, number and ratio of edges, true_positive_percent, false_negative_edges, false_negative_count
+            object that represents each cluster. These objects have information
+            about the cluster id, number and ratio of edges, true_positive_percent,
+            false_negative_edges, false_negative_count
 
         ibd_pd : pd.DataFrame
             DataFrame that has information about the edges that a pair shares
@@ -451,7 +457,8 @@ def cluster(
 
     cluster_obj : ClusterHandler
         Object that contains information about how the random walk
-        needs to be performed. It will use the construct networks and return those values in a list.
+        needs to be performed. It will use the construct networks and return those
+        values in a list.
 
     min_network_size : int
         threshold so we can filter networks that are >= the threshold

@@ -6,14 +6,17 @@ from pandas import DataFrame, Series
 def _identify_carriers_indx(
     carriers_series: Series, return_dict: Dict[str, List[str]]
 ) -> None:
-    """Function that will insert the key, value pair of the phenotype and the carriers into the dictionary
+    """Function that will insert the key, value pair of the phenotype and the carriers
+    into the dictionary
     Parameters
     ----------
     carriers_series : pd.Series
         row of dataframe that is used in the apply function in
         the generate_carrier_list function
+
     return_dict : dict[str, list[str]]
-        dictionary where the phecodes will be the keys and the values will be a list of indices indicating which grids are carriers
+        dictionary where the phecodes will be the keys and the values will be a list of
+        indices indicating which grids are carriers
     """
 
     return_dict[carriers_series.name] = carriers_series[
@@ -24,14 +27,18 @@ def _identify_carriers_indx(
 def _identify_carriers_indx(
     carriers_series: Series, return_dict: Dict[str, List[str]]
 ) -> None:
-    """Function that will insert the key, value pair of the phenotype and the carriers into the dictionary
+    """Function that will insert the key, value pair of the phenotype and the carriers
+    into the dictionary
+
     Parameters
     ----------
     carriers_series : pd.Series
         row of dataframe that is used in the apply function in
         the generate_carrier_list function
+
     return_dict : dict[str, list[str]]
-        dictionary where the phecodes will be the keys and the values will be a list of indices indicating which grids are carriers
+        dictionary where the phecodes will be the keys and the values will be a list of
+        indices indicating which grids are carriers
     """
 
     return_dict[carriers_series.name] = carriers_series[
@@ -40,11 +47,15 @@ def _identify_carriers_indx(
 
 
 def generate_carrier_dict(carriers_matrix: DataFrame) -> Dict[str, List[str]]:
-    """Function that will take the carriers_pheno_matrix and generate a dictionary that has the list of indices for each carrier
+    """Function that will take the carriers_pheno_matrix and generate a dictionary that
+    has the list of indices for each carrier
+
     Parameters
     ----------
     carriers_matrix : pd.DataFrame
-        dataframe where the columns are the phecodes and have 0's or 1's for whether or not they have the phecodes
+        dataframe where the columns are the phecodes and have 0's or 1's for whether or
+        not they have the phecodes
+
     Returns
     -------
     Tuple[dict[str, list[str]], dict[str, List[str]]
