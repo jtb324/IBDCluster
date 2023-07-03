@@ -15,7 +15,6 @@ runner = CliRunner()
 
 @pytest.mark.integtest
 def test_drive_full_run():
-
     result = runner.invoke(
         app,
         [
@@ -30,7 +29,7 @@ def test_drive_full_run():
             "-m",
             "3",
             "-vv",
-            "--no-recluster"
+            "--no-recluster",
         ],
     )
     # result = runner.invoke(

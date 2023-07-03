@@ -1,6 +1,10 @@
 name: black
 
-on: [pull_request]
+on: 
+  pull_request:
+    paths-ignore:
+      - docs/
+
 
 jobs:
   lint:
