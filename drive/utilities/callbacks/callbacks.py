@@ -27,27 +27,36 @@ def check_input_exists(ibd_input_file: Path) -> Path:
 
 
 def check_json_path(json_path: Path) -> Path:
-    """Callback function that creates the json path string. If the user provides a value then it uses the user provided value else it creates the path to the default file
+    """Callback function that creates the json path string. If the user provides a value
+    then it uses the user provided value else it creates the path to the default file
+
     Parameters
     ----------
     json_path : str
         path to the json config file or an empty string
+
     Returns
     -------
-    str
-        returns the string to the file
+    Path
+        returns the Path object pointing to the file
+
+    Raises
+    ------
+    FileNotFoundError
+        If the config.json file does not exist at the specified path then this error is
+        raised
     """
 
     if json_path:
         return json_path
     else:
-        root_dir = Path(__file__).parent.parent.parent.parent
+        src_dir = Path(__file__).parent.parent.parent
 
-        config_path = root_dir / "config.json"
+        config_path = src_dir / "config.json"
 
         if not config_path.exists():
             raise FileNotFoundError(
-                f"Expected the user to either pass a configuration file path or for the config.json file to be present in the program root directory at {config_path}."
+                f"Expected the user to either pass a configuration file path or for the config.json file to be present in the program root directory at {config_path}."  # noqa: E501
             )
 
         return config_path

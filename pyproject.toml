@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "drive-ibd"
-version = "2.0.8"
+version = "2.0.9"
 description = "cli tool to identify networks of individuals who share IBD segments overlapping loci of interest"
 authors = ["James Baker <james.baker@vanderbilt.edu>", "Hung-Hsin Chen <hung-hsin.chen.1@vumc.org>", "Jennifer E. Below <jennifer.e.below@vumc.org>"]
 maintainers = ["James Baker <james.baker@vanderbilt.edu>", "Hung-Hsin Chen <hung-hsin.chen.1@vumc.org>"]
@@ -11,6 +11,8 @@ keywords = ["python", "genetics", "identity by descent", "relatedness"]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Operating System :: Unix",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
 ]
