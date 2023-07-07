@@ -48,7 +48,7 @@ class ClusterHandler:
 
         ibd_vertices : Optional[DataFrame]
             DataFrame that has information for each vertice in the
-            graph. this value will be none when we are redoing the clustering
+            graph. This value will be none when we are redoing the clustering
         """
         if ibd_vertices is not None:
             logger.debug("Generating graph with vertex labels.")
@@ -95,7 +95,7 @@ class ClusterHandler:
 
         Parameters
         ----------
-        random_walk_clusters_sizes : List[int]
+        random_walk_clusters_sizes : ig.VertexClustering
             size of each cluster from the random walk results
 
         Returns
@@ -500,7 +500,7 @@ def cluster(
     # logginng the number of segments, haplotypes, and clusters
     # identified in the analysis
     logger.info(
-        f"Identified {network_graph.ecount()} IBD segments from {network_graph.vcount()} haplotypes"
+        f"Identified {network_graph.ecount()} IBD segments from {network_graph.vcount()} haplotypes"  # noqa: E501
     )
 
     logger.info(f"Identified {len(cluster_obj.final_clusters)} IBD clusters")

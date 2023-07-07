@@ -1,5 +1,5 @@
 {
-    "plugins":["plugins.pvalues", "plugins.network_writer"],
+    "plugins":["drive.plugins.pvalues", "drive.plugins.network_writer"],
     "modules": [
         {
             "name":"pvalues"

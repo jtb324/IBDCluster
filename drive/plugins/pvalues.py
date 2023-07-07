@@ -1,11 +1,12 @@
 from dataclasses import dataclass
 from typing import Dict, List, Tuple
 
+from numpy import float64
+from scipy.stats import binomtest
+
 from drive.factory import factory_register
 from drive.log import CustomLogger
 from drive.models import Data_Interface, Network_Interface
-from numpy import float64
-from scipy.stats import binomtest
 
 logger = CustomLogger.get_logger(__name__)
 
@@ -24,12 +25,24 @@ class Pvalues:
         network_size: int,
     ) -> float64:
         """Function that will determine the pvalue for each network
+
+        Parameters
+        ----------
+        phenotype : str
+
+        phenotype_percent : int
+
+        carriers_count : int
+
+        network_size : int
+
         Returns
+        -------
         float
             Returns the calculated pvalue
         """
-        # the probability is 1 if the carrier count is zero because it is chances of finding
-        # 0 or higher which is everyone
+        # the probability is 1 if the carrier count is zero because it is chances of
+        # finding 0 or higher which is everyone
         if carriers_count == 0:
             logger.debug(f"carrier count = 0 therefore pvalue for {phenotype} = 1")
             return 1
@@ -66,7 +79,7 @@ class Pvalues:
         )
 
         logger.verbose(
-            f"Identified {len(phenotype_counts.get('cases'))} cases and {len(phenotype_counts.get('controls'))} giving a phenotype frequency of {phenotype_frequency}"
+            f"Identified {len(phenotype_counts.get('cases'))} cases and {len(phenotype_counts.get('controls'))} giving a phenotype frequency of {phenotype_frequency}"  # noqa: E501
         )
 
         return phenotype_frequency
@@ -75,7 +88,7 @@ class Pvalues:
     def _get_carriers_in_network(
         phenotype_counts: Dict[str, List[str]], network: Network_Interface
     ) -> int:
-        """determine the number of individual cases that are
+        """Determine the number of individual cases that are
         also in the network
 
         Parameters
@@ -130,9 +143,9 @@ class Pvalues:
     def _gather_network_information(
         self,
         network: Network_Interface,
-        cohort_carriers: dict[str, Dict[str, List[str]]],
+        cohort_carriers: Dict[str, Dict[str, List[str]]],
     ) -> tuple[str, str, Dict[str, str]]:
-        """Function that will determine information about how many
+        """Determine information about how many
         carriers are in each network, the percentage, the IIDs of
         the carriers in the network, and use this to calculate the
         pvalue for the network. The function keeps track of the
@@ -140,15 +153,13 @@ class Pvalues:
 
         Parameters
         ----------
-        carriers_list : dict[str, list[str]]
-            Dictionary that has all the carriers in list for each phenotype of interest
 
         network : Network
             Network object attributes for iids, pairs, and haplotypes
 
-        phenotype_percentages : dict[str, float]
-            dictionary where the keys are phecode strings and the values are the phecode
-            frequencies in the population
+        phenotype_percentages : Dict[str, Dict[str, List[str]]]
+            dictionary where the keys are phenotype ids and the values are a dictionary
+            with the list of cases/controls/exclusions
 
         Returns
         -------
@@ -202,20 +213,22 @@ class Pvalues:
 
                 phenotype_pvalues[phenotype] = phenotype_str
 
-                # Now we will see if the phecode is lower then the cur_min_pvalue. If it is then
-                # we will change the cur_min_pvalue and we will update the cur_min_phecode
+                # Now we will see if the phecode is lower then the cur_min_pvalue. If it
+                # is then we will change the cur_min_pvalue and we will update the
+                # cur_min_phecode
                 if pvalue < cur_min_pvalue and pvalue != 0:
                     cur_min_pvalue = pvalue
 
                     cur_min_phenotype = phenotype
 
-        # if a minimum phecode is identified then we need to create a string, otherwise we
-        # use N/A's
+        # if a minimum phecode is identified then we need to create a string, otherwise
+        # we use N/A's
         if not cur_min_phenotype:
             cur_min_phenotype = "N/A"
             cur_min_pvalue = "N/A"
 
-        # return the pvalue_output string first and either a tuple of N/As or the min pvalue/min_phecode
+        # return the pvalue_output string first and either a tuple of N/As or the min
+        # pvalue/min_phecode
         return cur_min_pvalue, cur_min_phenotype, phenotype_pvalues
 
     @staticmethod
