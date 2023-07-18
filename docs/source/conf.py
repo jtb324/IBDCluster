@@ -36,3 +36,11 @@ extensions = [
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 master_doc = 'index'
 extensions = []
+
+html_theme = "sphinx_book_theme"
+html_theme_options = {
+    "repository_url": "https://github.com/belowlab/drive",
+    "use_repository_button": True,
+    "home_page_in_toc": True
+}
+html_title = "DRIVE"
