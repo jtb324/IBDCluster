@@ -46,3 +46,5 @@ Optional Arguments:
 ----
 
 * :yellow:`STEP`: This argument indicates the number of minimum steps that the random walk will use to generate a network. By default this value is 3.
+
+* :yellow:`cases`: This argument is a filepath to a text files that has a list of cases and controls and exclusions.
