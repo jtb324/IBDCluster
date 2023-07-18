@@ -31,18 +31,6 @@ extensions = [
     'sphinx.ext.viewcode',
     # 'sphinxcontrib_autodocgen'
 ]
-=======
-import sys
-import os
-
-# sys.path.insert(0, os.path.abspath('../'))
-sys.path.insert(0, os.path.abspath('../../drive/'))
-sys.path.insert(0, os.path.abspath('../'))
-
-project = 'DRIVE'
-copyright = '2023, James Baker, Hung-Hsin Chen, Jennifer Piper-Below, David Samuels'
-author = 'James Baker, Hung-Hsin Chen, Jennifer Piper-Below, David Samuels'
-release = '1.0.0'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
