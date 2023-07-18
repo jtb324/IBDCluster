@@ -1,5 +1,31 @@
-# ENVIRONMENT
+# ENVIRONMENTAL FILE
 /venv/
+.env
 
-build/
-./build/*
+# TEST FILES
+*.ipynb
+*.txt
+
+# IDE FILES
+.vscode
+.idea
+
+# CACHES
+*__pycache__/
+.mypy_cache
+# LOG FILES
+*.log
+# SUBMODULES
+IBDCluster/log/README.md
+# PROFILES
+/profiles/
+# BUILD DIRECTORIES
+/dist/
+/docs/build/
+
+# FILES THAT CAN'T BE UPLOADED
+./tests/test_true_results/biovu_longQT.DRIVE.txt
+tests/test_kcne_inputs/
+
+
+

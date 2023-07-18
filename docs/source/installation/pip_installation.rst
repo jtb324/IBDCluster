@@ -1,6 +1,7 @@
 Installing DRIVE from Pip
 =========================
-DRIVE v1.0.0 has been officially released on `PYPI <https://pypi.org/project/drive-ibd/>`_! This installation method is recommended for those who wish to use the software without any modification. PIP will install all of the necessary dependencies of DRIVE so that the user doesn't have to worry about dependency management. 
+
+DRIVE v2.0.0 has been officially released on `PYPI <https://pypi.org/project/drive-ibd/>`_! This installation method is recommended for those who wish to use the software without any internal modification. PIP will install all of the necessary dependencies of DRIVE so that the user doesn't have to worry about dependency management. 
 
 .. note::
 
@@ -13,7 +14,11 @@ DRIVE can be installed using the following command:
 
     pip install drive-ibd
 
-.. warning::
-    
-    DRIVE has been tested with python ranging from v3.6.13 to v3.9. Officially, DRIVE v1.0.0 only supports python 3.8 and 3.9 because the documentation tool sphinx only supports python >= 3.8. If the user only installs the basic dependencies (meaning not the docs dependency group) then they can use python 3.6 or 3.7 if so desired.
+
+If the install is successful, then you can run the following command and you should see a help message:
+
+.. code::
+
+    drive --help
+
     

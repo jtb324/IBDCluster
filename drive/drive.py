@@ -1,318 +1,281 @@
-###
+import json
+import re
+from datetime import datetime
+from pathlib import Path
+from typing import Optional
 
-import sys
-import argparse
-import gzip
-import igraph as ig
-import pandas as pd
-import itertools
+import typer
+
+import drive.factory as factory
+from drive.cluster import ClusterHandler, cluster
+from drive.filters import IbdFilter
+from drive.log import CustomLogger
+from drive.models import Data, FormatTypes, Genes, OverlapOptions, create_indices
+from drive.utilities.callbacks import check_input_exists, check_json_path
+from drive.utilities.parser import PhenotypeFileParser, load_phenotype_descriptions
+
+app = typer.Typer(add_completion=False)
 
 
-def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("-i", "--input", type=str, required=True, help="IBD input file")
-    parser.add_argument(
+def split_target_string(chromo_pos_str: str) -> Genes:
+    """Function that will split the target string provided by the user.
+
+    Parameters
+    ----------
+    chromo_pos_str : str
+        String that has the region of interest in base pairs.
+        This string will look like 10:1234-1234 where the
+        first number is the chromosome number, then the start
+        position, and then the end position of the region of
+        interest.
+
+    Returns
+    -------
+    Genes
+        returns a namedtuple that has the chromosome number,
+        the start position, and the end position
+
+    Raises
+    ------
+    ValueError
+        raises a value error if the string was formatted any
+        other way than chromosome:start_position-end_position.
+        Also raises a value error if the start position is
+        larger than the end position
+    """
+    split_str = re.split(":|-", chromo_pos_str)
+
+    if len(split_str) != 3:
+        error_msg = f"Expected the gene position string to be formatted like chromosome:start_position-end_position. Instead it was formatted as {chromo_pos_str}"  # noqa: E501
+
+        raise ValueError(error_msg)
+
+    integer_split_str = [int(value) for value in split_str]
+
+    if integer_split_str[1] > integer_split_str[2]:
+        raise ValueError(
+            f"expected the start position of the target string to be <= the end position. Instead the start position was {integer_split_str[1]} and the end position was {integer_split_str[2]}"  # noqa: E501
+        )
+
+    return Genes(*integer_split_str)
+
+
+@app.command()
+def main(
+    input_file: Path = typer.Option(
+        ..., "-i", "--input", help="IBD input file", callback=check_input_exists
+    ),
+    ibd_format: FormatTypes = typer.Option(
+        FormatTypes.HAPIBD.value,
         "-f",
         "--format",
-        type=str,
-        required=True,
-        help="IBD file format, e.g. hapIBD, iLASH, RaPID",
-    )
-    parser.add_argument(
+        help="IBD file format. Allowed values are hapibd, ilash, germline, rapid",
+    ),
+    target: str = typer.Option(
+        ...,
         "-t",
         "--target",
-        type=str,
-        required=True,
         help="Target region or position, chr:start-end or chr:pos",
+    ),
+    output: Path = typer.Option(..., "-o", "--output", help="output file prefix"),
+    min_cm: int = typer.Option(
+        3, "-m", "--min-cm", help="minimum centimorgan threshold."
+    ),
+    step: int = typer.Option(3, "-k", "--step", help="steps for random walk"),
+    max_check: int = typer.Option(
+        5,
+        "--max-recheck",
+        help="Maximum number of times to re-perform the clustering. This value will not be used if the flag --no-recluster is used.",  # noqa: E501
+    ),
+    case_file: Optional[Path] = typer.Option(
+        None,
+        "-c",
+        "--cases",
+        help="A file containing individuals who are cases. This file expects for there to be two columns. The first column will have individual ids and the second has status where cases are indicated by a 1 and control are indicated by a 0.",  # noqa: E501
+    ),
+    segment_overlap: OverlapOptions = typer.Option(
+        OverlapOptions.CONTAINS.value,
+        "--segment-overlap",
+        help="Indicates if the user wants the gene to contain the whole target region or if it just needs to overlap the segment.",  # noqa: E501
+    ),
+    phenotype_description_file: Optional[Path] = typer.Option(
+        None,
+        "-d",
+        "--descriptions",
+        help="tab delimited text file that has descriptions for each phecode. this file should have two columns called phecode and phenotype",  # noqa: E501
+    ),
+    max_network_size: int = typer.Option(
+        30, "--max-network-size", help="maximum network size allowed"
+    ),
+    minimum_connected_thres: float = typer.Option(
+        0.5,
+        "--min-connected-threshold",
+        help="minimum connectedness ratio required for the network",
+    ),
+    min_network_size: int = typer.Option(
+        2,
+        "--min-network-size",
+        help="This argument sets the minimun network size that we allow. All networks smaller than this size will be filtered out. If the user wishes to keep all networks they can set this to 0",  # noqa: E501
+    ),
+    segment_dist_threshold: float = typer.Option(
+        0.2,
+        "--segment-distribution-threshold",
+        help="Threshold to filter the network length to remove hub individuals",
+    ),
+    hub_threshold: float = typer.Option(
+        0.01,
+        "--hub-threshold",
+        help="Threshold to determine what percentage of hubs to keep",
+    ),
+    json_path: Path = typer.Option(
+        None,
+        "--json-config",
+        "-j",
+        help="path to the json config file",
+        callback=check_json_path,
+    ),
+    recluster: bool = typer.Option(
+        True,
+        help="whether or not the user wishes the program to automically recluster based on things lik hub threshold, max network size and how connected the graph is. ",  # noqa: E501
+    ),
+    verbose: int = typer.Option(
+        0,
+        "--verbose",
+        "-v",
+        help="verbose flag indicating if the user wants more information",
+        count=True,
+    ),
+    log_to_console: bool = typer.Option(
+        False,
+        "--log-to-console",
+        help="Optional flag to log to only the console or also a file",
+        is_flag=True,
+    ),
+    log_filename: str = typer.Option(
+        "drive.log", "--log-filename", help="Name for the log output file."
+    ),
+) -> None:
+    # getting the programs start time
+    start_time = datetime.now()
+
+    # creating and configuring the logger and then recording user inputs
+    logger = CustomLogger.create_logger()
+
+    logger.configure(output.parent, log_filename, verbose, log_to_console)
+    # record the input parameters
+    logger.record_inputs(
+        ibd_file=input_file,
+        ibd_program_used=ibd_format,
+        gene_target_region=target,
+        output_prefix=output,
+        phenotype_description_file=phenotype_description_file,
+        phenotype_file=case_file,
+        minimum_centimorgan_threshold=min_cm,
+        random_walk_step_size=step,
+        max_recheck_times=max_check,
+        max_network_size=max_network_size,
+        minimum_connection_threshold=minimum_connected_thres,
+        min_network_size=min_network_size,
+        log_to_console=log_to_console,
+        log_filename=log_filename,
+        recluster=recluster,
     )
-    parser.add_argument(
-        "-o", "--output", type=str, required=True, help="output file perfix"
-    )
-    parser.add_argument(
-        "-m",
-        "--mincm",
-        type=float,
-        required=False,
-        help="minimum cM, default=3",
-        default=3,
-    )
-    parser.add_argument(
-        "-k",
-        "--step",
-        type=int,
-        required=False,
-        help="steps for random walk, default=3",
-        default=3,
-    )
 
-    args = parser.parse_args()
+    logger.debug(f"Parent directory for log files and output: {output.parent}")
 
-    ## set input format
-    id1_indx = 0
-    hap1_indx = 1
-    id2_indx = 2
-    hap2_indx = 3
-    chr_indx = 4
-    str_indx = 5
-    end_indx = 6
+    logger.info(f"Analysis start time: {start_time}")
+    # we need to load in the phenotype descriptions file to get
+    # descriptions of each phenotype
+    if phenotype_description_file:
+        logger.verbose(
+            f"Using the phenotype descriptions file at: {phenotype_description_file}"
+        )
+        desc_dict = load_phenotype_descriptions(phenotype_description_file)
+    else:
+        logger.verbose("No phenotype descriptions provided")
+        desc_dict = {}
 
-    if args.format.lower() == "germline":
-        cM_indx = 10
-        unit = 11
+    # if the user has provided a phenotype file then we will determine case/control/
+    # exclusion counts. Otherwise we return an empty dictionary
+    if case_file:
+        with PhenotypeFileParser(case_file) as phenotype_file:
+            phenotype_counts, cohort_ids = phenotype_file.parse_cases_and_controls()
 
-        def getHAPID(IID, hapID):
-            return hapID
+            logger.info(
+                f"identified {len(phenotype_counts.keys())} phenotypes within the file {case_file}"  # noqa: E501
+            )
+    else:
+        logger.info(
+            "No phenotype information provided. Only the clustering step of the analysis will be performed"  # noqa: E501
+        )
 
-    elif args.format.lower() == "ilash":
-        cM_indx = 9
+        phenotype_counts = {}
+        cohort_ids = []
 
-        def getHAPID(IID, hapID):
-            return hapID
+    indices = create_indices(ibd_format.lower())
 
-    elif args.format.lower() in ["hap-ibd", "hapibd"]:
-        cM_indx = 7
-
-        def getHAPID(IID, hapID):
-            return "{0}.{1}".format(IID, hapID)
-
-    elif args.format.lower() == "rapid":
-        id1_indx = 1
-        hap1_indx = 3
-        id2_indx = 2
-        hap2_indx = 4
-        chr_indx = 0
-        cM_indx = 7
-
-        def getHAPID(IID, hapID):
-            return "{0}.{1}".format(IID, hapID)
+    logger.debug(f"created indices object: {indices}")
 
     ##target gene region or variant position
-    genechr = args.target.split(":")[0]
-    if len(args.target.split(":")[1].split("-")) == 2:
-        genestr = int(args.target.split(":")[1].split("-")[0])
-        geneend = int(args.target.split(":")[1].split("-")[1])
-    else:
-        genestr, geneend = int(args.target.split(":")[1])
+    target_gene = split_target_string(target)
 
-    ##other setting
-    mincM = args.mincm
-    kstep = args.step
-    TP = 0.5
-    maxN = 30
-    maxcheck = 5
+    logger.debug(f"Identified a target region: {target_gene}")
 
-    ibdpd = pd.DataFrame(columns=["idnum1", "idnum2", "cm"])
-    ibdvs = pd.DataFrame(columns=["idnum", "hapID", "IID"])
-    hapid_to_int = {}
-    allhapid = []
-    idnum = int(0)
+    filter_obj: IbdFilter = IbdFilter.load_file(input_file, indices, target_gene)
 
-    with gzip.open(args.input, "rt") as ibdfile:
-        for line in ibdfile:
-            line = line.strip().split()
-            CHR = line[chr_indx]
-            STR = min(int(line[str_indx]), int(line[end_indx]))
-            END = max(int(line[str_indx]), int(line[end_indx]))
-            iid1 = line[id1_indx]
-            iid2 = line[id2_indx]
-            hapid1 = str(getHAPID(line[id1_indx], line[hap1_indx]))
-            hapid2 = str(getHAPID(line[id2_indx], line[hap2_indx]))
-            cM = float(line[cM_indx])
-            if CHR == genechr and STR <= genestr and END >= geneend and cM >= mincM:
-                if hapid1 != hapid2:
-                    if hapid1 not in hapid_to_int:
-                        hapid_to_int[hapid1] = int(idnum)
-                        allhapid.append(hapid1)
-                        ibdvs.loc[int(idnum)] = [int(idnum), hapid1, iid1]
-                        idnum += 1
-                    if hapid2 not in hapid_to_int:
-                        hapid_to_int[hapid2] = int(idnum)
-                        allhapid.append(hapid2)
-                        ibdvs.loc[int(idnum)] = [int(idnum), hapid2, iid2]
-                        idnum += 1
-                    ibdpd = ibdpd.append(
-                        {
-                            "idnum1": int(hapid_to_int[hapid1]),
-                            "idnum2": int(hapid_to_int[hapid2]),
-                            "cm": cM,
-                        },
-                        ignore_index=True,
-                    )
-    ibdpd = ibdpd.astype({"idnum1": "int", "idnum2": "int"})
-    # print(ibdpd)
-    ibd_g = ig.Graph.DataFrame(ibdpd, directed=False, vertices=ibdvs, use_vids=True)
-    ibd_walktrap = ig.Graph.community_walktrap(ibd_g, weights="cm", steps=kstep)
-    ibd_walktrap_clusters = ibd_walktrap.as_clustering()
-    print(ibd_walktrap_clusters.summary())
-    allclst = [i for i, v in enumerate(ibd_walktrap_clusters.sizes()) if v > 2]
+    # choosing the proper way to filter the ibd files
+    filter_obj.set_filter(segment_overlap)
 
-    def get_clst_info(name, clst, target_clsts, target_ig):
-        clst_info[name] = {}
-        clst_info[name]["memberID"] = [
-            target_ig.vs()[c]["name"]
-            for c, v in enumerate(target_clsts.membership)
-            if v == clst
-        ]
-        clst_info[name]["member"] = [
-            c for c, v in enumerate(target_clsts.membership) if v == clst
-        ]
-        clst_edge_n = (
-            len(clst_info[name]["member"]) * (len(clst_info[name]["member"]) - 1) / 2
+    filter_obj.preprocess(min_cm, cohort_ids)
+
+    # We need to invert the hapid_map dictionary so that the
+    # integer mappings are keys and the values are the
+    # haplotype string
+    hapid_inverted = {value: key for key, value in filter_obj.hapid_map.items()}
+
+    # creating the object that will handle clustering within the networks
+    cluster_handler = ClusterHandler(
+        minimum_connected_thres,
+        max_network_size,
+        max_check,
+        step,
+        min_network_size,
+        segment_dist_threshold,
+        hub_threshold,
+        hapid_inverted,
+        recluster,
+    )
+
+    networks = cluster(filter_obj, cluster_handler, indices.cM_indx)
+
+    # creating the data container that all the plugins can interact with
+    plugin_api = Data(networks, output, phenotype_counts, desc_dict)
+
+    logger.debug(f"Data container: {plugin_api}")
+
+    # making sure that the output directory is created
+    # This section will load in the analysis plugins and run each plugin
+    with open(json_path, encoding="utf-8") as json_config:
+        config = json.load(json_config)
+
+        factory.load_plugins(config["plugins"])
+
+        analysis_plugins = [factory.factory_create(item) for item in config["modules"]]
+
+        logger.debug(
+            f"Using plugins: {', '.join([obj.name for obj in analysis_plugins])}"
         )
-        clst_info[name]["true_positive_edge"] = list(
-            filter(
-                lambda a: a != -1,
-                target_ig.get_eids(
-                    pairs=list(itertools.combinations(clst_info[name]["member"], 2)),
-                    directed=False,
-                    error=False,
-                ),
-            )
-        )
-        clst_info[name]["true_positive_n"] = len(clst_info[name]["true_positive_edge"])
-        clst_info[name]["true_positive"] = (
-            clst_info[name]["true_positive_n"] / clst_edge_n
-        )
-        all_edge = set([])
-        for mem in clst_info[name]["member"]:
-            all_edge = set(all_edge.union(set(target_ig.incident(mem))))
-        clst_info[name]["false_negative_edge"] = list(
-            all_edge.difference(
-                list(
-                    target_ig.get_eids(
-                        pairs=list(
-                            itertools.combinations(clst_info[name]["member"], 2)
-                        ),
-                        directed=False,
-                        error=False,
-                    )
-                )
-            )
-        )
-        clst_info[name]["false_negative_n"] = len(
-            clst_info[name]["false_negative_edge"]
-        )
-        if (
-            check_times < maxcheck
-            and clst_info[name]["true_positive"] < TP
-            and len(clst_info[name]["member"]) > maxN
-        ):
-            recheck[check_times].append(name)
-        else:
-            outclst.append(name)
 
-    clst_info = {}
-    recheck = {}
-    check_times = 0
-    recheck[check_times] = []
-    outclst = []
+        # iterating over every plugin and then running the analyze and write method
+        for analysis_obj in analysis_plugins:
+            analysis_obj.analyze(data=plugin_api)
 
-    for clst in allclst:
-        get_clst_info(str(clst), clst, ibd_walktrap_clusters, ibd_g)
+    end_time = datetime.now()
 
-    def redo_clst(i):
-        redopd = ibdpd.loc[
-            (ibdpd["idnum1"].isin(clst_info[i]["memberID"]))
-            & (ibdpd["idnum2"].isin(clst_info[i]["memberID"]))
-        ]
-        redo_g = ig.Graph.DataFrame(redopd, directed=False)
-        redo_walktrap = ig.Graph.community_walktrap(redo_g, weights="cm", steps=kstep)
-        redo_walktrap_clusters = redo_walktrap.as_clustering()
-        if len(redo_walktrap_clusters.sizes()) == 1:
-            clst_conn = pd.DataFrame(columns=["idnum", "conn", "conn.N", "TP"])
-            for idnum in clst_info[i]["member"]:
-                conn = sum(
-                    list(
-                        map(
-                            lambda x: 1 / x,
-                            redopd.loc[
-                                (redopd["idnum1"] == idnum)
-                                | (redopd["idnum2"] == idnum)
-                            ]["cm"],
-                        )
-                    )
-                )
-                conn_idnum = list(
-                    redopd.loc[(redopd["idnum1"] == idnum)]["idnum2"]
-                ) + list(redopd.loc[(redopd["idnum2"] == idnum)]["idnum1"])
-                conn_tp = len(
-                    redopd.loc[
-                        redopd["idnum1"].isin(conn_idnum)
-                        & redopd["idnum2"].isin(conn_idnum)
-                    ].index
-                )
-                if len(conn_idnum) == 1:
-                    connTP = 1
-                else:
-                    connTP = conn_tp / (len(conn_idnum) * (len(conn_idnum) - 1) / 2)
-                clst_conn.loc[idnum] = [idnum, conn, len(conn_idnum), connTP]
-            rmID = list(
-                clst_conn.loc[
-                    (clst_conn["conn.N"] > (0.2 * len(clst_info[i]["member"])))
-                    & (clst_conn["TP"] < TP)
-                    & (
-                        clst_conn["conn"]
-                        > sorted(clst_conn["conn"], reverse=True)[
-                            int(0.01 * len(clst_info[i]["member"]))
-                        ]
-                    )
-                ]["idnum"]
-            )
-            redopd = redopd.loc[
-                (~redopd["idnum1"].isin(rmID)) & (~redopd["idnum2"].isin(rmID))
-            ]
-            redo_g = ig.Graph.DataFrame(redopd, directed=False)
-            redo_walktrap = ig.Graph.community_walktrap(
-                redo_g, weights="cm", steps=kstep
-            )
-            redo_walktrap_clusters = redo_walktrap.as_clustering()
-        print(redo_walktrap_clusters.summary())
-        allclst = [c for c, v in enumerate(redo_walktrap_clusters.sizes()) if v > 2]
-        for clst in allclst:
-            get_clst_info(
-                "{0}.{1}".format(i, clst), clst, redo_walktrap_clusters, redo_g
-            )
-
-    while check_times < maxcheck and len(recheck[check_times]) > 0:
-        check_times += 1
-        print("recheck: {}".format(check_times))
-        recheck[check_times] = []
-        for redoclst in recheck[check_times - 1]:
-            redo_clst(redoclst)
-    #    print(recheck[check_times])
-
-    with open("{}.DRIVE.txt".format(args.output), "w") as output:
-        output.write(
-            "## {0} IBD segments from {1} haplotypes\n".format(
-                ibd_g.ecount(), ibd_g.vcount()
-            )
-        )
-        output.write("## Identified {} IBD clusters\n".format(len(outclst)))
-        output.write(
-            "clstID\tn.total\tn.haplotype\ttrue.postive.n\ttrue.postive\tfalst.postive\tIDs\tID.haplotype\n"
-        )
-        for clst in outclst:
-            clsthapid = list(
-                ibdvs.loc[ibdvs["idnum"].isin(clst_info[clst]["memberID"])]["hapID"]
-            )
-            clstIID = set(
-                ibdvs.loc[ibdvs["idnum"].isin(clst_info[clst]["memberID"])]["IID"]
-            )
-            n = len(clstIID)
-            nhap = len(clsthapid)
-            output.write(
-                "clst{0}\t{1}\t{2}\t{3}\t{4:.4f}\t{5}\t{6}\t{7}\n".format(
-                    clst,
-                    n,
-                    nhap,
-                    clst_info[clst]["true_positive_n"],
-                    clst_info[clst]["true_positive"],
-                    clst_info[clst]["false_negative_n"],
-                    ",".join(clstIID),
-                    ",".join(clsthapid),
-                )
-            )
+    logger.info(
+        f"Analysis finished at {end_time}. Total runtime: {end_time - start_time}"
+    )
 
 
 if __name__ == "__main__":
-    main()
+    app()

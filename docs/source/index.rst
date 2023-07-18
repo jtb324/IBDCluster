@@ -1,5 +1,6 @@
 .. DRIVE documentation master file, created by
-   sphinx-quickstart on Fri May  5 14:39:52 2023.
+
+   sphinx-quickstart on Sat May  6 10:53:12 2023.
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
@@ -25,19 +26,36 @@ Citation:
 Currently the paper DRIVE originally appeared in can be found on medrxiv at the following link: `<https://www.medrxiv.org/content/10.1101/2023.04.19.23288831v1>`_
 
 
-
 Contact:
 --------
 If you have any questions about DRIVE, you can either post an issue on the Github issues page or you can contact us at the email address, insert email here.
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
+   :caption: User's Guide
    :hidden:
 
-   installation/install
-   inputs
-   output
-   examples/examples_command_format
+   /installation/installation
+   /inputs_and_outputs/inputs
+   /inputs_and_outputs/outputs
+   
+   
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Tutorial
+   :hidden:
+
+   /examples/tutorial
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Developer's Guide
+   :hidden:
+
+   /contributing/contributing
+   /plugin_descriptions/extending_drive
+   /modules/modules
+
 
 

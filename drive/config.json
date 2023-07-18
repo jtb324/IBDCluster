@@ -1,0 +1,11 @@
+{
+    "plugins":["drive.plugins.pvalues", "drive.plugins.network_writer"],
+    "modules": [
+        {
+            "name":"pvalues"
+        },
+        {
+            "name":"network_writer"
+        }
+    ]
+}
