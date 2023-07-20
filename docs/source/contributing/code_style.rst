@@ -30,14 +30,6 @@ Isort is used to alphabetically sort imports. Isort also arranges imports by typ
 Ruff
 ----
 DRIVE uses Ruff for static code analysis. This tool will detect common code smell, catch common errors, indicate if code blocks are too complex, and suggest ways to refactor code blocks. For more information about Ruff, the documentation can be found here: `Ruff's documentation <https://beta.ruff.rs/docs/>`_.
-Pylint
-------
-Pylint is used as a static code analyzer for the project. This tool will detect common code smell, catch common errors, indicate if code blocks are too complex, and suggest ways to refactor code blocks. For more information about Pylint, the documentation can be found here: `Pylint documentation <https://pylint.readthedocs.io/en/latest/>`_. For compatibility with Black, ensure that the following lines are within the pyproject.toml file.
-
-.. code::
-
-    [tool.pylint.format]
-    max-line-length = "88"
 
 Commitizen
 ----------
