@@ -1,3 +1,5 @@
+.. _code_style:
+
 Code Styling Tips
 =================
 

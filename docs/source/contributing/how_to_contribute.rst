@@ -1,7 +1,9 @@
 How to contribute
 =================
 
-Aliqua elit cillum irure nulla commodo occaecat nisi adipisicing non magna tempor. Adipisicing ex minim dolor sint reprehenderit ex sit veniam id excepteur do voluptate. Excepteur incididunt nisi consequat laboris. Cillum irure sunt sit culpa anim occaecat do cupidatat culpa deserunt. Esse adipisicing non esse amet eiusmod. Laborum id incididunt ut Lorem ea ea consectetur ut exercitation ullamco nulla laboris. Et laborum reprehenderit in ullamco ea ullamco duis et.
+Fixing Bugs:
+------------
+If you discover any bugs, you could either submit and issue through Github using the recommended issue template. You are also welcome to try to fix the issue on your own and then submit a pull request. We ask that you read the code style section (:ref:`code_style`). Your pull request will only be accepted if it conforms to the development standards that DRIVE uses.
 
 Improving Documentation:
 ------------------------
