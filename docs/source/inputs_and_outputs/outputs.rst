@@ -72,4 +72,4 @@ Column descriptions:
 Log File
 --------
 
-DRIVE creates a log file with whatever name the user provides. This file has the suffix ".log". This file has information about the arguments the user passed and then runtime information from the program such as how many networks were identified and how many haplotypes were identified.
+DRIVE creates a log file with whatever name the user provides. This file has the suffix ".log". This file has information about the arguments the user passed and then runtime information from the program such as how many networks were identified and how many haplotypes were identified. The amount of information written to this file will vary depending on what level of verbosity the user chooses.
