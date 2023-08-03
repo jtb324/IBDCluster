@@ -87,9 +87,7 @@ class ClusterHandler:
 
         return random_walk_clusters
 
-    def filter_cluster_size(
-        self, random_walk_clusters_sizes: List[int]
-    ) -> List[int]:
+    def filter_cluster_size(self, random_walk_clusters_sizes: List[int]) -> List[int]:
         """Method to filter networks that are smaller than the min_cluster_size from
         the analysis
 
@@ -146,7 +144,7 @@ class ClusterHandler:
 
         for member_id, assigned_clst_id in enumerate(random_walk_members):
             if assigned_clst_id == clst_id:
-                vertex_ids.append(graph.vs() [member_id]["name"])
+                vertex_ids.append(graph.vs()[member_id]["name"])
                 member_list.append(member_id)
 
         return member_list, vertex_ids
@@ -291,7 +289,7 @@ class ClusterHandler:
             member_list, vertex_ids = ClusterHandler._gather_members(
                 random_walk_clusters.membership, clst_id, graph
             )
-            
+
             # Next we get the number of edges/ ratio of actual edges to
             # the potential edges
             (
@@ -330,7 +328,7 @@ class ClusterHandler:
                 # debug statement if we want to see the members and the haplotypes
                 logger.debug(f"members: {member_list}\nhaplotypes: {vertex_ids}")
 
-                # we are going to append the network to the list of networks that needs 
+                # we are going to append the network to the list of networks that needs
                 # to be rechecked
                 self.recheck_clsts.setdefault(self.check_times, []).append(network)
 
@@ -354,10 +352,7 @@ class ClusterHandler:
                 self.final_clusters.append(network)
 
     def redo_clustering(
-        self,
-        network: Network_Interface,
-        ibd_pd: DataFrame,
-        ibd_vs: DataFrame
+        self, network: Network_Interface, ibd_pd: DataFrame, ibd_vs: DataFrame
     ) -> None:
         """Method that will redo the clustering, if the
         networks were too large or did not show a high degree
@@ -423,8 +418,10 @@ class ClusterHandler:
                     try:
                         connTP = conn_tp / (len(conn_idnum) * (len(conn_idnum) - 1) / 2)
                     except ZeroDivisionError:
-                        raise ZeroDivisionError(f"There was a zero division error encountered when looking at the network with the id {idnum}")  # noqa: E501
-                    
+                        raise ZeroDivisionError(
+                            f"There was a zero division error encountered when looking at the network with the id {idnum}"
+                        )  # noqa: E501
+
                 clst_conn.loc[idnum] = [idnum, conn, len(conn_idnum), connTP]
             rmID = list(
                 clst_conn.loc[
@@ -446,8 +443,8 @@ class ClusterHandler:
                 (~redopd["idnum1"].isin(rmID)) & (~redopd["idnum2"].isin(rmID))
             ]
             redo_graph = self.generate_graph(
-                    redopd,
-                )
+                redopd,
+            )
             # redo_g = ig.Graph.DataFrame(redopd, directed=False)
             redo_walktrap_clusters = self.random_walk(redo_graph)
             # redo_walktrap = ig.Graph.community_walktrap(
@@ -515,11 +512,7 @@ def cluster(
         _ = cluster_obj.recheck_clsts.setdefault(cluster_obj.check_times, [])
 
         for network in cluster_obj.recheck_clsts.get(cluster_obj.check_times - 1):
-            cluster_obj.redo_clustering(
-                network,
-                ibd_pd,
-                ibd_vs
-            )
+            cluster_obj.redo_clustering(network, ibd_pd, ibd_vs)
     # logginng the number of segments, haplotypes, and clusters
     # identified in the analysis
     logger.info(
