@@ -267,7 +267,8 @@ class IbdFilter:
             )
 
     def _generate_vertices(self, data_chunk: DataFrame) -> None:
-        """Method that will generate the vertices dataframe which just has the columns idnum, hapID, and IID
+        """Method that will generate the vertices dataframe which just has the 
+        columns idnum, hapID, and IID
 
         Parameters
         ----------
@@ -275,7 +276,7 @@ class IbdFilter:
             chunk of the ibdfile. The size of this chunk is
             determined by the chunksize argument to
             pd.read_csv. This value is currently set to 100,000.
-        """  # noqa: E501
+        """  
         id1_df = data_chunk[["idnum1", "hapid1", self.indices.id1_indx]].rename(
             columns={"idnum1": "idnum", "hapid1": "hapID", 0: "IID"}
         )
@@ -424,6 +425,6 @@ class IbdFilter:
                 self._generate_vertices(removed_dups)
 
         self._check_empty_dataframes()
-
+    
         self.ibd_pd.reset_index(drop=True, inplace=True)
         self.ibd_vs = self.ibd_vs.drop_duplicates().sort_values(by="idnum")
