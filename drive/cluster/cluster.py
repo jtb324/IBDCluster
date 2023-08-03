@@ -87,15 +87,13 @@ class ClusterHandler:
 
         return random_walk_clusters
 
-    def filter_cluster_size(
-        self, random_walk_clusters_sizes: ig.VertexClustering
-    ) -> List[int]:
+    def filter_cluster_size(self, random_walk_clusters_sizes: List[int]) -> List[int]:
         """Method to filter networks that are smaller than the min_cluster_size from
         the analysis
 
         Parameters
         ----------
-        random_walk_clusters_sizes : ig.VertexClustering
+        random_walk_clusters_sizes : List[int]
             size of each cluster from the random walk results
 
         Returns
@@ -144,10 +142,10 @@ class ClusterHandler:
         # graph
         vertex_ids = []
 
-        for c, v in enumerate(random_walk_members):
-            if v == clst_id:
-                vertex_ids.append(graph.vs()[c]["name"])
-                member_list.append(c)
+        for member_id, assigned_clst_id in enumerate(random_walk_members):
+            if assigned_clst_id == clst_id:
+                vertex_ids.append(graph.vs()[member_id]["name"])
+                member_list.append(member_id)
 
         return member_list, vertex_ids
 
@@ -256,7 +254,7 @@ class ClusterHandler:
         graph: ig.Graph,
         cluster_ids: List[int],
         random_walk_clusters: ig.VertexClustering,
-        parent_cluster_id: Optional[int] = None,
+        parent_cluster_id: Optional[str] = None,
     ) -> None:
         """Method for getting the information about membership,
         true.positive, false.positives, etc... from the random
@@ -273,23 +271,25 @@ class ClusterHandler:
         random_walk_clusters : ig.VertexClustering
             result from performing the random walk.
 
-        parent_cluster_id : int
+        parent_cluster_id : Optional[str]
             id of the original cluster that is now being broken up. Child
             cluster ids will take the form parent_id.child_id
         """
+
         for clst_id in cluster_ids:
             # We need to form the appropriate id if the cluster has a
             # parent otherwise they get the value of the clst_id argument
             if parent_cluster_id:
                 clst_name = f"{parent_cluster_id}.{clst_id}"
             else:
-                clst_name = clst_id
+                clst_name = f"{clst_id}"
 
             # We are going to get the vertex id and member id of each
             # graph
             member_list, vertex_ids = ClusterHandler._gather_members(
                 random_walk_clusters.membership, clst_id, graph
             )
+
             # Next we get the number of edges/ ratio of actual edges to
             # the potential edges
             (
@@ -325,7 +325,11 @@ class ClusterHandler:
                     member_list,
                     vertex_ids,
                 )
+                # debug statement if we want to see the members and the haplotypes
+                logger.debug(f"members: {member_list}\nhaplotypes: {vertex_ids}")
 
+                # we are going to append the network to the list of networks that needs
+                # to be rechecked
                 self.recheck_clsts.setdefault(self.check_times, []).append(network)
 
             else:
@@ -343,13 +347,12 @@ class ClusterHandler:
                     member_ids,
                     haplotype_ids,
                 )
+                # logger.info(f"members: {member_ids}\nhaplotypes: {haplotype_ids}")
 
                 self.final_clusters.append(network)
 
     def redo_clustering(
-        self,
-        network: Network_Interface,
-        ibd_pd: DataFrame,
+        self, network: Network_Interface, ibd_pd: DataFrame, ibd_vs: DataFrame
     ) -> None:
         """Method that will redo the clustering, if the
         networks were too large or did not show a high degree
@@ -373,8 +376,11 @@ class ClusterHandler:
             (ibd_pd["idnum1"].isin(network.haplotypes))
             & (ibd_pd["idnum2"].isin(network.haplotypes))
         ]
+
+        redo_vs = ibd_vs[ibd_vs.idnum.isin(network.haplotypes)]
+
         # We are going to generate a new Networks object using the redo graph
-        redo_networks = ClusterHandler.generate_graph(redopd)
+        redo_networks = ClusterHandler.generate_graph(redopd, redo_vs)
         # performing the random walk
         redo_walktrap_clusters = self.random_walk(redo_networks)
 
@@ -383,7 +389,8 @@ class ClusterHandler:
             # creates an empty dataframe with these columns
             clst_conn = DataFrame(columns=["idnum", "conn", "conn.N", "TP"])
             # iterate over each member id
-            for idnum in network.members:
+            # for idnum in network.haplotypes:
+            for idnum in network.haplotypes:
                 conn = sum(
                     list(
                         map(
@@ -404,10 +411,17 @@ class ClusterHandler:
                         & redopd["idnum2"].isin(conn_idnum)
                     ].index
                 )
+                # assert 1 == 0
                 if len(conn_idnum) == 1:
                     connTP = 1
                 else:
-                    connTP = conn_tp / (len(conn_idnum) * (len(conn_idnum) - 1) / 2)
+                    try:
+                        connTP = conn_tp / (len(conn_idnum) * (len(conn_idnum) - 1) / 2)
+                    except ZeroDivisionError:
+                        raise ZeroDivisionError(
+                            f"There was a zero division error encountered when looking at the network with the id {idnum}"
+                        )  # noqa: E501
+
                 clst_conn.loc[idnum] = [idnum, conn, len(conn_idnum), connTP]
             rmID = list(
                 clst_conn.loc[
@@ -424,14 +438,19 @@ class ClusterHandler:
                     )
                 ]["idnum"]
             )
+
             redopd = redopd.loc[
                 (~redopd["idnum1"].isin(rmID)) & (~redopd["idnum2"].isin(rmID))
             ]
-            redo_g = ig.Graph.DataFrame(redopd, directed=False)
-            redo_walktrap = ig.Graph.community_walktrap(
-                redo_g, weights="cm", steps=self.random_walk_step_size
+            redo_graph = self.generate_graph(
+                redopd,
             )
-            redo_walktrap_clusters = redo_walktrap.as_clustering()
+            # redo_g = ig.Graph.DataFrame(redopd, directed=False)
+            redo_walktrap_clusters = self.random_walk(redo_graph)
+            # redo_walktrap = ig.Graph.community_walktrap(
+            #     redo_g, weights="cm", steps=self.random_walk_step_size
+            # )
+            # redo_walktrap_clusters = redo_walktrap.as_clustering()
 
         # Filter to the clusters that are llarger than the minimum size
         allclst = self.filter_cluster_size(redo_walktrap_clusters.sizes())
@@ -493,10 +512,7 @@ def cluster(
         _ = cluster_obj.recheck_clsts.setdefault(cluster_obj.check_times, [])
 
         for network in cluster_obj.recheck_clsts.get(cluster_obj.check_times - 1):
-            cluster_obj.redo_clustering(
-                network,
-                ibd_pd,
-            )
+            cluster_obj.redo_clustering(network, ibd_pd, ibd_vs)
     # logginng the number of segments, haplotypes, and clusters
     # identified in the analysis
     logger.info(
