@@ -1,13 +1,19 @@
 drive.cluster package
 =====================
 
-
+Submodules
+----------
 
 drive.cluster.cluster module
 ----------------------------
 
-.. automodule:: drive.cluster.cluster
+.. automodule:: cluster.cluster
    :members:
-   :undoc-members:
-   :show-inheritance:
+
+
+Module contents
+---------------
+
+.. automodule:: cluster
+   :members:
 

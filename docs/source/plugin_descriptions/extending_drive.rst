@@ -6,5 +6,7 @@ Extending Drive
     :caption: Plugins
     :hidden:
 
-    factory_plugins
     plugin_architecture
+    factory_plugins
+    expected_plugin_structure
+    

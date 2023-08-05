@@ -1,5 +1,5 @@
-Extending DRIVE
-===============
+How is DRIVE extensible
+=======================
 
 DRIVE is designed with user extensibility in mind and it accomplishes this through a plugin architecture. This design allows user to dynamic load their own code at runtime (as long as the code conforms to the specified Plugin Interface). You can read more about this design strategy at this site `Plugin Architecture <dotcms.com/blog/post/plugin-achitecture>`_. The only component of DRIVE that can be changed is the clustering algorithm. Everything else, such as the statistics and how the program writes to an output file are completely customizable to the user.
 

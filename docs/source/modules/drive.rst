@@ -17,7 +17,7 @@ Subpackages
 Submodules
 ----------
 
-drive module
+drive.drive module
 ------------------
 
 .. automodule:: drive.drive
