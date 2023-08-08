@@ -39,10 +39,10 @@ class NetworkWriter:
             # We need to add columns for the min pvalue descriptions
             header_str += "\tmin_pvalue\tmin_phenotype\tmin_phenotype_description"
             # for each phenotype we are going to create 4 columns for the number
-            # of cases in the network, the number of excluded individuals in the
-            # network, and the pvalue for the phenotype
+            # of cases in the network, The case ids in the network the number of
+            # excluded individuals in the network, and the pvalue for the phenotype
             for column in phenotypes:
-                header_str += f"\t{column + '_cases_in_network'}\t{column + '_excluded_in_network'}\t{column + '_pvalue'}"  # noqa: E501
+                header_str += f"\t{column + '_case_count_in_network'}\t{column + 'cases_in_network'}\t{column + '_excluded_in_network'}\t{column + '_pvalue'}"  # noqa: E501
 
             return header_str + "\n"
 
@@ -56,7 +56,7 @@ class NetworkWriter:
         Parameters
         ----------
         network : Network_Interface
-            network object that has all the per network
+            network object that hsas all the per network
             information from the clusters such as cluster
             ids, networks, pvalues, etc...
 

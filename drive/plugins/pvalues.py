@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Dict, List, Tuple
+from typing import Dict, List, Set, Tuple
 
 from numpy import float64
 from scipy.stats import binomtest
@@ -85,7 +85,7 @@ class Pvalues:
         return phenotype_frequency
 
     @staticmethod
-    def _get_carriers_in_network(
+    def _get_carrier_count_in_network(
         phenotype_counts: Dict[str, List[str]], network: Network_Interface
     ) -> int:
         """Determine the number of individual cases that are
@@ -109,6 +109,32 @@ class Pvalues:
         # determine the number of carriers in the network
 
         return len(network.members.intersection(phenotype_counts.get("cases")))
+
+    @staticmethod
+    def _get_carriers_in_network(
+        phenotype_counts: Dict[str, List[str]], network: Network_Interface
+    ) -> Set[str]:
+        """Generate a set of cases that are in the network
+
+        Parameters
+        ----------
+        phenotype_counts : Dict[str, List[str]]
+            Dictionary that has list for individuals who are
+            cases, controls, or exclusions.
+
+        network : Network_Interface
+            Network object with information about members of
+            the networks and what haplotypes are in the network
+
+        Returns
+        -------
+        Set[str]
+            returns a set of individuals that are in both the phenotype_counts
+            case set and the network members set
+        """
+        # determine the number of carriers in the network
+
+        return network.members.intersection(phenotype_counts.get("cases"))
 
     def _remove_exclusions(
         phenotype_counts: Dict[str, List[str]], network: Network_Interface
@@ -157,7 +183,7 @@ class Pvalues:
         network : Network
             Network object attributes for iids, pairs, and haplotypes
 
-        phenotype_percentages : Dict[str, Dict[str, List[str]]]
+        cohort_carriers : Dict[str, Dict[str, List[str]]]
             dictionary where the keys are phenotype ids and the values are a dictionary
             with the list of cases/controls/exclusions
 
@@ -185,13 +211,17 @@ class Pvalues:
             # if there are no controls then we can't do the
             # stats and should just return a string of N/A for all values
             if len(phenotype_counts.get("controls")) == 0:
-                phenotype_pvalues[phenotype] = "N/A\tN/A\tN/A"
+                phenotype_pvalues[phenotype] = "N/A\tN/A\tN/A\tN/A"
             else:
                 phenotype_freq = Pvalues._determine_phenotype_frequency(
                     phenotype_counts
                 )
 
-                num_carriers_in_network = Pvalues._get_carriers_in_network(
+                num_carriers_in_network = Pvalues._get_carrier_count_in_network(
+                    phenotype_counts, network
+                )
+
+                carrier_set = Pvalues._get_carriers_in_network(
                     phenotype_counts, network
                 )
 
@@ -209,7 +239,7 @@ class Pvalues:
                 )
 
                 # Next two lines create the string and then concats it to the output_str
-                phenotype_str = f"{num_carriers_in_network}\t{excluded_count}\t{pvalue}"
+                phenotype_str = f"{num_carriers_in_network}\t{', '.join(carrier_set)}\t{excluded_count}\t{pvalue}"  # noqa: E501
 
                 phenotype_pvalues[phenotype] = phenotype_str
 
