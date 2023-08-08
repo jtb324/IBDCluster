@@ -20,7 +20,7 @@ class Pvalues:
     @staticmethod
     def _determine_pvalue(
         phenotype: str,
-        phenotype_percent: int,
+        phenotype_percent: float,
         carriers_count: int,
         network_size: int,
     ) -> float64:
@@ -29,12 +29,17 @@ class Pvalues:
         Parameters
         ----------
         phenotype : str
+            id for the phenotype
 
-        phenotype_percent : int
+        phenotype_percent : float
+            float that tells what the prevalence of the phenotype in the
+            cohort population is
 
         carriers_count : int
+            number of carriers in the network
 
         network_size : int
+            size of the network
 
         Returns
         -------
@@ -239,13 +244,16 @@ class Pvalues:
                 )
 
                 # Next two lines create the string and then concats it to the output_str
-                phenotype_str = f"{num_carriers_in_network}\t{', '.join(carrier_set)}\t{excluded_count}\t{pvalue}"  # noqa: E501
+                if carrier_set:
+                    phenotype_str = f"{num_carriers_in_network}\t{', '.join(carrier_set)}\t{excluded_count}\t{pvalue}"  # noqa: E501
+                else:
+                    phenotype_str = f"{num_carriers_in_network}\tN/A\t{excluded_count}\t{pvalue}"  # noqa: E501
 
                 phenotype_pvalues[phenotype] = phenotype_str
 
-                # Now we will see if the phecode is lower then the cur_min_pvalue. If it
-                # is then we will change the cur_min_pvalue and we will update the
-                # cur_min_phecode
+                # Now we will see if the phecode is lower then the cur_min_pvalue.
+                # If it is then we will change the cur_min_pvalue and we will
+                # update the cur_min_phecode
                 if pvalue < cur_min_pvalue and pvalue != 0:
                     cur_min_pvalue = pvalue
 
@@ -269,9 +277,13 @@ class Pvalues:
         Parameters
         ----------
         phecode_descriptions : dict[str, dict[str, str]]
-            dictionary with descriptions of each phecode
+            dictionary with descriptions of each phecode. The outer key is the
+            phenotype id. The inner key is the string phenotype and the value is a
+            string that describes the phenotype
+
         min_phecode : str
             minimum phecode string
+
         Returns
         -------
         str
