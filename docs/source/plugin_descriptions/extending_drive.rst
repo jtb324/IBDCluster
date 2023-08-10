@@ -10,4 +10,5 @@ Extending Drive
     data_container_api
     factory_plugins
     expected_plugin_structure
+    plugin_configuration
     

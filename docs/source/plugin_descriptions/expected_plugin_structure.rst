@@ -22,6 +22,7 @@ DRIVE also requires the plugin class to have an attribute called "name". This at
 
 This plugin file is required to have one additional function called "initialize" which accepts no arguments and returns nothing. This function is used by DRIVE to run the code dynamically. 
 
+A template for the plugin class is shown below. The example uses dataclasses but a traditional class will work as well
 
 ..  code-block:: python
 
@@ -49,3 +50,10 @@ This plugin file is required to have one additional function called "initialize"
     # function is used by the plugin factory to dynamically run the code at runtime.
     def initialize() -> None:
         factory_register("plugin_name from the file name", PluginName)
+
+Where the plugins have to be place:
+-----------------------------------
+DRIVE expects the code for the plugins to be located in a module within the DRIVE source code directory. Within this source code there is a subdirectory call plugins. This directory is where DRIVE will look for the plugin code.
+
+.. attention::
+    At the moment this is the only directory where DRIVE looks for plugins. In the future, there may be added support for the user to specify another directory where plugins may be located.
