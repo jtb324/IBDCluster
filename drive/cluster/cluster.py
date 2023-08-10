@@ -419,7 +419,7 @@ class ClusterHandler:
                         connTP = conn_tp / (len(conn_idnum) * (len(conn_idnum) - 1) / 2)
                     except ZeroDivisionError:
                         raise ZeroDivisionError(
-                            f"There was a zero division error encountered when looking at the network with the id {idnum}"
+                            f"There was a zero division error encountered when looking at the network with the id {idnum}"  # noqa: E501
                         )  # noqa: E501
 
                 clst_conn.loc[idnum] = [idnum, conn, len(conn_idnum), connTP]
