@@ -46,7 +46,7 @@ If you have any questions about DRIVE, you can either post an issue on the Githu
    :caption: Tutorial
    :hidden:
 
-   /examples/tutorial
+   /examples/examples_command_format
 
 .. toctree::
    :maxdepth: 2

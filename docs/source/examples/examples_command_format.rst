@@ -1,8 +1,8 @@
-.. raw:: html
+.. .. raw:: html
 
-    <style> .yellow {color:yellow; font-weight:bold;} </style>
+..     <style> .yellow {color:yellow; font-weight:bold;} </style>
 
-.. role:: yellow
+.. .. role:: yellow
 
 Example command format
 ============================
@@ -11,7 +11,7 @@ The following command assumes that you have either installed DRIVE using pip or 
 
 .. code::
 
-    drive -i {input ibd filepath} -f {ibd program format} -t {chromosome position to cluster around} -o {output filepath}
+    drive -i {input ibd filepath} -t {chromosome position to cluster around} -o {output filepath}
 
 .. note::
 
@@ -20,13 +20,10 @@ The following command assumes that you have either installed DRIVE using pip or 
 Explanation of command:
 -----------------------
 
-* :yellow:`input ibd filepath`: filepath to the output from a program like hap-IBD, iLASH, or GERMLINE.
+* **input ibd filepath**: filepath to the output from a program like hap-IBD, iLASH, or GERMLINE. This file should correspond to the chromosome that the locus of interest is on.
 
 
-* :yellow:`ibd program format`: name of the ibd program used to determine ibd segments. This value could be hapibd, ilash, or germline.
+* **chromosome position to cluster around**: string indicating the target region of interest should be of the form chromosome:start position-end position (An example is chrX:XXXX-XXXX).
 
 
-* :yellow:`chromosome position to cluster around`: string indicating the target region of interest should be of the form chromosome:start position-end position (An example is chrX:XXXX-XXXX).
-
-
-* :yellow:`output filepath`: filepath to write an output file to. This value should not include a suffix. DRIVE will automatically append the suffix ".DRIVE.txt".
+* **output filepath**: filepath to write an output file to. This value should not include a suffix. DRIVE will automatically append the suffix ".DRIVE.txt".

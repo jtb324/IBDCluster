@@ -1,7 +1,7 @@
 Installing DRIVE from Pip
 =========================
 
-DRIVE v2.0.0 has been officially released on `PYPI <https://pypi.org/project/drive-ibd/>`_! This installation method is recommended for those who wish to use the software without any internal modification. PIP will install all of the necessary dependencies of DRIVE so that the user doesn't have to worry about dependency management. 
+DRIVE v2.1.0 has been officially released on `PYPI <https://pypi.org/project/drive-ibd/>`_! This installation method is recommended for those who wish to use the software without any internal modification. PIP will install all of the necessary dependencies of DRIVE so that the user doesn't have to worry about dependency management. 
 
 .. note::
 
