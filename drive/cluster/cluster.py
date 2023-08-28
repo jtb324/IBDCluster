@@ -60,7 +60,8 @@ class ClusterHandler:
             logger.debug(
                 "No vertex metadata provided. Vertex ids will be nonnegative integers"
             )
-            return ig.Graph.DataFrame(ibd_edges, directed=False, use_vids=False)
+            # return ig.Graph.DataFrame(ibd_edges, directed=False, use_vids=False)
+            return ig.Graph.DataFrame(ibd_edges, directed=False)
 
     def random_walk(self, graph: ig.Graph) -> ig.VertexClustering:
         """Method used to perform the random walk from igraph.community_walktrap
@@ -144,8 +145,8 @@ class ClusterHandler:
 
         for member_id, assigned_clst_id in enumerate(random_walk_members):
             if assigned_clst_id == clst_id:
-                vertex_ids.append(graph.vs()[member_id]["name"])
-                member_list.append(member_id)
+                member_list.append(graph.vs()[member_id]["name"])
+                vertex_ids.append(member_id)
 
         return member_list, vertex_ids
 
@@ -186,7 +187,7 @@ class ClusterHandler:
         return cluster_edge_count, cluster_edge_count / theoretical_edge_count
 
     def _determine_false_positive_edges(
-        graph: ig.Graph, member_list: List[int]
+        graph: ig.Graph, vertex_list: List[int]
     ) -> Tuple[int, List[int]]:
         """determine the number of false positive edges
 
@@ -195,8 +196,8 @@ class ClusterHandler:
         graph : ig.Graph
             graph object returned from ig.Graph.DataFrame
 
-        member_list : List[int]
-            list of ids within the specific network
+        vertex_list : List[int]
+            list of vertex ids within the specific network
 
         Returns
         -------
@@ -207,14 +208,14 @@ class ClusterHandler:
         """
         all_edge = set([])
 
-        for mem in member_list:
+        for mem in vertex_list:
             all_edge = all_edge.union(set(graph.incident(mem)))
 
         false_negative_edges = list(
             all_edge.difference(
                 list(
                     graph.get_eids(
-                        pairs=list(itertools.combinations(member_list, 2)),
+                        pairs=list(itertools.combinations(vertex_list, 2)),
                         directed=False,
                         error=False,
                     )
@@ -302,7 +303,7 @@ class ClusterHandler:
             (
                 false_neg_count,
                 false_neg_list,
-            ) = ClusterHandler._determine_false_positive_edges(graph, member_list)
+            ) = ClusterHandler._determine_false_positive_edges(graph, vertex_ids)
 
             # If the graph is too sparse and it is too large and the max
             # number of rechecks has not been reached then we will put
@@ -381,6 +382,7 @@ class ClusterHandler:
 
         # We are going to generate a new Networks object using the redo graph
         redo_networks = ClusterHandler.generate_graph(redopd, redo_vs)
+        # redo_networks = ClusterHandler.generate_graph(redopd)
         # performing the random walk
         redo_walktrap_clusters = self.random_walk(redo_networks)
 
@@ -390,7 +392,7 @@ class ClusterHandler:
             clst_conn = DataFrame(columns=["idnum", "conn", "conn.N", "TP"])
             # iterate over each member id
             # for idnum in network.haplotypes:
-            for idnum in network.haplotypes:
+            for idnum in network.members:
                 conn = sum(
                     list(
                         map(
