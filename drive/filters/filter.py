@@ -140,7 +140,7 @@ class IbdFilter:
         # right chromosome. If the target_gene chromosome number is not
         # found in the file then a ValueError is raised.
 
-        # sometimes build 38 have chr# instead of # in the file so we should also 
+        # sometimes build 38 have chr# instead of # in the file so we should also
         # check for that
         chromo_str = f"chr{self.target_gene.chr}"
 
