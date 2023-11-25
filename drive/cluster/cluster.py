@@ -77,6 +77,9 @@ class ClusterHandler:
             result of the random walk cluster. This object has
             information about clusters and membership
         """
+        logger.debug(
+            f"Performing the community walktrap algorithm with a random walk step size of: {self.random_walk_step_size}"
+        )
 
         ibd_walktrap = ig.Graph.community_walktrap(
             graph, weights="cm", steps=self.random_walk_step_size
