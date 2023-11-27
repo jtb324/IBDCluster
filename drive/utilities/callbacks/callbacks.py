@@ -1,62 +1,50 @@
 from pathlib import Path
+import argparse
+import sys
 
 
-def check_input_exists(ibd_input_file: Path) -> Path:
-    """Callback that will check that the input ibd file exists
+class CheckInputExist(argparse.Action):
+    def __init__(self, option_strings, dest, nargs=None, **kwargs) -> None:
+        if nargs is not None:
+            raise ValueError("nargs not allowed")
+        super(CheckInputExist, self).__init__(option_strings, dest, **kwargs)
 
-    Parameters
-    ----------
-    ibd_input_file : Path
-        Path object to the input ibd file. This file should be gzipped
-
-    Returns
-    -------
-    Path
-        returns the Path object if it exists
-
-    Raises
-    ------
-    FileNotFoundError
-        If the ibd input file does not exist then the program will
-        immediately raise a FileNotFoundError
-    """
-    if ibd_input_file.exists():
-        return ibd_input_file
-    else:
-        raise FileNotFoundError(f"The file, {ibd_input_file}, was not found")
-
-
-def check_json_path(json_path: Path) -> Path:
-    """Callback function that creates the json path string. If the user provides a value
-    then it uses the user provided value else it creates the path to the default file
-
-    Parameters
-    ----------
-    json_path : str
-        path to the json config file or an empty string
-
-    Returns
-    -------
-    Path
-        returns the Path object pointing to the file
-
-    Raises
-    ------
-    FileNotFoundError
-        If the config.json file does not exist at the specified path then this error is
-        raised
-    """
-
-    if json_path:
-        return json_path
-    else:
-        src_dir = Path(__file__).parent.parent.parent
-
-        config_path = src_dir / "config.json"
-
-        if not config_path.exists():
-            raise FileNotFoundError(
-                f"Expected the user to either pass a configuration file path or for the config.json file to be present in the program root directory at {config_path}."  # noqa: E501
+    def __call__(
+        self,
+        parser: argparse.ArgumentParser,
+        namespace: argparse.Namespace,
+        values: Path,
+        option_string: str = None,
+    ) -> None:
+        if values.exists():
+            setattr(namespace, self.dest, values)
+        else:
+            print(
+                f"ERROR: The file, {values}, was not found. Please make sure that there is not a typo in the file name."
             )
+            sys.exit(1)
 
-        return config_path
+
+# class CheckJsonPath(argparse.Action):
+
+#     def __init__(self, option_strings, dest, nargs=None, **kwargs) -> None:
+#         if nargs is not None:
+#             raise ValueError("nargs not allowed")
+#         super(CheckJsonPath, self).__init__(option_strings, dest, **kwargs)
+
+
+#     def __call__(self, parser: argparse.ArgumentParser, namespace: argparse.Namespace, values: Path, option_string: str =None) -> None:
+#         print(f"This is the content in values: {values}")
+#         if values:
+#             setattr(namespace, self.dest, values)
+#         else:
+#             src_dir = Path(__file__).parent.parent.parent
+
+#             config_path = src_dir / "config.json"
+
+#             if not config_path.exists():
+#                 raise FileNotFoundError(
+#                     f"Expected the user to either pass a configuration file path or for the config.json file to be present in the program root directory at {config_path}."  # noqa: E501
+#                 )
+
+#             setattr(namespace, self.dest, config_path)

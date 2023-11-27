@@ -2,11 +2,10 @@ import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Callable, Dict, Iterator, List, Optional, TypeVar
-
 from pandas import DataFrame, concat, read_csv
 
 from drive.log import CustomLogger
-from drive.models import FileIndices, Genes, OverlapOptions
+from drive.models import FileIndices, Genes
 
 logger = CustomLogger.get_logger(__name__)
 
@@ -15,7 +14,6 @@ logger = CustomLogger.get_logger(__name__)
 T = TypeVar("T", bound="IbdFilter")
 
 
-# def filter_
 @dataclass
 class IbdFilter:
     ibd_file: Iterator[DataFrame]
@@ -221,16 +219,17 @@ class IbdFilter:
             & (data_chunk[self.indices.cM_indx] >= min_cm)
         ].copy()
 
-    def set_filter(self, filter_option: OverlapOptions) -> None:
+    def set_filter(self, filter_option: str) -> None:
         """Method to determine how the user wishes to filter the IBD segments file
 
         Parameters
         ----------
-        filter_option : OverlapOptions
-            Enum that represents the user's choice for how to filter the ibd segments.
+        filter_option : str
+            string that represents the user's choice for how to filter the ibd segments.
             If the user chooses 'contains' the only segments that contain the entire
             region are kept. If the user chooses 'overlaps' then segments that overlap
             at all with the target region are kept."""
+
         if filter_option == "contains":
             logger.info("Identifying IBD segments that contain the target region")
             self.filter = self._contains_filter
@@ -379,7 +378,6 @@ class IbdFilter:
     def preprocess(
         self,
         min_centimorgan: int,
-        target_overlap_style: OverlapOptions,
         cohort_ids: Optional[List[str]] = None,
     ) -> None:
         """Method that will filter the ibd file.
@@ -395,6 +393,7 @@ class IbdFilter:
             Lists of ids that make up the cohort. The ibd_file
             will be filtered to only this list.
         """
+
         for chunk in self.ibd_file:
             cohort_restricted_chunk = self._filter_for_cohort(chunk, cohort_ids)
 

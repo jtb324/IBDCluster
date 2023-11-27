@@ -2,19 +2,45 @@ import json
 import re
 from datetime import datetime
 from pathlib import Path
+import argparse
 from typing import Optional
+from rich_argparse import RichHelpFormatter
 
-import typer
 
 import drive.factory as factory
 from drive.cluster import ClusterHandler, cluster
 from drive.filters import IbdFilter
 from drive.log import CustomLogger
-from drive.models import Data, FormatTypes, Genes, OverlapOptions, create_indices
-from drive.utilities.callbacks import check_input_exists, check_json_path
+from drive.models import Data, Genes, create_indices
+from drive.utilities.callbacks import CheckInputExist
 from drive.utilities.parser import PhenotypeFileParser, load_phenotype_descriptions
 
-app = typer.Typer(add_completion=False)
+
+def find_json_file() -> Path:
+    """Method to find the default config file if the user does not provide one
+
+    Returns
+    -------
+    Path
+        returns the path to the json file
+
+    Raises
+    ------
+    FileNotFoundError
+        Raises a FileNotFoundError if the program can not locate a json file and the
+        user does not provide the path to a file
+    """
+
+    src_dir = Path(__file__).parent
+
+    config_path = src_dir / "config.json"
+
+    if not config_path.exists():
+        raise FileNotFoundError(
+            f"Expected the user to either pass a configuration file path or for the config.json file to be present in the program root directory at {config_path}."  # noqa: E501
+        )
+
+    return config_path
 
 
 def split_target_string(chromo_pos_str: str) -> Genes:
@@ -60,149 +86,204 @@ def split_target_string(chromo_pos_str: str) -> Genes:
     return Genes(*integer_split_str)
 
 
-@app.command()
-def main(
-    input_file: Path = typer.Option(
-        ..., "-i", "--input", help="IBD input file", callback=check_input_exists
-    ),
-    ibd_format: FormatTypes = typer.Option(
-        FormatTypes.HAPIBD.value,
-        "-f",
+def main() -> None:
+    parser = argparse.ArgumentParser(
+        description=" Distant Relatedness for Identification and Variant Evaluation (DRIVE) is a novel approach to IBD-based genotype inference used to identify shared chromosomal segments in dense genetic arrays",
+        formatter_class=RichHelpFormatter,
+    )
+
+    parser.add_argument(
+        "--input",
+        "-i",
+        type=Path,
+        help="IBD input file from ibd detection software",
+        required=True,
+        action=CheckInputExist,
+    )
+
+    parser.add_argument(
         "--format",
-        help="IBD file format. Allowed values are hapibd, ilash, germline, rapid",
-    ),
-    target: str = typer.Option(
-        ...,
-        "-t",
+        "-f",
+        default="hapibd",
+        type=str,
+        help="IBD program used to detect segments. Allowed values are hapibd, ilash, germline, rapid. Program expects for value to be lowercase. (default: %(default)s)",
+        choices=["hapibd", "ilash", "germline", "rapid"],
+    )
+
+    parser.add_argument(
         "--target",
+        "-t",
+        type=str,
         help="Target region or position, chr:start-end or chr:pos",
-    ),
-    output: Path = typer.Option(..., "-o", "--output", help="output file prefix"),
-    min_cm: int = typer.Option(
-        3, "-m", "--min-cm", help="minimum centimorgan threshold."
-    ),
-    step: int = typer.Option(3, "-k", "--step", help="steps for random walk"),
-    max_check: int = typer.Option(
-        5,
+        required=True,
+    )
+
+    parser.add_argument(
+        "--output",
+        "-o",
+        type=Path,
+        help="output file prefix. The program will append .drive_networks.txt to the filename provided",
+        required=True,
+    )
+
+    parser.add_argument(
+        "--min-cm",
+        "-m",
+        default=3,
+        type=int,
+        help="minimum centimorgan threshold. The program expects this to be an integer value. (default: %(default)s)",
+    )
+
+    parser.add_argument(
+        "--step",
+        "-k",
+        default=3,
+        type=int,
+        help="Minimum required number of steps for the community walktrap algorithm.(default: %(default)s)",
+    )
+
+    parser.add_argument(
         "--max-recheck",
-        help="Maximum number of times to re-perform the clustering. This value will not be used if the flag --no-recluster is used.",  # noqa: E501
-    ),
-    case_file: Optional[Path] = typer.Option(
-        None,
-        "-c",
+        default=5,
+        type=int,
+        help="Maximum number of times to re-perform the clustering. This value will not be used if the flag --no-recluster is used.(default: %(default)s)",  # noqa: E501
+    )
+
+    parser.add_argument(
         "--cases",
-        help="A file containing individuals who are cases. This file expects for there to be two columns. The first column will have individual ids and the second has status where cases are indicated by a 1 and control are indicated by a 0.",  # noqa: E501
-    ),
-    segment_overlap: OverlapOptions = typer.Option(
-        OverlapOptions.CONTAINS.value,
+        "-c",
+        type=Path,
+        help="A file containing individuals who are cases. This file expects for there to be two columns. The first column will have individual ids and the second has status where cases are indicated by a 1, control are indicated by a 0, and exclusions are indicated by NA.",  # noqa: E501
+        action=CheckInputExist,
+    )
+
+    parser.add_argument(
         "--segment-overlap",
-        help="Indicates if the user wants the gene to contain the whole target region or if it just needs to overlap the segment.",  # noqa: E501
-    ),
-    phenotype_description_file: Optional[Path] = typer.Option(
-        None,
-        "-d",
+        default="contains",
+        choices=["contains", "overlaps"],
+        type=str,
+        help="Indicates if the user wants the gene to contain the whole target region or if it just needs to overlap the segment. (default: %(default)s)",  # noqa: E501
+    )
+
+    parser.add_argument(
         "--descriptions",
+        "-d",
+        type=Path,
         help="tab delimited text file that has descriptions for each phecode. this file should have two columns called phecode and phenotype",  # noqa: E501
-    ),
-    max_network_size: int = typer.Option(
-        30, "--max-network-size", help="maximum network size allowed"
-    ),
-    minimum_connected_thres: float = typer.Option(
-        0.5,
+    )
+
+    parser.add_argument(
+        "--max-network-size",
+        default=30,
+        type=int,
+        help="maximum network size allowed if the user has allowed the recluster option. (default: %(default)s)",
+    )
+
+    parser.add_argument(
         "--min-connected-threshold",
-        help="minimum connectedness ratio required for the network",
-    ),
-    min_network_size: int = typer.Option(
-        2,
+        default=0.5,
+        type=float,
+        help="minimum connectedness ratio required for the network. (default: %(default)s)",
+    )
+
+    parser.add_argument(
         "--min-network-size",
-        help="This argument sets the minimun network size that we allow. All networks smaller than this size will be filtered out. If the user wishes to keep all networks they can set this to 0",  # noqa: E501
-    ),
-    segment_dist_threshold: float = typer.Option(
-        0.2,
+        default=2,
+        type=int,
+        help="This argument sets the minimun network size that we allow. All networks smaller than this size will be filtered out. If the user wishes to keep all networks they can set this to 0. (default: %(default)s)",  # noqa: E501
+    )
+
+    parser.add_argument(
         "--segment-distribution-threshold",
-        help="Threshold to filter the network length to remove hub individuals",
-    ),
-    hub_threshold: float = typer.Option(
-        0.01,
+        default=0.2,
+        type=float,
+        help="Threshold to filter the network length to remove hub individuals. (default: %(default)s)",
+    )
+
+    parser.add_argument(
         "--hub-threshold",
-        help="Threshold to determine what percentage of hubs to keep",
-    ),
-    json_path: Path = typer.Option(
-        None,
+        default=0.01,
+        type=float,
+        help="Threshold to determine what percentage of hubs to keep. (default: %(default)s)",
+    )
+
+    parser.add_argument(
         "--json-config",
         "-j",
+        default=None,
+        type=Path,
         help="path to the json config file",
-        callback=check_json_path,
-    ),
-    recluster: bool = typer.Option(
-        True,
+    )
+
+    parser.add_argument(
+        "--recluster",
+        type=bool,
+        default=True,
+        action=argparse.BooleanOptionalAction,
         help="whether or not the user wishes the program to automically recluster based on things lik hub threshold, max network size and how connected the graph is. ",  # noqa: E501
-    ),
-    verbose: int = typer.Option(
-        0,
+    )
+
+    parser.add_argument(
         "--verbose",
         "-v",
+        default=0,
         help="verbose flag indicating if the user wants more information",
-        count=True,
-    ),
-    log_to_console: bool = typer.Option(
-        False,
+        action="count",
+    )
+
+    parser.add_argument(
         "--log-to-console",
+        default=False,
         help="Optional flag to log to only the console or also a file",
-        is_flag=True,
-    ),
-    log_filename: str = typer.Option(
-        "drive.log", "--log-filename", help="Name for the log output file."
-    ),
-) -> None:
+        action="store_true",
+    )
+
+    parser.add_argument(
+        "--log-filename",
+        default="drive.log",
+        type=str,
+        help="Name for the log output file. (default: %(default)s)",
+    )
+
+    args = parser.parse_args()
+
     # getting the programs start time
     start_time = datetime.now()
+
+    # We need to make sure that there is a configuration file
+    json_config = args.json_config if args.json_config else find_json_file()
 
     # creating and configuring the logger and then recording user inputs
     logger = CustomLogger.create_logger()
 
-    logger.configure(output.parent, log_filename, verbose, log_to_console)
-    # record the input parameters
-    logger.record_inputs(
-        ibd_file=input_file,
-        ibd_program_used=ibd_format,
-        gene_target_region=target,
-        output_prefix=output,
-        phenotype_description_file=phenotype_description_file,
-        phenotype_file=case_file,
-        minimum_centimorgan_threshold=min_cm,
-        random_walk_step_size=step,
-        max_recheck_times=max_check,
-        max_network_size=max_network_size,
-        minimum_connection_threshold=minimum_connected_thres,
-        min_network_size=min_network_size,
-        log_to_console=log_to_console,
-        log_filename=log_filename,
-        recluster=recluster,
+    logger.configure(
+        args.output.parent, args.log_filename, args.verbose, args.log_to_console
     )
 
-    logger.debug(f"Parent directory for log files and output: {output.parent}")
+    # record the input parameters using a method from the logger object that
+    # takes the parser as an argument
+    logger.record_namespace(args)
+
+    logger.debug(f"Parent directory for log files and output: {args.output.parent}")
 
     logger.info(f"Analysis start time: {start_time}")
     # we need to load in the phenotype descriptions file to get
     # descriptions of each phenotype
-    if phenotype_description_file:
-        logger.verbose(
-            f"Using the phenotype descriptions file at: {phenotype_description_file}"
-        )
-        desc_dict = load_phenotype_descriptions(phenotype_description_file)
+    if args.descriptions:
+        logger.verbose(f"Using the phenotype descriptions file at: {args.descriptions}")
+        desc_dict = load_phenotype_descriptions(args.descriptions)
     else:
         logger.verbose("No phenotype descriptions provided")
         desc_dict = {}
 
     # if the user has provided a phenotype file then we will determine case/control/
     # exclusion counts. Otherwise we return an empty dictionary
-    if case_file:
-        with PhenotypeFileParser(case_file) as phenotype_file:
+    if args.cases:
+        with PhenotypeFileParser(args.cases) as phenotype_file:
             phenotype_counts, cohort_ids = phenotype_file.parse_cases_and_controls()
 
             logger.info(
-                f"identified {len(phenotype_counts.keys())} phenotypes within the file {case_file}"  # noqa: E501
+                f"identified {len(phenotype_counts.keys())} phenotypes within the file {args.cases}"  # noqa: E501
             )
     else:
         logger.info(
@@ -212,21 +293,21 @@ def main(
         phenotype_counts = {}
         cohort_ids = []
 
-    indices = create_indices(ibd_format.lower())
+    indices = create_indices(args.format.lower())
 
     logger.debug(f"created indices object: {indices}")
 
     ##target gene region or variant position
-    target_gene = split_target_string(target)
+    target_gene = split_target_string(args.target)
 
     logger.debug(f"Identified a target region: {target_gene}")
 
-    filter_obj: IbdFilter = IbdFilter.load_file(input_file, indices, target_gene)
+    filter_obj: IbdFilter = IbdFilter.load_file(args.input, indices, target_gene)
 
     # choosing the proper way to filter the ibd files
-    filter_obj.set_filter(segment_overlap)
+    filter_obj.set_filter(args.segment_overlap)
 
-    filter_obj.preprocess(min_cm, cohort_ids)
+    filter_obj.preprocess(args.min_cm, cohort_ids)
 
     # We need to invert the hapid_map dictionary so that the
     # integer mappings are keys and the values are the
@@ -235,27 +316,27 @@ def main(
 
     # creating the object that will handle clustering within the networks
     cluster_handler = ClusterHandler(
-        minimum_connected_thres,
-        max_network_size,
-        max_check,
-        step,
-        min_network_size,
-        segment_dist_threshold,
-        hub_threshold,
+        args.min_connected_threshold,
+        args.max_network_size,
+        args.max_recheck,
+        args.step,
+        args.min_network_size,
+        args.segment_distribution_threshold,
+        args.hub_threshold,
         hapid_inverted,
-        recluster,
+        args.recluster,
     )
 
     networks = cluster(filter_obj, cluster_handler, indices.cM_indx)
 
     # creating the data container that all the plugins can interact with
-    plugin_api = Data(networks, output, phenotype_counts, desc_dict)
+    plugin_api = Data(networks, args.output, phenotype_counts, desc_dict)
 
     logger.debug(f"Data container: {plugin_api}")
 
     # making sure that the output directory is created
     # This section will load in the analysis plugins and run each plugin
-    with open(json_path, encoding="utf-8") as json_config:
+    with open(json_config, encoding="utf-8") as json_config:
         config = json.load(json_config)
 
         factory.load_plugins(config["plugins"])
@@ -278,4 +359,4 @@ def main(
 
 
 if __name__ == "__main__":
-    app()
+    main()
