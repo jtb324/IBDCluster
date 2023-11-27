@@ -154,7 +154,7 @@ class PhenotypeFileParser:
                 logger.warning(
                     f"The status for individual, {grid_id}, was not recognized. The status found in the file was {value} for phenotype {phenotype_mapping}. This individual will be added to the exclusion list but it is recommended that the user checks to ensure that this is not a typo in the phenotype file."  # noqa: E501
                 )
-                phenotype_dict[phenotype_mapping]["excluded"].append(grid_id)
+                phenotype_dict[phenotype_mapping]["excluded"].add(grid_id)
 
     def _create_phenotype_dictionary(
         self,
