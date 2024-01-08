@@ -4,7 +4,7 @@ ecodings, separators, and by handling multiple errors."""
 import gzip
 from logging import Logger
 from pathlib import Path
-from typing import Dict, List, Set, Tuple, TypeVar, Union
+from typing import Dict, List, Optional, Set, Tuple, TypeVar, Union
 
 from drive.log import CustomLogger
 
@@ -18,7 +18,9 @@ class PhenotypeFileParser:
     """Parser used to read in the phenotype file. This will allow use to account for
     different delimiters in files as well as catch errors."""
 
-    def __init__(self, filepath: Union[Path, str]) -> None:
+    def __init__(
+        self, filepath: Union[Path, str], phenotype_name: Optional[str] = None
+    ) -> None:
         """Initialize the PhenotypeFileParser class.
 
         Parameters
@@ -26,11 +28,16 @@ class PhenotypeFileParser:
         filepath : Path | str
             filepath to the phenotype file that has case control status for individuals
 
+        phenotype_name : str
+            Phenotype name that can be used specify a specific column in a
+            phenotype matrix if the user only wants ot focus on 1 phenotype.
+
         Raises
         ------
         FileNotFoundError
         """
         self.individuals: List[str] = []
+        self.specific_phenotype: str = phenotype_name
         # we are going to make sure the filepath variable is a
         # PosixPath
         filepath = Path(filepath)
@@ -178,6 +185,14 @@ class PhenotypeFileParser:
             a dictionary that maps the index of the phenotype in the
             header line to the phenotype name. The third element is the
             separator string
+
+        Raises
+        ------
+        ValueError
+            This function will raise a Value error if the values 'grid' or 'grids'
+            (uppercase or lowercase) are not found in the header line. The function
+            can also raise a value error if the user tries to specify a phenotype
+            name that is not in the header line.
         """
 
         # determining what the appropriate separator should be
@@ -203,14 +218,36 @@ class PhenotypeFileParser:
         # controls
         phenotype_dict = {}
 
-        # build each dictionary
-        for indx, phenotype in enumerate(split_line_phenotypes):
-            phenotype_indx[indx] = phenotype
-            phenotype_dict[phenotype] = {
-                "cases": set(),
-                "controls": set(),
-                "excluded": set(),
-            }
+        # build a dictionary for each phenotype of the cases and the controls.
+        # If the user has specified a phenotype, we will only add that phenotype
+        # and we will add its corresponding index to the phenotype_indx dictionary
+        # This block will catch a value error if the user provides a phenotype name
+        # that is not in the file
+        if self.specific_phenotype:
+            try:
+                indx = split_line_phenotypes.index(self.specific_phenotype)
+            except ValueError:
+                logger.critical(
+                    f"The value {self.specific_phenotype} was not found in one of the phenotype column files. Please make sure you spelled the phenotype name the exact same as it is in the phenotype file."
+                )
+                raise ValueError(
+                    "The value {self.specific_phenotype} was not found in the phenotype file."
+                )
+            else:
+                phenotype_indx[indx] = self.specific_phenotype
+                phenotype_dict[self.specific_phenotype] = {
+                    "cases": set(),
+                    "controls": set(),
+                    "excluded": set(),
+                }
+        else:
+            for indx, phenotype in enumerate(split_line_phenotypes):
+                phenotype_indx[indx] = phenotype
+                phenotype_dict[phenotype] = {
+                    "cases": set(),
+                    "controls": set(),
+                    "excluded": set(),
+                }
 
         logger.debug(f"Phenotype index dictionary:\n {phenotype_indx}")
         logger.debug(f"Phenotype counts dictionary: \n {phenotype_dict}")
