@@ -226,7 +226,7 @@ def main() -> None:
         type=bool,
         default=True,
         action=argparse.BooleanOptionalAction,
-        help="whether or not the user wishes the program to automically recluster based on things lik hub threshold, max network size and how connected the graph is. ",  # noqa: E501
+        help="whether or not the user wishes the program to automically recluster based on things like hub threshold, max network size and how connected the graph is. ",  # noqa: E501
     )
 
     parser.add_argument(
