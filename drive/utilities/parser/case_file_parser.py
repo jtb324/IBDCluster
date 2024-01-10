@@ -147,21 +147,22 @@ class PhenotypeFileParser:
 
         # go through each value in the file
         for indx, value in enumerate(line[1:]):
-            phenotype_mapping = phenotype_indx.get(indx)
+            if phenotype_mapping := phenotype_indx.get(indx):
+                if value == "1" or value == "1.0":
+                    phenotype_dict[phenotype_mapping]["cases"].add(grid_id)
+                elif value == "0" or value == "0.0":
+                    phenotype_dict[phenotype_mapping]["controls"].add(grid_id)
+                # we are going to excluded on values na, n/a, -1, -1.
+                # 0, "", " " to try to catch different values
+                elif value.lower() in ["na", "n/a", "-1", "-1.0", " ", ""]:
+                    phenotype_dict[phenotype_mapping]["excluded"].add(grid_id)
+                else:
+                    logger.warning(
+                        f"The status for individual, {grid_id}, was not recognized. The status found in the file was {value} for phenotype {phenotype_mapping}. This individual will be added to the exclusion list but it is recommended that the user checks to ensure that this is not a typo in the phenotype file."  # noqa: E501
+                    )
+                    phenotype_dict[phenotype_mapping]["excluded"].add(grid_id)
 
-            if value == "1" or value == "1.0":
-                phenotype_dict[phenotype_mapping]["cases"].add(grid_id)
-            elif value == "0" or value == "0.0":
-                phenotype_dict[phenotype_mapping]["controls"].add(grid_id)
-            # we are going to excluded on values na, n/a, -1, -1.
-            # 0, "", " " to try to catch different values
-            elif value.lower() in ["na", "n/a", "-1", "-1.0", " ", ""]:
-                phenotype_dict[phenotype_mapping]["excluded"].add(grid_id)
-            else:
-                logger.warning(
-                    f"The status for individual, {grid_id}, was not recognized. The status found in the file was {value} for phenotype {phenotype_mapping}. This individual will be added to the exclusion list but it is recommended that the user checks to ensure that this is not a typo in the phenotype file."  # noqa: E501
-                )
-                phenotype_dict[phenotype_mapping]["excluded"].add(grid_id)
+        logger.debug(f"Phenotype dictionary after adding individuals: {phenotype_dict}")
 
     def _create_phenotype_dictionary(
         self,
