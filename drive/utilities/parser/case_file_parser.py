@@ -147,6 +147,10 @@ class PhenotypeFileParser:
 
         # go through each value in the file
         for indx, value in enumerate(line[1:]):
+            # If the user only wants to specify a specific column then there is a
+            # possible of the indx number not being in the phenotype indx. We can
+            # use the walrus operator to make sure that we only attempt to
+            # determine the case control status for the phenotype if .get function # returns a value and not none
             if phenotype_mapping := phenotype_indx.get(indx):
                 if value == "1" or value == "1.0":
                     phenotype_dict[phenotype_mapping]["cases"].add(grid_id)

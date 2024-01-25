@@ -68,7 +68,14 @@ class IbdFilter:
         if not ibd_file.is_file():
             raise FileNotFoundError(f"The file, {ibd_file}, was not found")
 
-        input_file_chunks = read_csv(ibd_file, sep="\t", header=None, chunksize=100_100)
+        # we need to make sure that the id columns read in as strings no matter what
+        input_file_chunks = read_csv(
+            ibd_file,
+            sep="\t",
+            header=None,
+            chunksize=100_100,
+            dtype={indices.id1_indx: str, indices.id2_indx: str},
+        )
 
         return cls(input_file_chunks, indices, target_gene)
 
