@@ -383,6 +383,9 @@ class ClusterHandler:
 
         redo_vs = ibd_vs[ibd_vs.idnum.isin(network.haplotypes)]
 
+        # If the redopd or redo_vs is empty it causes strange behavior and the code will
+        # usually fail. The desired behavior is for the program to tell teh user that
+        # the graph could not be constructed and then for it to move on.
         if not redopd.empty and not redo_vs.empty:
             # We are going to generate a new Networks object using the redo graph
             redo_networks = ClusterHandler.generate_graph(redopd, redo_vs)
