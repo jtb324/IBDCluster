@@ -3,7 +3,6 @@ import re
 from datetime import datetime
 from pathlib import Path
 import argparse
-from typing import Optional
 from rich_argparse import RichHelpFormatter
 
 
@@ -201,6 +200,13 @@ def main() -> None:
     )
 
     parser.add_argument(
+        "--phenotype-name",
+        default=None,
+        type=str,
+        help="If the user wishes to only run 1 phenotype from a file with multiple phenotypes they can prioritize a column that has the phenotype name. The name must match with the column.",
+    )
+
+    parser.add_argument(
         "--hub-threshold",
         default=0.01,
         type=float,
@@ -220,7 +226,7 @@ def main() -> None:
         type=bool,
         default=True,
         action=argparse.BooleanOptionalAction,
-        help="whether or not the user wishes the program to automically recluster based on things lik hub threshold, max network size and how connected the graph is. ",  # noqa: E501
+        help="whether or not the user wishes the program to automically recluster based on things like hub threshold, max network size and how connected the graph is. ",  # noqa: E501
     )
 
     parser.add_argument(
@@ -279,7 +285,7 @@ def main() -> None:
     # if the user has provided a phenotype file then we will determine case/control/
     # exclusion counts. Otherwise we return an empty dictionary
     if args.cases:
-        with PhenotypeFileParser(args.cases) as phenotype_file:
+        with PhenotypeFileParser(args.cases, args.phenotype_name) as phenotype_file:
             phenotype_counts, cohort_ids = phenotype_file.parse_cases_and_controls()
 
             logger.info(

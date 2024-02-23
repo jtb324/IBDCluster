@@ -4,7 +4,7 @@ ecodings, separators, and by handling multiple errors."""
 import gzip
 from logging import Logger
 from pathlib import Path
-from typing import Dict, List, Set, Tuple, TypeVar, Union
+from typing import Dict, List, Optional, Set, Tuple, TypeVar, Union
 
 from drive.log import CustomLogger
 
@@ -18,7 +18,9 @@ class PhenotypeFileParser:
     """Parser used to read in the phenotype file. This will allow use to account for
     different delimiters in files as well as catch errors."""
 
-    def __init__(self, filepath: Union[Path, str]) -> None:
+    def __init__(
+        self, filepath: Union[Path, str], phenotype_name: Optional[str] = None
+    ) -> None:
         """Initialize the PhenotypeFileParser class.
 
         Parameters
@@ -26,11 +28,16 @@ class PhenotypeFileParser:
         filepath : Path | str
             filepath to the phenotype file that has case control status for individuals
 
+        phenotype_name : str
+            Phenotype name that can be used specify a specific column in a
+            phenotype matrix if the user only wants ot focus on 1 phenotype.
+
         Raises
         ------
         FileNotFoundError
         """
         self.individuals: List[str] = []
+        self.specific_phenotype: str = phenotype_name
         # we are going to make sure the filepath variable is a
         # PosixPath
         filepath = Path(filepath)
@@ -140,28 +147,33 @@ class PhenotypeFileParser:
 
         # go through each value in the file
         for indx, value in enumerate(line[1:]):
-            phenotype_mapping = phenotype_indx.get(indx)
+            # If the user only wants to specify a specific column then there is a
+            # possible of the indx number not being in the phenotype indx. We can
+            # use the walrus operator to make sure that we only attempt to
+            # determine the case control status for the phenotype if .get function # returns a value and not none
+            if phenotype_mapping := phenotype_indx.get(indx):
+                if value == "1" or value == "1.0":
+                    phenotype_dict[phenotype_mapping]["cases"].add(grid_id)
+                elif value == "0" or value == "0.0":
+                    phenotype_dict[phenotype_mapping]["controls"].add(grid_id)
+                # we are going to excluded on values na, n/a, -1, -1.
+                # 0, "", " " to try to catch different values
+                elif value.lower() in ["na", "n/a", "-1", "-1.0", " ", ""]:
+                    phenotype_dict[phenotype_mapping]["excluded"].add(grid_id)
+                else:
+                    logger.warning(
+                        f"The status for individual, {grid_id}, was not recognized. The status found in the file was {value} for phenotype {phenotype_mapping}. This individual will be added to the exclusion list but it is recommended that the user checks to ensure that this is not a typo in the phenotype file."  # noqa: E501
+                    )
+                    phenotype_dict[phenotype_mapping]["excluded"].add(grid_id)
 
-            if value == "1" or value == "1.0":
-                phenotype_dict[phenotype_mapping]["cases"].add(grid_id)
-            elif value == "0" or value == "0.0":
-                phenotype_dict[phenotype_mapping]["controls"].add(grid_id)
-            # we are going to excluded on values na, n/a, -1, -1.
-            # 0, "", " " to try to catch different values
-            elif value.lower() in ["na", "n/a", "-1", "-1.0", " ", ""]:
-                phenotype_dict[phenotype_mapping]["excluded"].add(grid_id)
-            else:
-                logger.warning(
-                    f"The status for individual, {grid_id}, was not recognized. The status found in the file was {value} for phenotype {phenotype_mapping}. This individual will be added to the exclusion list but it is recommended that the user checks to ensure that this is not a typo in the phenotype file."  # noqa: E501
-                )
-                phenotype_dict[phenotype_mapping]["excluded"].add(grid_id)
+        logger.debug(f"Phenotype dictionary after adding individuals: {phenotype_dict}")
 
     def _create_phenotype_dictionary(
         self,
         header_line: str,
     ) -> Tuple[Dict[str, Dict[str, Set[str]]], Dict[int, str], str]:
         """Function that will generate a dictionary where the keys are
-        phenotypes and the values list of cases/exclusions/controls
+        phenotypes and the values are lists of the cases/exclusions/controls
 
         Parameters
         ----------
@@ -178,6 +190,14 @@ class PhenotypeFileParser:
             a dictionary that maps the index of the phenotype in the
             header line to the phenotype name. The third element is the
             separator string
+
+        Raises
+        ------
+        ValueError
+            This function will raise a Value error if the value 'grid' or 'grids'
+            (uppercase or lowercase) is not found in the header line. The function
+            can also raise a value error if the user tries to specify a phenotype
+            name that is not in the header line.
         """
 
         # determining what the appropriate separator should be
@@ -203,17 +223,41 @@ class PhenotypeFileParser:
         # controls
         phenotype_dict = {}
 
-        # build each dictionary
-        for indx, phenotype in enumerate(split_line_phenotypes):
-            phenotype_indx[indx] = phenotype
-            phenotype_dict[phenotype] = {
-                "cases": set(),
-                "controls": set(),
-                "excluded": set(),
-            }
+        # build a dictionary for each phenotype of the cases and the controls.
+        # If the user has specified a phenotype, we will only add that phenotype
+        # and we will add its corresponding index to the phenotype_indx dictionary
+        # This block will catch a value error if the user provides a phenotype name
+        # that is not in the file
+        if self.specific_phenotype:
+            try:
+                indx = split_line_phenotypes.index(self.specific_phenotype)
+            except ValueError:
+                logger.critical(
+                    f"The value {self.specific_phenotype} was not found in one of the phenotype column files. Please make sure you spelled the phenotype name the exact same as it is in the phenotype file."
+                )
+                raise ValueError(
+                    "The value {self.specific_phenotype} was not found in the phenotype file."
+                )
+            else:
+                phenotype_indx[indx] = self.specific_phenotype
+                phenotype_dict[self.specific_phenotype] = {
+                    "cases": set(),
+                    "controls": set(),
+                    "excluded": set(),
+                }
+        else:
+            for indx, phenotype in enumerate(split_line_phenotypes):
+                phenotype_indx[indx] = phenotype
+                phenotype_dict[phenotype] = {
+                    "cases": set(),
+                    "controls": set(),
+                    "excluded": set(),
+                }
 
         logger.debug(f"Phenotype index dictionary:\n {phenotype_indx}")
-        logger.debug(f"Phenotype counts dictionary: \n {phenotype_dict}")
+        logger.debug(
+            f"Phenotype counts dictionary has {len(phenotype_dict.keys())} PheCodes as keys after creation."
+        )
         return phenotype_dict, phenotype_indx, separator
 
     def parse_cases_and_controls(
