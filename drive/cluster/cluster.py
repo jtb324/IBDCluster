@@ -383,86 +383,93 @@ class ClusterHandler:
 
         redo_vs = ibd_vs[ibd_vs.idnum.isin(network.haplotypes)]
 
-        # We are going to generate a new Networks object using the redo graph
-        redo_networks = ClusterHandler.generate_graph(redopd, redo_vs)
-        # redo_networks = ClusterHandler.generate_graph(redopd)
-        # performing the random walk
-        redo_walktrap_clusters = self.random_walk(redo_networks)
+        if not redopd.empty and not redo_vs.empty:
+            # We are going to generate a new Networks object using the redo graph
+            redo_networks = ClusterHandler.generate_graph(redopd, redo_vs)
+            # redo_networks = ClusterHandler.generate_graph(redopd)
+            # performing the random walk
+            redo_walktrap_clusters = self.random_walk(redo_networks)
 
-        # If only one cluster is found
-        if len(redo_walktrap_clusters.sizes()) == 1:
-            # creates an empty dataframe with these columns
-            clst_conn = DataFrame(columns=["idnum", "conn", "conn.N", "TP"])
-            # iterate over each member id
-            # for idnum in network.haplotypes:
-            for idnum in network.members:
-                conn = sum(
-                    list(
-                        map(
-                            lambda x: 1 / x,
-                            redopd.loc[
-                                (redopd["idnum1"] == idnum)
-                                | (redopd["idnum2"] == idnum)
-                            ]["cm"],
+            # If only one cluster is found
+            if len(redo_walktrap_clusters.sizes()) == 1:
+                # creates an empty dataframe with these columns
+                clst_conn = DataFrame(columns=["idnum", "conn", "conn.N", "TP"])
+                # iterate over each member id
+                # for idnum in network.haplotypes:
+                for idnum in network.members:
+                    conn = sum(
+                        list(
+                            map(
+                                lambda x: 1 / x,
+                                redopd.loc[
+                                    (redopd["idnum1"] == idnum)
+                                    | (redopd["idnum2"] == idnum)
+                                ]["cm"],
+                            )
                         )
                     )
-                )
-                conn_idnum = list(
-                    redopd.loc[(redopd["idnum1"] == idnum)]["idnum2"]
-                ) + list(redopd.loc[(redopd["idnum2"] == idnum)]["idnum1"])
-                conn_tp = len(
-                    redopd.loc[
-                        redopd["idnum1"].isin(conn_idnum)
-                        & redopd["idnum2"].isin(conn_idnum)
-                    ].index
-                )
-                # assert 1 == 0
-                if len(conn_idnum) == 1:
-                    connTP = 1
-                else:
-                    try:
-                        connTP = conn_tp / (len(conn_idnum) * (len(conn_idnum) - 1) / 2)
-                    except ZeroDivisionError:
-                        raise ZeroDivisionError(
-                            f"There was a zero division error encountered when looking at the network with the id {idnum}"  # noqa: E501
-                        )  # noqa: E501
-
-                clst_conn.loc[idnum] = [idnum, conn, len(conn_idnum), connTP]
-            rmID = list(
-                clst_conn.loc[
-                    (
-                        clst_conn["conn.N"]
-                        > (self.segment_dist_threshold * len(network.members))
+                    conn_idnum = list(
+                        redopd.loc[(redopd["idnum1"] == idnum)]["idnum2"]
+                    ) + list(redopd.loc[(redopd["idnum2"] == idnum)]["idnum1"])
+                    conn_tp = len(
+                        redopd.loc[
+                            redopd["idnum1"].isin(conn_idnum)
+                            & redopd["idnum2"].isin(conn_idnum)
+                        ].index
                     )
-                    & (clst_conn["TP"] < self.minimum_connected_thres)
-                    & (
-                        clst_conn["conn"]
-                        > sorted(clst_conn["conn"], reverse=True)[
-                            int(self.hub_threshold * len(network.members))
-                        ]
-                    )
-                ]["idnum"]
+                    # assert 1 == 0
+                    if len(conn_idnum) == 1:
+                        connTP = 1
+                    else:
+                        try:
+                            connTP = conn_tp / (
+                                len(conn_idnum) * (len(conn_idnum) - 1) / 2
+                            )
+                        except ZeroDivisionError:
+                            raise ZeroDivisionError(
+                                f"There was a zero division error encountered when looking at the network with the id {idnum}"  # noqa: E501
+                            )  # noqa: E501
+
+                    clst_conn.loc[idnum] = [idnum, conn, len(conn_idnum), connTP]
+                rmID = list(
+                    clst_conn.loc[
+                        (
+                            clst_conn["conn.N"]
+                            > (self.segment_dist_threshold * len(network.members))
+                        )
+                        & (clst_conn["TP"] < self.minimum_connected_thres)
+                        & (
+                            clst_conn["conn"]
+                            > sorted(clst_conn["conn"], reverse=True)[
+                                int(self.hub_threshold * len(network.members))
+                            ]
+                        )
+                    ]["idnum"]
+                )
+
+                redopd = redopd.loc[
+                    (~redopd["idnum1"].isin(rmID)) & (~redopd["idnum2"].isin(rmID))
+                ]
+                redo_graph = self.generate_graph(
+                    redopd,
+                )
+                # redo_g = ig.Graph.DataFrame(redopd, directed=False)
+                redo_walktrap_clusters = self.random_walk(redo_graph)
+                # redo_walktrap = ig.Graph.community_walktrap(
+                #     redo_g, weights="cm", steps=self.random_walk_step_size
+                # )
+                # redo_walktrap_clusters = redo_walktrap.as_clustering()
+
+            # Filter to the clusters that are llarger than the minimum size
+            allclst = self.filter_cluster_size(redo_walktrap_clusters.sizes())
+
+            self.gather_cluster_info(
+                redo_networks, allclst, redo_walktrap_clusters, original_id
             )
-
-            redopd = redopd.loc[
-                (~redopd["idnum1"].isin(rmID)) & (~redopd["idnum2"].isin(rmID))
-            ]
-            redo_graph = self.generate_graph(
-                redopd,
+        else:
+            logger.debug(
+                f"A graph was not able to be generated when we attempted to recluster the network: {original_id}. This error probably indicates that there were There were none of the {len(network.haplotypes)} individuals in that specific network that shared ibd segments with one another."
             )
-            # redo_g = ig.Graph.DataFrame(redopd, directed=False)
-            redo_walktrap_clusters = self.random_walk(redo_graph)
-            # redo_walktrap = ig.Graph.community_walktrap(
-            #     redo_g, weights="cm", steps=self.random_walk_step_size
-            # )
-            # redo_walktrap_clusters = redo_walktrap.as_clustering()
-
-        # Filter to the clusters that are llarger than the minimum size
-        allclst = self.filter_cluster_size(redo_walktrap_clusters.sizes())
-
-        self.gather_cluster_info(
-            redo_networks, allclst, redo_walktrap_clusters, original_id
-        )
 
 
 def cluster(

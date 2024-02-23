@@ -173,7 +173,7 @@ class PhenotypeFileParser:
         header_line: str,
     ) -> Tuple[Dict[str, Dict[str, Set[str]]], Dict[int, str], str]:
         """Function that will generate a dictionary where the keys are
-        phenotypes and the values list of cases/exclusions/controls
+        phenotypes and the values are lists of the cases/exclusions/controls
 
         Parameters
         ----------
@@ -194,8 +194,8 @@ class PhenotypeFileParser:
         Raises
         ------
         ValueError
-            This function will raise a Value error if the values 'grid' or 'grids'
-            (uppercase or lowercase) are not found in the header line. The function
+            This function will raise a Value error if the value 'grid' or 'grids'
+            (uppercase or lowercase) is not found in the header line. The function
             can also raise a value error if the user tries to specify a phenotype
             name that is not in the header line.
         """
@@ -255,7 +255,9 @@ class PhenotypeFileParser:
                 }
 
         logger.debug(f"Phenotype index dictionary:\n {phenotype_indx}")
-        logger.debug(f"Phenotype counts dictionary: \n {phenotype_dict}")
+        logger.debug(
+            f"Phenotype counts dictionary has {len(phenotype_dict.keys())} PheCodes as keys after creation."
+        )
         return phenotype_dict, phenotype_indx, separator
 
     def parse_cases_and_controls(
