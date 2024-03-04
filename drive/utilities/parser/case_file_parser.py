@@ -5,6 +5,7 @@ import gzip
 from logging import Logger
 from pathlib import Path
 from typing import Dict, List, Optional, Set, Tuple, TypeVar, Union
+from xopen import xopen
 
 from drive.log import CustomLogger
 
@@ -64,7 +65,7 @@ class PhenotypeFileParser:
             if suffix == ".gz":
                 file = gzip.open(self.file, "rt")
             else:
-                file = open(self.file, "r", encoding="utf-8")
+                file = xopen(self.file, "r", encoding="utf-8")
         except OSError as e:
             logger.critical(e)
             logger.critical(
