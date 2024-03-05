@@ -5,7 +5,6 @@ import gzip
 from logging import Logger
 from pathlib import Path
 from typing import Dict, List, Optional, Set, Tuple, TypeVar, Union
-from xopen import xopen
 
 from drive.log import CustomLogger
 
@@ -65,7 +64,7 @@ class PhenotypeFileParser:
             if suffix == ".gz":
                 file = gzip.open(self.file, "rt")
             else:
-                file = xopen(self.file, "r", encoding="utf-8")
+                file = open(self.file, "r", encoding="utf-8")
         except OSError as e:
             logger.critical(e)
             logger.critical(
@@ -80,8 +79,7 @@ class PhenotypeFileParser:
         return self
 
     def __exit__(self, exc_type, exc_value, traceback) -> None:
-        """Close the resource when it is not longer being used. Used by the context
-        manager."""
+        """Close the resource when it is not longer being used. Used by the context manager."""
         self.opened_file.close()
 
     @staticmethod
@@ -139,6 +137,10 @@ class PhenotypeFileParser:
             a dictionary that maps the index of the phenotype in the
             header line to the phenotype name. The third element is the
             separator string
+
+        phenotype_indx : Dict[int, str]
+            Dictionary that maps the index that the phecode is in the file to
+            the PheCode label
         """
         # pull out the correct grid id
         grid_id = line[0]
@@ -179,7 +181,8 @@ class PhenotypeFileParser:
         Parameters
         ----------
         header_line : str
-            line from the phenotype file
+            first line from the phenotype file. This line has all the PheCodes
+            in the file
 
         Returns
         -------
@@ -282,8 +285,13 @@ class PhenotypeFileParser:
             separator,
         ) = self._create_phenotype_dictionary(self.opened_file.readline())
 
+        logger.verbose(
+            "Reading in cases, controls, and excluded individuals from the provided phenotype file."
+        )  # noqa: E501
+
         for line in self.opened_file:
             # we need to first check if there is a header row
+
             split_line = line.strip("\n").split(separator)
 
             self._determine_status(split_line, phenotype_dict, phenotype_indx_mappings)
