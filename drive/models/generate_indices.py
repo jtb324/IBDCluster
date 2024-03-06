@@ -4,6 +4,7 @@ from typing import Protocol
 from pandas import DataFrame
 
 
+# general protocol that defines that every class needs the get_haplotype_id method
 class FileIndices(Protocol):
     def get_haplotype_id(
         self, data: DataFrame, ind_id_indx: int, phase_col_indx: int, col_name: str
