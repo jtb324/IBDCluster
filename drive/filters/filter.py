@@ -385,7 +385,7 @@ class IbdFilter:
     def preprocess(
         self,
         min_centimorgan: int,
-        cohort_ids: Optional[Dict[int, str]] = None,
+        cohort_ids: Optional[List[str]] = None,
     ) -> None:
         """Method that will filter the ibd file.
 
