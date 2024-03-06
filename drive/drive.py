@@ -297,7 +297,7 @@ def main() -> None:
         )
 
         phenotype_counts = {}
-        cohort_ids = []
+        cohort_ids = {}
 
     indices = create_indices(args.format.lower())
 
